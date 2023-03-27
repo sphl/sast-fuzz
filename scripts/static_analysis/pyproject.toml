@@ -1,0 +1,14 @@
+[tool.poetry]
+name = "sast-fuzz_analyzer"
+version = "0.1.0"
+description = "Vuln.-indicator for the SAST-directed greybox fuzzer"
+authors = ["Stephan Lipp <sphlpp91@gmail.com>"]
+#readme = "README.md"
+packages = [{include = "static_analysis"}]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
