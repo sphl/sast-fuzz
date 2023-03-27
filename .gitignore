@@ -5,15 +5,15 @@
 .idea/
 
 # CMake
-_deps
-build/
-cmake_install.cmake
+CMakeLists.txt.user
 CMakeCache.txt
 CMakeFiles/
-CMakeLists.txt.user
 CMakeScripts
+Testing/
+Makefile
+cmake_install.cmake
+install_manifest.txt
 compile_commands.json
 CTestTestfile.cmake
-install_manifest.txt
-Makefile
-Testing/
+_deps
+build/
