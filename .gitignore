@@ -1,11 +1,19 @@
-CMakeLists.txt.user
-CMakeCache.txt
-CMakeFiles
-CMakeScripts
-Testing
-Makefile
+# MacOS
+.DS_Store
+
+# JetBrains IDE
+.idea/
+
+# CMake
+_deps
+build/
 cmake_install.cmake
-install_manifest.txt
+CMakeCache.txt
+CMakeFiles/
+CMakeLists.txt.user
+CMakeScripts
 compile_commands.json
 CTestTestfile.cmake
-_deps
+install_manifest.txt
+Makefile
+Testing/
