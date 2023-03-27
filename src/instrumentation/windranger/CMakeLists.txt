@@ -1,9 +1,9 @@
 klee_get_llvm_libs(
-        LLVM_LIBS
-        analysis
-        bitwriter
-        instrumentation
-        irreader
+    LLVM_LIBS
+    analysis
+    bitwriter
+    instrumentation
+    irreader
 )
 
 add_executable(cbi cbi.cpp)
