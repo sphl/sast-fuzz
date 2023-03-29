@@ -730,5 +730,7 @@ int main(int argc, char **argv) {
     instrumentCondition();
     LLVMModuleSet::getLLVMModuleSet()->dumpModulesToFile(".ci.bc");
 
+    delete icfg;
+
     return 0;
 }
