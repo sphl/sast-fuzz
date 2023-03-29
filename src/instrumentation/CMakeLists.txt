@@ -1,12 +1,3 @@
-include("${CMAKE_SOURCE_DIR}/cmake/string_to_list.cmake")
-include("${CMAKE_SOURCE_DIR}/cmake/find_llvm.cmake")
-
-# TODO: Remove the line below in the release version!
-set(SVF_DIR "/opt/svf-2.2")
-include("${CMAKE_SOURCE_DIR}/cmake/find_svf.cmake")
-
-include_directories("${SVF_INCLUDE_DIR}")
-
 add_executable(afl-clang-fast afl-clang-fast.c)
 target_link_libraries(afl-clang-fast PRIVATE afl_config)
 

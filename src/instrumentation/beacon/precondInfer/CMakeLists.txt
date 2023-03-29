@@ -386,7 +386,7 @@ include("${CMAKE_SOURCE_DIR}/cmake/klee_add_component.cmake")
 
 add_subdirectory(Support)
 add_subdirectory(Expr)
-add_subdirectory(BA)
+add_subdirectory(BackwardAnalysis)
 
 # ----------------------------------------------------------------------------------------------------------------------
 # KLEE tools (precondInfer)

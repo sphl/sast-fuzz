@@ -17,6 +17,7 @@ klee_add_component(
     WPCondition.cpp
     WPInferenceInterface.cpp
 )
+target_include_directories(backwardAI PUBLIC "${SVF_INCLUDE_DIR}")
 target_link_libraries(
     backwardAI
     PUBLIC kleaverExpr

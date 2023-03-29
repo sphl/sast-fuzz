@@ -238,7 +238,7 @@ __attribute__((constructor)) void __dislocator_init(void) {
             FATAL("Bad value for AFL_LD_LIMIT_MB");
     }
 
-    alloc_verbose = getenv("AFL_LD_VERBOSE") != nullptr;
-    hard_fail = getenv("AFL_LD_HARD_FAIL") != nullptr;
-    no_calloc_over = getenv("AFL_LD_NO_CALLOC_OVER") != nullptr;
+    alloc_verbose = getenv("AFL_LD_VERBOSE") != NULL;
+    hard_fail = getenv("AFL_LD_HARD_FAIL") != NULL;
+    no_calloc_over = getenv("AFL_LD_NO_CALLOC_OVER") != NULL;
 }
