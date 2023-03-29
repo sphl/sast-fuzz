@@ -33,7 +33,7 @@ int main(int argc, char **argv) {
     for (auto callNode : *callGraph) {
         const SVFFunction *svfFunc = callNode.second->getFunction();
         if (!svfFunc->isDeclaration()) {
-            auto lineRange = LLVMUtils::getLineRange(svfFunc->getLLVMFun());
+            auto lineRange = LLVMUtils::getFunctionLineRange(svfFunc->getLLVMFun());
 
             std::cout << callNode.first << ":" << LLVMUtils::getFilename(svfFunc->getLLVMFun()) << ":"
                       << svfFunc->getName().str() << (callNode.second->isReachableFromProgEntry() ? "*" : "") << ":";

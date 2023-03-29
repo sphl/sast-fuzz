@@ -14,7 +14,7 @@ class LLVMUtils {
   public:
     static string getFilename(const Function *func);
 
-    static optional<pair<LineNumber, LineNumber>> getLineRange(const Function *func);
+    static optional<pair<LineNumber, LineNumber>> getFunctionLineRange(const Function *func);
 };
 
 #endif  // PI_LLVMUTILS_H

@@ -11,7 +11,7 @@ string LLVMUtils::getFilename(const Function *func) {
     return path(func->getSubprogram()->getFilename().str()).filename();
 }
 
-optional<pair<LineNumber, LineNumber>> LLVMUtils::getLineRange(const Function *func) {
+optional<pair<LineNumber, LineNumber>> LLVMUtils::getFunctionLineRange(const Function *func) {
     assert(!func->isDeclaration());
 
     if (!func->hasMetadata()) {
