@@ -36,5 +36,6 @@ foreach (target ${afl_targets})
     target_link_libraries(${target} PRIVATE afl_config)
 endforeach ()
 
-add_subdirectory(instrumentation)
-add_subdirectory(libs)
+add_subdirectory(static_analysis)
+#add_subdirectory(instrumentation)
+#add_subdirectory(libs)
