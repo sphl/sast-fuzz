@@ -1,6 +1,4 @@
-// Taken from: https://www.programiz.com/dsa/quick-sort
-
-// Quick sort in C
+// Taken from: https://www.programiz.com/dsa/quick-sort (Quick sort in C)
 
 #include <stdio.h>
 
