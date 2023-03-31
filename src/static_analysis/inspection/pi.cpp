@@ -1,4 +1,4 @@
-#include "Inspector.h"
+#include "PIHelper.h"
 #include "SVF-FE/LLVMUtil.h"
 #include "utils/LLVMUtils.h"
 
@@ -23,7 +23,7 @@ int main(int argc, char **argv) {
     assert(LLVM_DWARF_VERSION(SVF::LLVMModuleSet::getLLVMModuleSet()) > 0 &&
            "ERROR: Bitcode file doesn't contain debug information!");
 
-    vector<FuncInfo> funcInfos = Inspector::getFuncInfo(svfModule);
+    vector<FuncInfo> funcInfos = PIHelper::getFuncInfo(svfModule);
 
     for (auto func : funcInfos) {
         cout << func << endl;

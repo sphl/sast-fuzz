@@ -1,4 +1,4 @@
-#include "Inspector.h"
+#include "PIHelper.h"
 
 #include "SVF-FE/PAGBuilder.h"
 #include "WPA/Andersen.h"
@@ -6,7 +6,7 @@
 
 using namespace std;
 
-std::vector<FuncInfo> Inspector::getFuncInfo(SVF::SVFModule *svfModule) {
+std::vector<FuncInfo> PIHelper::getFuncInfo(SVF::SVFModule *svfModule) {
     SVF::PAGBuilder builder;
     SVF::PAG *pag = builder.build(svfModule);
 

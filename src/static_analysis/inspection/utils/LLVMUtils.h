@@ -1,7 +1,7 @@
 #ifndef PI_LLVMUTILS_H
 #define PI_LLVMUTILS_H
 
-#include "../Types.h"
+#include "../PITypes.h"
 
 #include "llvm/IR/Function.h"
 

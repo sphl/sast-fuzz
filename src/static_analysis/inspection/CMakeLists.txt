@@ -17,10 +17,10 @@ add_executable(
     pi
     container/FuncInfo.cpp
     container/FuncInfo.h
-    Inspector.cpp
-    Inspector.h
     pi.cpp
-    Types.h
+    PIHelper.cpp
+    PIHelper.h
+    PITypes.h
     utils/IO.cpp
     utils/IO.h
     utils/LLVMUtils.cpp
