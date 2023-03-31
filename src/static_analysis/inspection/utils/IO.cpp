@@ -3,6 +3,8 @@
 #include <fstream>
 #include <iterator>
 
+using namespace std;
+
 string IO::readFile(const string &filepath) {
     string text = "";
     ifstream inputFile(filepath);

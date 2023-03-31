@@ -5,19 +5,16 @@
 
 #include <string>
 
-using namespace std;
-using namespace llvm;
-
 typedef unsigned int LineNumber;
-typedef pair<LineNumber, LineNumber> LineRange;
+typedef std::pair<LineNumber, LineNumber> LineRange;
 
 class LLVMUtils {
   public:
-    static string getFilename(const Function *func);
+    static std::string getFilename(const llvm::Function *func);
 
-    static optional<LineRange> getBBLineRange(const BasicBlock &bb);
+    static std::optional<LineRange> getBBLineRange(const llvm::BasicBlock &bb);
 
-    static optional<LineRange> getFunctionLineRange(const Function *func);
+    static std::optional<LineRange> getFunctionLineRange(const llvm::Function *func);
 };
 
 #endif  // PI_LLVMUTILS_H

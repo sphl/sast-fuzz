@@ -3,13 +3,11 @@
 
 #include <string>
 
-using namespace std;
-
 class IO {
   public:
-    static string readFile(const string &filepath);
+    static std::string readFile(const std::string &filepath);
 
-    static void writeFile(const string &filepath, const string &text);
+    static void writeFile(const std::string &filepath, const std::string &text);
 };
 
 #endif  // PI_IO_H

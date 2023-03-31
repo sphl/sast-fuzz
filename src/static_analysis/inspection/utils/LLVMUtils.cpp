@@ -5,7 +5,9 @@
 #include <filesystem>
 #include <set>
 
+using namespace std;
 using namespace std::filesystem;
+using namespace llvm;
 
 string LLVMUtils::getFilename(const Function *func) {
     return path(func->getSubprogram()->getFilename().str()).filename();
