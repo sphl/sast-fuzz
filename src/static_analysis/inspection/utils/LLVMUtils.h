@@ -7,6 +7,9 @@
 #include <string>
 
 class LLVMUtils {
+  private:
+    static LineRange computeLineRange(const Lines lineNumbers);
+
   public:
     static std::string getFilename(const llvm::Function &func);
 

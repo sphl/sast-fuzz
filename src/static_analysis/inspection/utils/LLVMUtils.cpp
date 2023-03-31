@@ -9,6 +9,13 @@ using namespace std;
 using namespace std::filesystem;
 using namespace llvm;
 
+LineRange LLVMUtils::computeLineRange(const Lines lineNumbers) {
+    LineNumber min = *min_element(lineNumbers.begin(), lineNumbers.end());
+    LineNumber max = *max_element(lineNumbers.begin(), lineNumbers.end());
+
+    return LineRange(min, max);
+}
+
 string LLVMUtils::getFilename(const Function &func) {
     return path(func.getSubprogram()->getFilename().str()).filename();
 }
@@ -49,10 +56,7 @@ optional<LineRange> LLVMUtils::getBBLineRange(const BasicBlock &bb) {
     } else {
         Lines lineNumbers = optLines.value();
 
-        LineNumber min = *min_element(lineNumbers.begin(), lineNumbers.end());
-        LineNumber max = *max_element(lineNumbers.begin(), lineNumbers.end());
-
-        return LineRange(min, max);
+        return computeLineRange(lineNumbers);
     }
 }
 
@@ -88,9 +92,6 @@ optional<LineRange> LLVMUtils::getFunctionLineRange(const Function &func) {
     } else {
         Lines lineNumbers = optLines.value();
 
-        LineNumber min = *min_element(lineNumbers.begin(), lineNumbers.end());
-        LineNumber max = *max_element(lineNumbers.begin(), lineNumbers.end());
-
-        return LineRange(min, max);
+        return computeLineRange(lineNumbers);
     }
 }
