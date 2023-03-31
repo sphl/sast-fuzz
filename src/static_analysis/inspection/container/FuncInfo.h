@@ -1,7 +1,7 @@
 #ifndef PI_FUNCTIONINFO_H
 #define PI_FUNCTIONINFO_H
 
-#include "../PITypes.h"
+#include "../Types.h"
 
 #include <ostream>
 #include <string>
@@ -10,14 +10,14 @@ class FuncInfo {
   private:
     std::string name;
     std::string filename;
-    Lines lines;
+    Lines lineNumbers;
     LineRange lineRange;
     bool reachableFromMain;
 
   public:
     FuncInfo(const std::string &name,
              const std::string &filename,
-             const Lines &lines,
+             const Lines &lineNumbers,
              const LineRange &lineRange,
              bool reachableFromMain);
 
@@ -25,7 +25,7 @@ class FuncInfo {
 
     [[nodiscard]] const std::string &getFilename() const;
 
-    [[nodiscard]] const Lines &getLines() const;
+    [[nodiscard]] const Lines &getLineNumbers() const;
 
     [[nodiscard]] const LineRange &getLineRange() const;
 

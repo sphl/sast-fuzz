@@ -6,7 +6,7 @@
 using namespace std;
 
 string IO::readFile(const string &filepath) {
-    string text = "";
+    string text;
     ifstream inputFile(filepath);
 
     if (inputFile.is_open()) {

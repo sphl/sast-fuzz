@@ -2,24 +2,25 @@
 
 FuncInfo::FuncInfo(const std::string &name,
                    const std::string &filename,
-                   const Lines &lines,
+                   const Lines &lineNumbers,
                    const LineRange &lineRange,
                    bool reachableFromMain)
-    : name(name), filename(filename), lines(lines), lineRange(lineRange), reachableFromMain(reachableFromMain) {}
+    : name(name), filename(filename), lineNumbers(lineNumbers), lineRange(lineRange),
+      reachableFromMain(reachableFromMain) {}
 
 const std::string &FuncInfo::getName() const { return name; }
 
 const std::string &FuncInfo::getFilename() const { return filename; }
 
-const Lines &FuncInfo::getLines() const { return lines; }
+const Lines &FuncInfo::getLineNumbers() const { return lineNumbers; }
 
 const LineRange &FuncInfo::getLineRange() const { return lineRange; }
 
 bool FuncInfo::isReachableFromMain() const { return reachableFromMain; }
 
 bool FuncInfo::operator==(const FuncInfo &rhs) const {
-    return name == rhs.name && filename == rhs.filename && lines == rhs.lines && lineRange == rhs.lineRange &&
-           reachableFromMain == rhs.reachableFromMain;
+    return name == rhs.name && filename == rhs.filename && lineNumbers == rhs.lineNumbers &&
+           lineRange == rhs.lineRange && reachableFromMain == rhs.reachableFromMain;
 }
 
 bool FuncInfo::operator!=(const FuncInfo &rhs) const { return !(rhs == *this); }
