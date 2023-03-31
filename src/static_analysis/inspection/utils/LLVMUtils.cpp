@@ -9,8 +9,8 @@ using namespace std;
 using namespace std::filesystem;
 using namespace llvm;
 
-string LLVMUtils::getFilename(const Function *func) {
-    return path(func->getSubprogram()->getFilename().str()).filename();
+string LLVMUtils::getFilename(const Function &func) {
+    return path(func.getSubprogram()->getFilename().str()).filename();
 }
 
 optional<LineRange> LLVMUtils::getBBLineRange(const BasicBlock &bb) {
@@ -44,17 +44,17 @@ optional<LineRange> LLVMUtils::getBBLineRange(const BasicBlock &bb) {
     }
 }
 
-optional<LineRange> LLVMUtils::getFunctionLineRange(const Function *func) {
-    assert(!func->isDeclaration());
+optional<LineRange> LLVMUtils::getFunctionLineRange(const Function &func) {
+    assert(!func.isDeclaration());
 
-    if (!func->hasMetadata()) {
+    if (!func.hasMetadata()) {
         return nullopt;
     }
 
     LineNumber lineMin = UINT_MAX;
     LineNumber lineMax = 0;
 
-    for (auto &bb : *func) {
+    for (auto &bb : func) {
         auto lineRange = getBBLineRange(bb);
 
         if (lineRange.has_value()) {

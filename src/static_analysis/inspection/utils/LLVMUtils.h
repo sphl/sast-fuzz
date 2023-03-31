@@ -10,11 +10,11 @@ typedef std::pair<LineNumber, LineNumber> LineRange;
 
 class LLVMUtils {
   public:
-    static std::string getFilename(const llvm::Function *func);
+    static std::string getFilename(const llvm::Function &func);
 
     static std::optional<LineRange> getBBLineRange(const llvm::BasicBlock &bb);
 
-    static std::optional<LineRange> getFunctionLineRange(const llvm::Function *func);
+    static std::optional<LineRange> getFunctionLineRange(const llvm::Function &func);
 };
 
 #endif  // PI_LLVMUTILS_H
