@@ -7,11 +7,10 @@
 #include <string>
 
 class LLVMUtils {
-  private:
-    static LineRange computeLineRange(const Lines lineNumbers);
-
   public:
     static std::string getFilename(const llvm::Function &func);
+
+    static LineRange getLineRange(const Lines  &lineNumbers);
 
     static std::optional<Lines> getBBLines(const llvm::BasicBlock &bb);
 
