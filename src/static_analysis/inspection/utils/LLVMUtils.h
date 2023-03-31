@@ -1,14 +1,10 @@
 #ifndef PI_LLVMUTILS_H
 #define PI_LLVMUTILS_H
 
+#include "../PITypes.h"
 #include "llvm/IR/Function.h"
 
-#include <set>
 #include <string>
-
-typedef unsigned int LineNumber;
-typedef std::set<LineNumber> Lines;
-typedef std::pair<LineNumber, LineNumber> LineRange;
 
 class LLVMUtils {
   public:
