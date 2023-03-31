@@ -13,8 +13,8 @@ string LLVMUtils::getFilename(const Function &func) {
     return path(func.getSubprogram()->getFilename().str()).filename();
 }
 
-optional<LineRange> LLVMUtils::getBBLineRange(const BasicBlock &bb) {
-    set<LineNumber> lineNumbers;
+optional<Lines> LLVMUtils::getBBLines(const BasicBlock &bb) {
+    Lines lineNumbers;
 
     const Function *parentFunc = bb.getParent();
 
@@ -37,6 +37,18 @@ optional<LineRange> LLVMUtils::getBBLineRange(const BasicBlock &bb) {
     if (lineNumbers.empty()) {
         return nullopt;
     } else {
+        return lineNumbers;
+    }
+}
+
+optional<LineRange> LLVMUtils::getBBLineRange(const BasicBlock &bb) {
+    auto optLines = getBBLines(bb);
+
+    if (!optLines.has_value()) {
+        return nullopt;
+    } else {
+        Lines lineNumbers = optLines.value();
+
         LineNumber min = *min_element(lineNumbers.begin(), lineNumbers.end());
         LineNumber max = *max_element(lineNumbers.begin(), lineNumbers.end());
 
@@ -44,28 +56,41 @@ optional<LineRange> LLVMUtils::getBBLineRange(const BasicBlock &bb) {
     }
 }
 
-optional<LineRange> LLVMUtils::getFunctionLineRange(const Function &func) {
+optional<Lines> LLVMUtils::getFunctionLines(const Function &func) {
     assert(!func.isDeclaration());
 
     if (!func.hasMetadata()) {
         return nullopt;
     }
 
-    LineNumber lineMin = UINT_MAX;
-    LineNumber lineMax = 0;
+    Lines lineNumbers;
 
     for (auto &bb : func) {
-        auto lineRange = getBBLineRange(bb);
+        auto optLines = getBBLines(bb);
 
-        if (lineRange.has_value()) {
-            lineMin = min(lineMin, lineRange->first);
-            lineMax = max(lineMax, lineRange->second);
+        if (optLines.has_value()) {
+            lineNumbers.merge(optLines.value());
         }
     }
 
-    if (lineMax == 0) {
+    if (lineNumbers.empty()) {
         return nullopt;
     } else {
-        return LineRange(lineMin, lineMax);
+        return lineNumbers;
+    }
+}
+
+optional<LineRange> LLVMUtils::getFunctionLineRange(const Function &func) {
+    auto optLines = getFunctionLines(func);
+
+    if (!optLines.has_value()) {
+        return nullopt;
+    } else {
+        Lines lineNumbers = optLines.value();
+
+        LineNumber min = *min_element(lineNumbers.begin(), lineNumbers.end());
+        LineNumber max = *max_element(lineNumbers.begin(), lineNumbers.end());
+
+        return LineRange(min, max);
     }
 }
