@@ -6,7 +6,7 @@
 #include <ostream>
 #include <string>
 
-class FunctionInfo {
+class FuncInfo {
   private:
     std::string name;
     std::string filename;
@@ -15,11 +15,11 @@ class FunctionInfo {
     bool reachableFromMain;
 
   public:
-    FunctionInfo(const std::string &name,
-                 const std::string &filename,
-                 const Lines &lines,
-                 const LineRange &lineRange,
-                 bool reachableFromMain);
+    FuncInfo(const std::string &name,
+             const std::string &filename,
+             const Lines &lines,
+             const LineRange &lineRange,
+             bool reachableFromMain);
 
     [[nodiscard]] const std::string &getName() const;
 
@@ -31,11 +31,11 @@ class FunctionInfo {
 
     [[nodiscard]] bool isReachableFromMain() const;
 
-    bool operator==(const FunctionInfo &rhs) const;
+    bool operator==(const FuncInfo &rhs) const;
 
-    bool operator!=(const FunctionInfo &rhs) const;
+    bool operator!=(const FuncInfo &rhs) const;
 
-    friend std::ostream &operator<<(std::ostream &os, const FunctionInfo &info);
+    friend std::ostream &operator<<(std::ostream &os, const FuncInfo &info);
 };
 
 #endif  // PI_FUNCTIONINFO_H
