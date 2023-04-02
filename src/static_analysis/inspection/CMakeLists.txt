@@ -15,6 +15,8 @@ klee_get_llvm_libs(
 
 add_executable(
     pi
+    container/BBInfo.cpp
+    container/BBInfo.h
     container/FuncInfo.cpp
     container/FuncInfo.h
     pi.cpp
