@@ -1,5 +1,5 @@
-#ifndef PI_LINETYPES_H
-#define PI_LINETYPES_H
+#ifndef PI_PITYPES_H
+#define PI_PITYPES_H
 
 #include <set>
 
@@ -9,4 +9,4 @@ typedef std::pair<LineNumber, LineNumber> LineRange;
 
 typedef unsigned long BBId;
 
-#endif  // PI_LINETYPES_H
+#endif  // PI_PITYPES_H
