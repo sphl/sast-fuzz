@@ -7,11 +7,17 @@
 
 #include <string>
 
+typedef unsigned long BBId;
+
 class LLVMUtils {
   public:
+    static LineRange computeRange(const Lines &lineNumbers);
+
     static std::string getFilename(const llvm::Function &func);
 
-    static LineRange computeRange(const Lines &lineNumbers);
+    static void setBBId(llvm::BasicBlock &bb, BBId id);
+
+    static std::optional<BBId> getBBId(const llvm::BasicBlock &bb);
 
     static std::optional<Lines> getBBLines(const llvm::BasicBlock &bb);
 

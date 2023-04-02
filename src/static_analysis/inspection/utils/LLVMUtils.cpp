@@ -5,19 +5,41 @@
 #include <filesystem>
 #include <set>
 
+#define BLOCK_ID_KEY "sastfuzz.block.id"
+
 using namespace std;
 using namespace std::filesystem;
 using namespace llvm;
-
-string LLVMUtils::getFilename(const Function &func) {
-    return path(func.getSubprogram()->getFilename().str()).filename();
-}
 
 LineRange LLVMUtils::computeRange(const Lines &lineNumbers) {
     LineNumber min = *min_element(lineNumbers.begin(), lineNumbers.end());
     LineNumber max = *max_element(lineNumbers.begin(), lineNumbers.end());
 
     return LineRange(min, max);
+}
+
+string LLVMUtils::getFilename(const Function &func) {
+    return path(func.getSubprogram()->getFilename().str()).filename();
+}
+
+void LLVMUtils::setBBId(BasicBlock &bb, BBId id) {
+    Instruction *inst = bb.getFirstNonPHI();
+    LLVMContext &C = inst->getContext();
+
+    MDNode *node = MDNode::get(C, MDString::get(C, to_string(id)));
+
+    inst->setMetadata(BLOCK_ID_KEY, node);
+}
+
+std::optional<BBId> LLVMUtils::getBBId(const BasicBlock &bb) {
+    const Instruction *inst = bb.getFirstNonPHI();
+
+    if (!inst->hasMetadata(BLOCK_ID_KEY)) {
+        return nullopt;
+    } {
+        auto temp = cast<MDString>(inst->getMetadata(BLOCK_ID_KEY)->getOperand(0));
+        return stoul(temp->getString().str());
+    }
 }
 
 optional<Lines> LLVMUtils::getBBLines(const BasicBlock &bb) {
