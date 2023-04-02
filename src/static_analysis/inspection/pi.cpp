@@ -2,6 +2,7 @@
 #include "SVF-FE/PAGBuilder.h"
 #include "WPA/Andersen.h"
 #include "container/FuncInfo.h"
+#include "utils/IO.h"
 #include "utils/LLVMUtils.h"
 #include "utils/PrettyPrinter.h"
 
@@ -11,8 +12,9 @@
 
 using namespace std;
 
-static llvm::cl::opt<std::string>
-        InputFilename(llvm::cl::Positional, llvm::cl::desc("<input bitcode>"), llvm::cl::init("-"));
+static llvm::cl::opt<std::string> inputFile(llvm::cl::Positional, llvm::cl::desc("<bitcode file>"));
+
+static llvm::cl::opt<std::string> outputFile(llvm::cl::Positional, llvm::cl::desc("<JSON file>"));
 
 vector<FuncInfo> getFuncInfo(SVF::SVFModule *svfModule) {
     SVF::PAGBuilder builder;
@@ -57,7 +59,8 @@ int main(int argc, char **argv) {
 
     vector<FuncInfo> funcInfos = getFuncInfo(svfModule);
 
-    cout << PrettyPrinter::convertToJSON(funcInfos) << endl;
+    string json = PrettyPrinter::convertToJSON(funcInfos);
+    IO::writeFile(outputFile, json);
 
     return 0;
 }
