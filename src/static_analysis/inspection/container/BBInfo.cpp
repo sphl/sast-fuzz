@@ -14,3 +14,5 @@ bool BBInfo::operator==(const BBInfo &rhs) const {
 }
 
 bool BBInfo::operator!=(const BBInfo &rhs) const { return !(rhs == *this); }
+
+bool BBInfo::operator <(const BBInfo &rhs) const { return id < rhs.id; }

@@ -36,11 +36,8 @@ string PrettyPrinter::convertToJSON(vector<FuncInfo> &funcInfos) {
         writer.Bool(funcInfo.isReachableFromMain());
         writer.EndObject();  // function -- location
 
-        writer.Key("stats");
-        writer.StartObject();
         writer.Key("LoC");
         writer.Uint(funcInfo.getLineNumbers().size());
-        writer.EndObject();  // function -- stats
         writer.EndObject();
 
         writer.Key("basic_blocks");
@@ -63,11 +60,8 @@ string PrettyPrinter::convertToJSON(vector<FuncInfo> &funcInfos) {
 
             writer.EndObject();  // BB -- location
 
-            writer.Key("stats");
-            writer.StartObject();
             writer.Key("LoC");
             writer.Uint(blockInfo.getLineNumbers().size());
-            writer.EndObject();  // BB -- stats
             writer.EndObject();
         }
         writer.EndArray();  // BBs

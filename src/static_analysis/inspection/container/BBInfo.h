@@ -23,6 +23,8 @@ class BBInfo {
     bool operator==(const BBInfo &rhs) const;
 
     bool operator!=(const BBInfo &rhs) const;
+
+    bool operator <(const BBInfo &rhs) const;
 };
 
 #endif  // PI_BBINFO_H
