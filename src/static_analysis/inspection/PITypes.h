@@ -3,7 +3,7 @@
 
 #include <set>
 
-typedef unsigned int LineNumber;
+typedef unsigned long LineNumber;
 typedef std::set<LineNumber> Lines;
 typedef std::pair<LineNumber, LineNumber> LineRange;
 

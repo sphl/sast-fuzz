@@ -3,12 +3,12 @@
 
 #include "../container/FuncInfo.h"
 
-#include <vector>
 #include <string>
+#include <vector>
 
 class PrettyPrinter {
   public:
-    static std::string convertToJSON(std::vector<FuncInfo> funcInfos);
+    static std::string convertToJSON(std::vector<FuncInfo> &funcInfos);
 };
 
 #endif  // PI_PRETTYPRINTER_H

@@ -23,8 +23,6 @@ class BBInfo {
     bool operator==(const BBInfo &rhs) const;
 
     bool operator!=(const BBInfo &rhs) const;
-
-    friend std::ostream &operator<<(std::ostream &os, const BBInfo &info);
 };
 
 #endif  // PI_BBINFO_H

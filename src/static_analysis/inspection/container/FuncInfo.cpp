@@ -4,9 +4,10 @@ FuncInfo::FuncInfo(const std::string &name,
                    const std::string &filename,
                    const Lines &lineNumbers,
                    const LineRange &lineRange,
-                   bool reachableFromMain)
+                   bool reachableFromMain,
+                   std::set<BBInfo> blockInfos)
     : name(name), filename(filename), lineNumbers(lineNumbers), lineRange(lineRange),
-      reachableFromMain(reachableFromMain) {}
+      reachableFromMain(reachableFromMain), blockInfos(blockInfos) {}
 
 const std::string &FuncInfo::getName() const { return name; }
 
@@ -18,15 +19,11 @@ const LineRange &FuncInfo::getLineRange() const { return lineRange; }
 
 bool FuncInfo::isReachableFromMain() const { return reachableFromMain; }
 
+const std::set<BBInfo> &FuncInfo::getBlockInfos() const { return blockInfos; }
+
 bool FuncInfo::operator==(const FuncInfo &rhs) const {
     return name == rhs.name && filename == rhs.filename && lineNumbers == rhs.lineNumbers &&
-           lineRange == rhs.lineRange && reachableFromMain == rhs.reachableFromMain;
+           lineRange == rhs.lineRange && reachableFromMain == rhs.reachableFromMain && blockInfos == rhs.blockInfos;
 }
 
 bool FuncInfo::operator!=(const FuncInfo &rhs) const { return !(rhs == *this); }
-
-std::ostream &operator<<(std::ostream &os, const FuncInfo &info) {
-    os << info.filename << ":" << info.name << (info.reachableFromMain ? "*" : "") << "[" << info.lineRange.first << ","
-       << info.lineRange.second << "]";
-    return os;
-}

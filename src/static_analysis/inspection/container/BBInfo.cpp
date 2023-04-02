@@ -14,9 +14,3 @@ bool BBInfo::operator==(const BBInfo &rhs) const {
 }
 
 bool BBInfo::operator!=(const BBInfo &rhs) const { return !(rhs == *this); }
-
-std::ostream &operator<<(std::ostream &os, const BBInfo &info) {
-    os << info.id << ":"
-       << "[" << info.lineRange.first << "," << info.lineRange.second << "]";
-    return os;
-}

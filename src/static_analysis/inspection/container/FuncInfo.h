@@ -2,8 +2,10 @@
 #define PI_FUNCTIONINFO_H
 
 #include "../PITypes.h"
+#include "BBInfo.h"
 
 #include <ostream>
+#include <set>
 #include <string>
 
 class FuncInfo {
@@ -13,13 +15,15 @@ class FuncInfo {
     Lines lineNumbers;
     LineRange lineRange;
     bool reachableFromMain;
+    std::set<BBInfo> blockInfos;
 
   public:
     FuncInfo(const std::string &name,
              const std::string &filename,
              const Lines &lineNumbers,
              const LineRange &lineRange,
-             bool reachableFromMain);
+             bool reachableFromMain,
+             std::set<BBInfo> blockInfos);
 
     [[nodiscard]] const std::string &getName() const;
 
@@ -31,11 +35,11 @@ class FuncInfo {
 
     [[nodiscard]] bool isReachableFromMain() const;
 
+    [[nodiscard]] const std::set<BBInfo> &getBlockInfos() const;
+
     bool operator==(const FuncInfo &rhs) const;
 
     bool operator!=(const FuncInfo &rhs) const;
-
-    friend std::ostream &operator<<(std::ostream &os, const FuncInfo &info);
 };
 
 #endif  // PI_FUNCTIONINFO_H
