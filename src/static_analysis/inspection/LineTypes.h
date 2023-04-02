@@ -1,5 +1,5 @@
-#ifndef PI_PITYPES_H
-#define PI_PITYPES_H
+#ifndef PI_LINETYPES_H
+#define PI_LINETYPES_H
 
 #include <set>
 
@@ -7,4 +7,4 @@ typedef unsigned int LineNumber;
 typedef std::set<LineNumber> Lines;
 typedef std::pair<LineNumber, LineNumber> LineRange;
 
-#endif  // PI_PITYPES_H
+#endif  // PI_LINETYPES_H

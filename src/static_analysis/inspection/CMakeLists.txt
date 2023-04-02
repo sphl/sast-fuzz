@@ -17,10 +17,8 @@ add_executable(
     pi
     container/FuncInfo.cpp
     container/FuncInfo.h
+    LineTypes.h
     pi.cpp
-    PIHelper.cpp
-    PIHelper.h
-    PITypes.h
     utils/IO.cpp
     utils/IO.h
     utils/LLVMUtils.cpp

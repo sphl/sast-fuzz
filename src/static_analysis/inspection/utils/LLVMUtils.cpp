@@ -13,7 +13,7 @@ string LLVMUtils::getFilename(const Function &func) {
     return path(func.getSubprogram()->getFilename().str()).filename();
 }
 
-LineRange LLVMUtils::getLineRange(const Lines &lineNumbers) {
+LineRange LLVMUtils::computeRange(const Lines &lineNumbers) {
     LineNumber min = *min_element(lineNumbers.begin(), lineNumbers.end());
     LineNumber max = *max_element(lineNumbers.begin(), lineNumbers.end());
 
@@ -56,7 +56,7 @@ optional<LineRange> LLVMUtils::getBBLineRange(const BasicBlock &bb) {
     } else {
         Lines lineNumbers = optLines.value();
 
-        return getLineRange(lineNumbers);
+        return computeRange(lineNumbers);
     }
 }
 
@@ -92,6 +92,6 @@ optional<LineRange> LLVMUtils::getFunctionLineRange(const Function &func) {
     } else {
         Lines lineNumbers = optLines.value();
 
-        return getLineRange(lineNumbers);
+        return computeRange(lineNumbers);
     }
 }
