@@ -23,6 +23,8 @@ add_executable(
     utils/IO.h
     utils/LLVMUtils.cpp
     utils/LLVMUtils.h
+    utils/PrettyPrinter.cpp
+    utils/PrettyPrinter.h
 )
 target_compile_options(pi PRIVATE -fno-rtti -fPIC)
 target_include_directories(pi PRIVATE ${SVF_INCLUDE_DIR})

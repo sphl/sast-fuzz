@@ -3,6 +3,7 @@
 #include "WPA/Andersen.h"
 #include "container/FuncInfo.h"
 #include "utils/LLVMUtils.h"
+#include "utils/PrettyPrinter.h"
 
 #include <iostream>
 
@@ -56,9 +57,7 @@ int main(int argc, char **argv) {
 
     vector<FuncInfo> funcInfos = getFuncInfo(svfModule);
 
-    for (auto func : funcInfos) {
-        cout << func << endl;
-    }
+    cout << PrettyPrinter::convertToJSON(funcInfos) << endl;
 
     return 0;
 }
