@@ -1,7 +1,7 @@
 #ifndef PI_FUNCTIONINFO_H
 #define PI_FUNCTIONINFO_H
 
-#include "../LineTypes.h"
+#include "../PITypes.h"
 
 #include <ostream>
 #include <string>

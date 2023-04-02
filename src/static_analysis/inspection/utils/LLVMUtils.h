@@ -1,15 +1,13 @@
 #ifndef PI_LLVMUTILS_H
 #define PI_LLVMUTILS_H
 
-#include "../LineTypes.h"
+#include "../PITypes.h"
 
-#include "llvm/IR/Module.h"
-#include "llvm/IR/Function.h"
 #include "llvm/IR/BasicBlock.h"
+#include "llvm/IR/Function.h"
+#include "llvm/IR/Module.h"
 
 #include <string>
-
-typedef unsigned long BBId;
 
 class LLVMUtils {
   public:
