@@ -3,7 +3,9 @@
 
 #include "../LineTypes.h"
 
+#include "llvm/IR/Module.h"
 #include "llvm/IR/Function.h"
+#include "llvm/IR/BasicBlock.h"
 
 #include <string>
 
@@ -16,6 +18,8 @@ class LLVMUtils {
     static std::string getFilename(const llvm::Function &func);
 
     static void setBBId(llvm::BasicBlock &bb, BBId id);
+
+    static void setBBIds(llvm::Module &mod);
 
     static std::optional<BBId> getBBId(const llvm::BasicBlock &bb);
 

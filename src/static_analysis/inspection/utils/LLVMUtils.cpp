@@ -5,7 +5,7 @@
 #include <filesystem>
 #include <set>
 
-#define BLOCK_ID_KEY "sastfuzz.block.id"
+#define BLOCK_ID_KEY "sast-fuzz.block.id"
 
 using namespace std;
 using namespace std::filesystem;
@@ -29,6 +29,15 @@ void LLVMUtils::setBBId(BasicBlock &bb, BBId id) {
     MDNode *node = MDNode::get(C, MDString::get(C, to_string(id)));
 
     inst->setMetadata(BLOCK_ID_KEY, node);
+}
+
+void LLVMUtils::setBBIds(Module &mod) {
+    BBId id = 0;
+    for (auto &func : mod) {
+        for (auto &bb : func) {
+            setBBId(bb, id++);
+        }
+    }
 }
 
 std::optional<BBId> LLVMUtils::getBBId(const BasicBlock &bb) {
