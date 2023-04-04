@@ -28,6 +28,6 @@ add_executable(
     utils/PrettyPrinter.cpp
     utils/PrettyPrinter.h
 )
-target_compile_options(pi PRIVATE -fno-rtti -fPIC)
+target_compile_options(pi PRIVATE -O3 -fno-rtti -fPIC)
 target_include_directories(pi PRIVATE ${SVF_INCLUDE_DIR})
 target_link_libraries(pi PRIVATE ${SVF_LIB} ${LLVM_LIBS})

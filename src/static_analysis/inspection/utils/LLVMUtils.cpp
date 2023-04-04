@@ -6,6 +6,7 @@
 #include <set>
 
 #define BLOCK_ID_KEY "sast-fuzz.block.id"
+#define BLOCK_ENTRY(bb) ((bb).getFirstNonPHI())
 
 using namespace std;
 using namespace std::filesystem;
@@ -23,7 +24,7 @@ string LLVMUtils::getFilename(const Function &func) {
 }
 
 void LLVMUtils::setBBId(BasicBlock &bb, BBId id) {
-    Instruction *inst = bb.getFirstNonPHI();
+    Instruction *inst = BLOCK_ENTRY(bb);
     LLVMContext &C = inst->getContext();
 
     MDNode *node = MDNode::get(C, MDString::get(C, to_string(id)));
@@ -41,7 +42,7 @@ void LLVMUtils::setBBIds(Module &mod) {
 }
 
 std::optional<BBId> LLVMUtils::getBBId(const BasicBlock &bb) {
-    const Instruction *inst = bb.getFirstNonPHI();
+    const Instruction *inst = BLOCK_ENTRY(bb);
 
     if (!inst->hasMetadata(BLOCK_ID_KEY)) {
         return nullopt;
@@ -57,7 +58,6 @@ optional<Lines> LLVMUtils::getBBLines(const BasicBlock &bb) {
     const Function *parentFunc = bb.getParent();
 
     for (auto &inst : bb) {
-        //if (inst.hasMetadata()) {
         auto &debugLoc = inst.getDebugLoc();
         if (debugLoc) {
             LineNumber line = debugLoc.getLine();
@@ -69,7 +69,6 @@ optional<Lines> LLVMUtils::getBBLines(const BasicBlock &bb) {
                 lineNumbers.insert(line);
             }
         }
-        //}
     }
 
     if (lineNumbers.empty()) {
