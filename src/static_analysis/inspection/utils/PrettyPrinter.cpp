@@ -6,7 +6,7 @@
 using namespace std;
 using namespace rapidjson;
 
-string PrettyPrinter::convertToJSON(vector<FuncInfo> &funcInfos) {
+string JSONPrinter::format(std::vector<FuncInfo> &funcInfos){
     StringBuffer sb;
     Writer<StringBuffer> writer(sb);
 

@@ -2,13 +2,23 @@
 #define PI_PRETTYPRINTER_H
 
 #include "../container/FuncInfo.h"
+#include "IO.h"
 
 #include <string>
 #include <vector>
 
-class PrettyPrinter {
+class Printer {
   public:
-    static std::string convertToJSON(std::vector<FuncInfo> &funcInfos);
+    virtual std::string format(std::vector<FuncInfo> &funcInfos) = 0;
+
+    void printToFile(std::string &filepath, std::vector<FuncInfo> &funcInfos) {
+        IO::writeFile(filepath, format(funcInfos));
+    }
+};
+
+class JSONPrinter : public Printer {
+  public:
+    std::string format(std::vector<FuncInfo> &funcInfos) override;
 };
 
 #endif  // PI_PRETTYPRINTER_H
