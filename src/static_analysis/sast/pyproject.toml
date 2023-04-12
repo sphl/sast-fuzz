@@ -4,13 +4,16 @@ version = "0.1.0"
 description = "Vulnerability indicator of the SAST-directed greybox fuzzer"
 authors = ["Stephan Lipp <sphlpp91@gmail.com>"]
 #readme = "README.md"
-packages = [{include = "sast"}]
+packages = [{include = "sfa"}]
 
 [tool.poetry.dependencies]
 python = "^3.8"
 
+[tool.poetry.group.dev.dependencies]
+mypy = "^1.2.0"
+
 [tool.poetry.scripts]
-sfa = "sast.main:main"
+sfa = "sfa.main:main"
 
 [build-system]
 requires = ["poetry-core"]
