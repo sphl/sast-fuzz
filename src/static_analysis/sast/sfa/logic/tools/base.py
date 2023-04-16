@@ -46,7 +46,6 @@ def convert_sarif(findings: str, tool_name: Optional[str] = None) -> SASTToolOut
 class SASTTool(ABC):
     """SAST tool runner skeleton."""
 
-    # Environment setup for build process
     _setup_env: ClassVar[Dict[str, str]] = {
         **environ.copy(),
         **{
@@ -56,6 +55,7 @@ class SASTTool(ABC):
             "CXXFLAGS": "-O0 -fno-inline"
         }
     }
+    """Environment setup for build process."""
 
     def __init__(self, subject_dir: str) -> None:
         self._subject_dir = subject_dir

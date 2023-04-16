@@ -17,6 +17,7 @@ class Sanitizer(SASTTool):
     """Address-/MemorySanitizer runner implementation."""
 
     _result_file_name: ClassVar[str] = "report.csv"
+    """Name of the sanitizer output file."""
 
     _sanitizer_config: ClassVar[Dict[SanitizerType, Dict[str, str]]] = {
         SanitizerType.ASAN: {
@@ -28,6 +29,7 @@ class Sanitizer(SASTTool):
             "env": "MSAN_OUTPUT_FILE"
         }
     }
+    """Configuration (i.e., CLI flags, env. variables) of the supported sanitizers."""
 
     def __init__(self, subject_dir: str, sanitizer_type: SanitizerType):
         super().__init__(subject_dir)
@@ -41,6 +43,7 @@ class Sanitizer(SASTTool):
         result_file = path.join(temp_dir, self._result_file_name)
 
         setup_env = self._setup_env
+        # Enable selected sanitizer by setting the respective Clang flag.
         setup_env["CFLAGS"] = f"{setup_env['CFLAGS']} -g -fsanitize={config['opt']}"
         setup_env["CXXFLAGS"] = f"{setup_env['CXXFLAGS']} -g -fsanitize={config['opt']}"
         setup_env[config["env"]] = result_file
