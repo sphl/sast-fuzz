@@ -7,6 +7,7 @@ from sfa.utils.io import copy_dir, read
 
 
 class CodeQL(SASTTool):
+    """CodeQL runner implementation."""
 
     def __init__(self, subject_dir: str):
         super().__init__(subject_dir)

@@ -52,6 +52,8 @@ class Infer(SASTTool):
         # By default, Infer writes the results into the 'report.json' file once the analysis is complete.
         result_file = path.join(working_dir, "report.json")
 
+        assert path.exists(result_file)
+
         return read(result_file)
 
     def _format(self, findings: str) -> SASTToolOutput:
