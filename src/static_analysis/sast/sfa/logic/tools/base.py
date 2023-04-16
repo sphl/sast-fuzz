@@ -1,9 +1,46 @@
+import json
 import tempfile
 from abc import ABC, abstractmethod
 from os import environ, path
-from typing import Set, Tuple, Dict, TypeAlias, ClassVar
+from typing import Set, Tuple, Dict, TypeAlias, ClassVar, Optional
 
 SASTToolOutput: TypeAlias = Set[Tuple[str, str, int, str]]
+
+
+def convert_sarif(findings: str, tool_name: Optional[str] = None) -> SASTToolOutput:
+    """Convert SARIF output into common data format.
+
+    :param findings: SAST tool output
+    :param tool_name: SAST tool name
+    :return: Formatted output
+    """
+    sarif_data = json.loads(findings)
+
+    assert sarif_data["version"] == "2.1.0"
+
+    result = set()
+
+    for run in sarif_data["runs"]:
+        if tool_name is None:
+            tool_name = run["tool"]["driver"]["name"]
+
+        tool_name = tool_name.lower()
+
+        # Create a mapping from the rule ID to its corresponding name.
+        rule_dict = {rule["id"]: rule["name"] for rule in run["tool"]["driver"]["rules"]}
+
+        for finding in run["results"]:
+            assert finding["ruleId"] in rule_dict.keys()
+
+            rule_name = rule_dict[finding["ruleId"]]
+
+            for loc in finding["locations"]:
+                file_name = path.basename(loc["physicalLocation"]["artifactLocation"]["uri"])
+                code_line = int(loc["physicalLocation"]["region"]["startLine"])
+
+                result.add((tool_name, file_name, code_line, rule_name))
+
+    return result
 
 
 class SASTTool(ABC):
