@@ -18,7 +18,7 @@ def convert_sarif(findings: str, tool_name: Optional[str] = None) -> SASTToolOut
 
     assert sarif_data["version"] == "2.1.0"
 
-    result = set()
+    result_set = set()
 
     for run in sarif_data["runs"]:
         if tool_name is None:
@@ -38,13 +38,13 @@ def convert_sarif(findings: str, tool_name: Optional[str] = None) -> SASTToolOut
                 file_name = path.basename(loc["physicalLocation"]["artifactLocation"]["uri"])
                 code_line = int(loc["physicalLocation"]["region"]["startLine"])
 
-                result.add((tool_name, file_name, code_line, rule_name))
+                result_set.add((tool_name, file_name, code_line, rule_name))
 
-    return result
+    return result_set
 
 
 class SASTTool(ABC):
-    """Skeleton for implementing SAST tool runners."""
+    """SAST tool runner skeleton."""
 
     # Environment setup for build process
     _setup_env: ClassVar[Dict[str, str]] = {

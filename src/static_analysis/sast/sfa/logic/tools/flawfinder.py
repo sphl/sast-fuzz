@@ -5,11 +5,14 @@ from sfa.logic.tools.base import SASTTool, SASTToolOutput, convert_sarif
 
 
 class Flawfinder(SASTTool):
+    """Flawfinder runner implementation."""
 
     def __init__(self, subject_dir: str):
         super().__init__(subject_dir)
 
     def _setup(self, temp_dir: str) -> str:
+        # Since Flawfinder does not attach itself to the build process, we directly perform the analysis in the
+        # subject's source directory.
         return self._subject_dir
 
     def _analyze(self, working_dir: str) -> str:
