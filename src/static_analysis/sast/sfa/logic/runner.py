@@ -32,4 +32,6 @@ def run_sast_tools(tools: List[SASTTool], run_parallel: bool = True) -> SASTTool
         with Pool(len(tools)) as pool:
             temp_res = pool.map(_starter, tools)
 
-    return set(chain(*temp_res))
+    findings = set(chain(*temp_res))
+
+    return findings
