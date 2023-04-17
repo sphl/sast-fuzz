@@ -29,13 +29,14 @@ class Sanitizer(SASTTool):
             "env": "MSAN_OUTPUT_FILE"
         }
     }
-    """Configuration (i.e., CLI flags, env. variables) of the supported sanitizers."""
+    """Configuration (Clang flag, output file env. variable) of the supported sanitizers."""
 
     def __init__(self, subject_dir: str, sanitizer_type: SanitizerType):
         super().__init__(subject_dir)
         self._sanitizer_type = sanitizer_type
 
     def _setup(self, temp_dir: str) -> str:
+        # TODO: Check if custom LLVM version is installed!
         assert path.exists(path.join(self._subject_dir, BUILD_SCRIPT_NAME))
 
         config = self._sanitizer_config[self._sanitizer_type]
@@ -43,7 +44,6 @@ class Sanitizer(SASTTool):
         result_file = path.join(temp_dir, self._result_file_name)
 
         setup_env = self._setup_env
-        # Enable selected sanitizer by setting the respective Clang flag.
         setup_env["CFLAGS"] = f"{setup_env['CFLAGS']} -g -fsanitize={config['opt']}"
         setup_env["CXXFLAGS"] = f"{setup_env['CXXFLAGS']} -g -fsanitize={config['opt']}"
         setup_env[config["env"]] = result_file
