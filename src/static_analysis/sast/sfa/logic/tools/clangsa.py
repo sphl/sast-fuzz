@@ -37,4 +37,6 @@ class ClangSA(SASTTool):
         return linesep.join(map(lambda f: json.dumps(read_json(f), indent=None), result_files))
 
     def _format(self, findings: str) -> SASTToolOutput:
-        return set(itertools.chain(*map(lambda s: convert_sarif(s, "clangsa"), findings.split(linesep))))
+        result_set = map(lambda s: convert_sarif(s, "clangsa"), findings.split(linesep))
+
+        return set(itertools.chain(*result_set))

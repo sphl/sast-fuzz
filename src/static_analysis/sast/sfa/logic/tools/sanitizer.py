@@ -31,7 +31,7 @@ class Sanitizer(SASTTool):
     }
     """Configuration (Clang flag, output file env. variable) of the supported sanitizers."""
 
-    def __init__(self, subject_dir: str, sanitizer_type: SanitizerType):
+    def __init__(self, subject_dir: str, sanitizer_type: SanitizerType = SanitizerType.ASAN):
         super().__init__(subject_dir)
         self._sanitizer_type = sanitizer_type
 
