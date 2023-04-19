@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Union
+from typing import List, Union
 
 from sfa.logic.tools.base import SASTToolRunner
 from sfa.logic.tools.clangsa import ClangSA
@@ -16,6 +16,10 @@ class SASTTool(Enum):
     CSA = "clangsa"
     ASN = "asan"
     MSN = "msan"
+
+    @classmethod
+    def values(cls) -> List[str]:
+        return [tool.value for tool in cls]
 
 
 class SASTToolFactory:
