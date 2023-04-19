@@ -43,7 +43,7 @@ def convert_sarif(findings: str, tool_name: Optional[str] = None) -> SASTToolOut
     return result_set
 
 
-class SASTTool(ABC):
+class SASTToolRunner(ABC):
     """SAST tool runner skeleton."""
 
     _setup_env: ClassVar[Dict[str, str]] = {

@@ -1,10 +1,10 @@
 import subprocess as proc
 
 from sfa.config import FLAWFINDER, FLAWFINDER_FLAG_SET
-from sfa.logic.tools.base import SASTTool, SASTToolOutput, convert_sarif
+from sfa.logic.tools.base import SASTToolRunner, SASTToolOutput, convert_sarif
 
 
-class Flawfinder(SASTTool):
+class Flawfinder(SASTToolRunner):
     """Flawfinder runner implementation."""
 
     def __init__(self, subject_dir: str):

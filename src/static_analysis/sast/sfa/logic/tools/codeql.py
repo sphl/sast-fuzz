@@ -2,11 +2,11 @@ import subprocess as proc
 from os import path
 
 from sfa.config import SHELL, BUILD_SCRIPT_NAME, CODEQL, CODEQL_RULE_SET, CODEQL_NUM_THREADS
-from sfa.logic.tools.base import SASTTool, SASTToolOutput, convert_sarif
+from sfa.logic.tools.base import SASTToolRunner, SASTToolOutput, convert_sarif
 from sfa.utils.io import copy_dir, read
 
 
-class CodeQL(SASTTool):
+class CodeQL(SASTToolRunner):
     """CodeQL runner implementation."""
 
     def __init__(self, subject_dir: str):

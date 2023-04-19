@@ -4,11 +4,11 @@ import subprocess as proc
 from os import linesep, path
 
 from sfa.config import SHELL, BUILD_SCRIPT_NAME, CLANGSA, CLANGSA_RULE_SET
-from sfa.logic.tools.base import SASTTool, SASTToolOutput, convert_sarif
+from sfa.logic.tools.base import SASTToolRunner, SASTToolOutput, convert_sarif
 from sfa.utils.io import read_json, copy_dir, find_files
 
 
-class ClangSA(SASTTool):
+class ClangSA(SASTToolRunner):
     """Clang SA (scan-build) runner implementation."""
 
     def __init__(self, subject_dir: str):

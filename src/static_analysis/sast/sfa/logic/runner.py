@@ -2,10 +2,10 @@ from itertools import chain
 from multiprocessing import Pool
 from typing import List
 
-from sfa.logic.tools.base import SASTTool, SASTToolOutput
+from sfa.logic.tools.base import SASTToolRunner, SASTToolOutput
 
 
-def _starter(tool: SASTTool) -> SASTToolOutput:
+def _starter(tool: SASTToolRunner) -> SASTToolOutput:
     """Run a single SAST tool.
 
     :param tool: SAST tool runner
@@ -14,7 +14,7 @@ def _starter(tool: SASTTool) -> SASTToolOutput:
     return tool.run()
 
 
-def run_sast_tools(tools: List[SASTTool], run_parallel: bool = True) -> SASTToolOutput:
+def run_sast_tools(tools: List[SASTToolRunner], run_parallel: bool = True) -> SASTToolOutput:
     """Run multiple SAST tools.
 
     Given a list of SAST tools, this function executes the corresponding runners in parallel resp. sequence, followed by

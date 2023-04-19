@@ -4,7 +4,7 @@ from os import path, linesep
 from typing import Dict, ClassVar
 
 from sfa.config import SHELL, BUILD_SCRIPT_NAME
-from sfa.logic.tools.base import SASTTool, SASTToolOutput
+from sfa.logic.tools.base import SASTToolRunner, SASTToolOutput
 from sfa.utils.io import copy_dir, read
 
 
@@ -13,7 +13,7 @@ class SanitizerType(Enum):
     MSAN = auto()
 
 
-class Sanitizer(SASTTool):
+class Sanitizer(SASTToolRunner):
     """Address-/MemorySanitizer runner implementation."""
 
     _result_file_name: ClassVar[str] = "report.csv"

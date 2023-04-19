@@ -3,11 +3,11 @@ import subprocess as proc
 from os import path
 
 from sfa.config import SHELL, BUILD_SCRIPT_NAME, INFER, INFER_RULE_SET, INFER_NUM_THREADS
-from sfa.logic.tools.base import SASTTool, SASTToolOutput
+from sfa.logic.tools.base import SASTToolRunner, SASTToolOutput
 from sfa.utils.io import copy_dir, read
 
 
-class Infer(SASTTool):
+class Infer(SASTToolRunner):
     """Infer runner implementation."""
 
     def __init__(self, subject_dir: str):
