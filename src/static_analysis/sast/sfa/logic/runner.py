@@ -14,23 +14,23 @@ def _starter(tool: SASTToolRunner) -> SASTToolOutput:
     return tool.run()
 
 
-def run_sast_tools(tools: List[SASTToolRunner], run_parallel: bool = True) -> SASTToolOutput:
+def run_sast_tools(runners: List[SASTToolRunner], exec_parallel: bool = True) -> SASTToolOutput:
     """Run multiple SAST tools.
 
     Given a list of SAST tools, this function executes the corresponding runners in parallel resp. sequence, followed by
     merging the tools' output into a single result set.
 
-    :param tools: SAST tool runners
-    :param run_parallel: Parallel runner exec.
+    :param runners: SAST tool runners
+    :param exec_parallel: Parallel runner execution
     :return: Output of SAST tools
     """
-    assert len(tools) > 0
+    assert len(runners) > 0
 
-    if not run_parallel:
-        temp_res = list(map(lambda tool: tool.run(), tools))
+    if not exec_parallel:
+        temp_res = list(map(lambda tool: tool.run(), runners))
     else:
-        with Pool(len(tools)) as pool:
-            temp_res = pool.map(_starter, tools)
+        with Pool(len(runners)) as pool:
+            temp_res = pool.map(_starter, runners)
 
     findings = set(chain(*temp_res))
 

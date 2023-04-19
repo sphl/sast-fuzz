@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import Union
 
 from sfa.logic.tools.base import SASTToolRunner
 from sfa.logic.tools.clangsa import ClangSA
@@ -18,7 +19,7 @@ class SASTTool(Enum):
 
 
 class SASTToolFactory:
-    """Factory for generating SAST tool runners."""
+    """Factory for creating SAST tool runners."""
 
     def __init__(self, subject_dir: str):
         self._creators = {
@@ -30,13 +31,20 @@ class SASTToolFactory:
             SASTTool.MSN: Sanitizer(subject_dir, SanitizerType.MSAN)
         }
 
-    def get_runner(self, tool: SASTTool) -> SASTToolRunner:
-        """Get SAST tool runner based on tool name.
+    def get_runner(self, tool: Union[str, SASTTool]) -> SASTToolRunner:
+        """Get a runner for a specific SAST tool.
 
-        :param tool: SAST tool name
-        :return: Tool runner
+        :param tool: SAST tool
+        :return: Runner
         """
-        if tool not in self._creators.keys():
-            raise ValueError(tool)
+        if type(tool) is str:
+            key = SASTTool(tool)
+        elif type(tool) is SASTTool:
+            key = tool
+        else:
+            raise NotImplementedError()
 
-        return self._creators[tool]
+        if key not in self._creators.keys():
+            raise ValueError("SAST tool is not supported!")
+
+        return self._creators[key]

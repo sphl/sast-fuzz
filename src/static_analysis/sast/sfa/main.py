@@ -1,12 +1,8 @@
 import argparse
 from os import path
 
+from sfa.logic.tools.factory import SASTTool, SASTToolFactory
 from sfa.logic.runner import run_sast_tools
-from sfa.logic.tools.clangsa import ClangSA
-from sfa.logic.tools.codeql import CodeQL
-from sfa.logic.tools.flawfinder import Flawfinder
-from sfa.logic.tools.infer import Infer
-from sfa.logic.tools.sanitizer import Sanitizer
 
 
 def sfa() -> int:
@@ -21,15 +17,10 @@ def sfa() -> int:
 
     assert path.exists(subject_dir)
 
-    sast_tools = [
-        Flawfinder(subject_dir),
-        Infer(subject_dir),
-        CodeQL(subject_dir),
-        ClangSA(subject_dir),
-        Sanitizer(subject_dir)
-    ]
+    factory = SASTToolFactory(subject_dir)
+    runners = list(map(factory.get_runner, [tool for tool in SASTTool]))
 
-    findings = run_sast_tools(sast_tools)
+    findings = run_sast_tools(runners)
 
     print(findings)
 
