@@ -4,7 +4,7 @@ from os import path, linesep
 from typing import Dict, ClassVar
 
 from sfa.config import SHELL, BUILD_SCRIPT_NAME
-from sfa.logic.tools.base import SASTToolRunner, SASTToolOutput
+from sfa.logic.tools.base import SASTToolRunner, SASTToolFlag, SASTToolOutput
 from sfa.utils.io import copy_dir, read
 
 
@@ -69,6 +69,6 @@ class Sanitizer(SASTToolRunner):
                 code_line = int(line_vals[3])
                 vuln_type = "-"
 
-                result_set.add((tool_name, file_name, code_line, vuln_type))
+                result_set.add(SASTToolFlag(tool_name, file_name, code_line, vuln_type))
 
         return result_set

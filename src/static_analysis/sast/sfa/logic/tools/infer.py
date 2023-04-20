@@ -3,7 +3,7 @@ import subprocess as proc
 from os import path
 
 from sfa.config import SHELL, BUILD_SCRIPT_NAME, INFER, INFER_RULE_SET, INFER_NUM_THREADS
-from sfa.logic.tools.base import SASTToolRunner, SASTToolOutput
+from sfa.logic.tools.base import SASTToolRunner, SASTToolFlag, SASTToolOutput
 from sfa.utils.io import copy_dir, read
 
 
@@ -65,6 +65,6 @@ class Infer(SASTToolRunner):
             code_line = int(finding["line"])
             vuln_type = finding["bug_type"]
 
-            result_set.add((tool_name, file_name, code_line, vuln_type))
+            result_set.add(SASTToolFlag(tool_name, file_name, code_line, vuln_type))
 
         return result_set

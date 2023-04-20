@@ -1,10 +1,21 @@
 import json
 import tempfile
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from os import environ, path
-from typing import Set, Tuple, Dict, TypeAlias, ClassVar, Optional
+from typing import Set, Dict, TypeAlias, ClassVar, Optional
 
-SASTToolOutput: TypeAlias = Set[Tuple[str, str, int, str]]
+
+@dataclass
+class SASTToolFlag:
+    """Container for SAST tool flag information."""
+    tool_name: str
+    file_name: str
+    code_line: int
+    vuln_type: str
+
+
+SASTToolOutput: TypeAlias = Set[SASTToolFlag]
 
 
 def convert_sarif(findings: str, tool_name: Optional[str] = None) -> SASTToolOutput:
@@ -38,7 +49,7 @@ def convert_sarif(findings: str, tool_name: Optional[str] = None) -> SASTToolOut
                 file_name = path.basename(loc["physicalLocation"]["artifactLocation"]["uri"])
                 code_line = int(loc["physicalLocation"]["region"]["startLine"])
 
-                result_set.add((tool_name, file_name, code_line, rule_name))
+                result_set.add(SASTToolFlag(tool_name, file_name, code_line, rule_name))
 
     return result_set
 
