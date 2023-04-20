@@ -27,27 +27,16 @@ class Infer(SASTToolRunner):
         return result_dir
 
     def _analyze(self, working_dir: str) -> str:
-        # exec_cmd = " ".join(
-        #     [
-        #         f"{INFER} analyze",
-        #         f"--results-dir {working_dir}",
-        #         f"--jobs {INFER_NUM_THREADS}",
-        #         "--keep-going"
-        #     ] + INFER_RULE_SET
-        # )
-        #
-        # proc.run(exec_cmd, shell=True)
+        exec_cmd = " ".join(
+            [
+                f"{INFER} analyze",
+                f"--results-dir {working_dir}",
+                f"--jobs {INFER_NUM_THREADS}",
+                "--keep-going"
+            ] + INFER_RULE_SET
+        )
 
-        exec_cmd = [
-            INFER,
-            "analyze",
-            f"--results-dir {working_dir}",
-            f"--jobs {INFER_NUM_THREADS}",
-            "--keep-going"
-        ] + INFER_RULE_SET
-
-        # TODO: Check if 'shell=True' is needed here.
-        proc.run(exec_cmd)
+        proc.run(exec_cmd, shell=True)
 
         # By default, Infer writes the results into the 'report.json' file once the analysis is complete.
         result_file = path.join(working_dir, "report.json")

@@ -34,29 +34,17 @@ class CodeQL(SASTToolRunner):
     def _analyze(self, working_dir: str) -> str:
         result_file = path.join(working_dir, "report.sarif")
 
-        # exec_cmd = " ".join(
-        #     [
-        #         f"{CODEQL} database analyze",
-        #         f"--output={result_file}",
-        #         "--format=sarifv2.1.0",
-        #         f"--threads={CODEQL_NUM_THREADS}",
-        #         working_dir
-        #     ] + CODEQL_RULE_SET
-        # )
-        #
-        # proc.run(exec_cmd, shell=True)
+        exec_cmd = " ".join(
+            [
+                f"{CODEQL} database analyze",
+                f"--output={result_file}",
+                "--format=sarifv2.1.0",
+                f"--threads={CODEQL_NUM_THREADS}",
+                working_dir
+            ] + CODEQL_RULE_SET
+        )
 
-        exec_cmd = [
-            CODEQL,
-            "database",
-            "analyze",
-            f"--output={result_file}",
-            "--format=sarifv2.1.0",
-            f"--threads={CODEQL_NUM_THREADS}",
-            working_dir
-        ] + CODEQL_RULE_SET
-
-        proc.run(exec_cmd)
+        proc.run(exec_cmd, shell=True)
 
         assert path.exists(result_file)
 
