@@ -3,8 +3,8 @@ from os import path
 
 from sfa.config import SHELL, BUILD_SCRIPT_NAME, CODEQL, CODEQL_RULE_SET, CODEQL_NUM_THREADS
 from sfa.logic.tools.base import SASTToolRunner, SASTToolOutput, convert_sarif
-from sfa.utils.io import copy_dir, read
 from sfa.utils.error import log_assert
+from sfa.utils.io import copy_dir, read
 
 
 class CodeQL(SASTToolRunner):

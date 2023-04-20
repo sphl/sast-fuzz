@@ -4,8 +4,8 @@ from os import path
 
 from sfa.config import SHELL, BUILD_SCRIPT_NAME, INFER, INFER_RULE_SET, INFER_NUM_THREADS
 from sfa.logic.tools.base import SASTToolRunner, SASTToolFlag, SASTToolOutput
-from sfa.utils.io import copy_dir, read
 from sfa.utils.error import log_assert
+from sfa.utils.io import copy_dir, read
 
 
 class Infer(SASTToolRunner):

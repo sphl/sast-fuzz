@@ -1,16 +1,15 @@
-import sys
-import logging
 import argparse
+import logging
+import sys
+from argparse import Namespace
 from os import path
 
-from sfa.utils.error import log_assert
 from sfa.logic.runner import run_sast_tools
 from sfa.logic.tools.factory import SASTTool, SASTToolFactory
+from sfa.utils.error import log_assert
 
 
-def sfa() -> int:
-    logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format="%(asctime)s SFA[%(levelname)s]: %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
-
+def parse_args() -> Namespace:
     parser = argparse.ArgumentParser()
 
     parser.add_argument("-i", "--subject-dir", metavar="<path>", dest="subject_dir", type=str, required=True,
@@ -19,8 +18,18 @@ def sfa() -> int:
                         help="Path to the output CSV file.")
     parser.add_argument("-x", "--exclude-tool", choices=SASTTool.values(), action="append", dest="excluded_tools",
                         default=list(), required=False, help="SAST tool(s) to be excluded from the analysis.")
+    parser.add_argument("-p", "--parallel", action="store_true", dest="exec_parallel", default=False,
+                        help="Execute the SAST tools in parallel.")
 
-    args = parser.parse_args()
+    return parser.parse_args()
+
+
+def sfa() -> int:
+    logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format="%(asctime)s SFA[%(levelname)s]: %(message)s",
+                        datefmt="%Y-%m-%d %H:%M:%S")
+    logger = logging.getLogger()
+
+    args = parse_args()
 
     subject_dir = path.expanduser(args.subject_dir)
     output_file = path.expanduser(args.output_file)
@@ -31,12 +40,16 @@ def sfa() -> int:
     log_assert(path.exists(path.dirname(output_file)), "Directory of output file does not exist!", sys_exit=True)
     log_assert(len(selected_tools) >= 1, "All SAST tools have been disabled!", sys_exit=True)
 
+    logger.info("Selected SAST tools: [%s]", ", ".join(selected_tools))
+
     factory = SASTToolFactory(subject_dir)
     runners = list(map(factory.get_runner, selected_tools))
 
-    findings = run_sast_tools(runners)
+    findings = run_sast_tools(runners, args.exec_parallel)
 
     print(findings)
+
+    logger.info("Analysis finished!")
 
     return 0
 

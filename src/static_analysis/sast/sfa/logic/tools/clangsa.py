@@ -5,8 +5,8 @@ from os import linesep, path
 
 from sfa.config import SHELL, BUILD_SCRIPT_NAME, CLANGSA, CLANGSA_RULE_SET
 from sfa.logic.tools.base import SASTToolRunner, SASTToolOutput, convert_sarif
-from sfa.utils.io import read_json, copy_dir, find_files
 from sfa.utils.error import log_assert
+from sfa.utils.io import read_json, copy_dir, find_files
 
 
 class ClangSA(SASTToolRunner):

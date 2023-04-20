@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from os import environ, path
 from typing import Set, Dict, TypeAlias, ClassVar, Optional
+
 from sfa.utils.error import log_assert
 
 

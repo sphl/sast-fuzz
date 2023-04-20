@@ -5,8 +5,8 @@ from typing import Dict, ClassVar
 
 from sfa.config import SHELL, BUILD_SCRIPT_NAME
 from sfa.logic.tools.base import SASTToolRunner, SASTToolFlag, SASTToolOutput
-from sfa.utils.io import copy_dir, read
 from sfa.utils.error import log_assert
+from sfa.utils.io import copy_dir, read
 
 
 class SanitizerType(Enum):
