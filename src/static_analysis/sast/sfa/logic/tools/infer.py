@@ -5,6 +5,7 @@ from os import path
 from sfa.config import SHELL, BUILD_SCRIPT_NAME, INFER, INFER_RULE_SET, INFER_NUM_THREADS
 from sfa.logic.tools.base import SASTToolRunner, SASTToolFlag, SASTToolOutput
 from sfa.utils.io import copy_dir, read
+from sfa.utils.error import log_assert
 
 
 class Infer(SASTToolRunner):
@@ -14,7 +15,7 @@ class Infer(SASTToolRunner):
         super().__init__(subject_dir)
 
     def _setup(self, temp_dir: str) -> str:
-        assert path.exists(path.join(self._subject_dir, BUILD_SCRIPT_NAME))
+        log_assert(path.exists(path.join(self._subject_dir, BUILD_SCRIPT_NAME)))
 
         result_dir = path.join(temp_dir, "infer_res")
 
@@ -41,7 +42,7 @@ class Infer(SASTToolRunner):
         # By default, Infer writes the results into the 'report.json' file once the analysis is complete.
         result_file = path.join(working_dir, "report.json")
 
-        assert path.exists(result_file)
+        log_assert(path.exists(result_file))
 
         return read(result_file)
 

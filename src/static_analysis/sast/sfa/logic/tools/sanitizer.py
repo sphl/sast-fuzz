@@ -6,6 +6,7 @@ from typing import Dict, ClassVar
 from sfa.config import SHELL, BUILD_SCRIPT_NAME
 from sfa.logic.tools.base import SASTToolRunner, SASTToolFlag, SASTToolOutput
 from sfa.utils.io import copy_dir, read
+from sfa.utils.error import log_assert
 
 
 class SanitizerType(Enum):
@@ -37,7 +38,7 @@ class Sanitizer(SASTToolRunner):
 
     def _setup(self, temp_dir: str) -> str:
         # TODO: Check if custom LLVM version is installed!
-        assert path.exists(path.join(self._subject_dir, BUILD_SCRIPT_NAME))
+        log_assert(path.exists(path.join(self._subject_dir, BUILD_SCRIPT_NAME)))
 
         config = self._sanitizer_config[self._sanitizer_type]
 
@@ -50,7 +51,7 @@ class Sanitizer(SASTToolRunner):
 
         proc.run([SHELL, BUILD_SCRIPT_NAME], cwd=copy_dir(self._subject_dir, temp_dir), env=setup_env)
 
-        assert path.exists(result_file)
+        log_assert(path.exists(result_file))
 
         return temp_dir
 

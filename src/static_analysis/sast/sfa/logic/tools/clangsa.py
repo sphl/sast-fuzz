@@ -6,6 +6,7 @@ from os import linesep, path
 from sfa.config import SHELL, BUILD_SCRIPT_NAME, CLANGSA, CLANGSA_RULE_SET
 from sfa.logic.tools.base import SASTToolRunner, SASTToolOutput, convert_sarif
 from sfa.utils.io import read_json, copy_dir, find_files
+from sfa.utils.error import log_assert
 
 
 class ClangSA(SASTToolRunner):
@@ -15,7 +16,7 @@ class ClangSA(SASTToolRunner):
         super().__init__(subject_dir)
 
     def _setup(self, temp_dir: str) -> str:
-        assert path.exists(path.join(self._subject_dir, BUILD_SCRIPT_NAME))
+        log_assert(path.exists(path.join(self._subject_dir, BUILD_SCRIPT_NAME)))
 
         result_dir = path.join(temp_dir, "clangsa_res")
 
@@ -30,7 +31,7 @@ class ClangSA(SASTToolRunner):
     def _analyze(self, working_dir: str) -> str:
         result_files = find_files(working_dir, file_ext="sarif")
 
-        assert len(result_files) > 0
+        log_assert(len(result_files) > 0)
 
         # Clang SA writes the results of each checker into a separate SARIF file. Therefore, we append the results
         # (JSON string) of each file as one line to the return string.

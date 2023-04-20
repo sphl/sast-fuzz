@@ -48,7 +48,4 @@ class SASTToolFactory:
         else:
             raise NotImplementedError()
 
-        if key not in self._creators.keys():
-            raise ValueError("SAST tool is not supported!")
-
         return self._creators[key]

@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from os import environ, path
 from typing import Set, Dict, TypeAlias, ClassVar, Optional
+from sfa.utils.error import log_assert
 
 
 @dataclass(frozen=True)
@@ -27,7 +28,7 @@ def convert_sarif(findings: str, tool_name: Optional[str] = None) -> SASTToolOut
     """
     sarif_data = json.loads(findings)
 
-    assert sarif_data["version"] == "2.1.0"
+    log_assert(sarif_data["version"] == "2.1.0", "Unsupported SARIF version!")
 
     result_set = set()
 
@@ -41,7 +42,7 @@ def convert_sarif(findings: str, tool_name: Optional[str] = None) -> SASTToolOut
         rule_dict = {rule["id"]: rule["name"] for rule in run["tool"]["driver"]["rules"]}
 
         for finding in run["results"]:
-            assert finding["ruleId"] in rule_dict.keys()
+            log_assert(finding["ruleId"] in rule_dict.keys())
 
             rule_name = rule_dict[finding["ruleId"]]
 
@@ -103,11 +104,11 @@ class SASTToolRunner(ABC):
 
         :return: None
         """
-        assert path.exists(self._subject_dir)
+        log_assert(path.exists(self._subject_dir))
 
         with tempfile.TemporaryDirectory() as temp_dir:
             working_dir = self._setup(temp_dir)
 
-            assert path.exists(working_dir)
+            log_assert(path.exists(working_dir))
 
             return self._format(self._analyze(working_dir))

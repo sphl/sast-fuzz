@@ -4,6 +4,7 @@ from os import path
 from sfa.config import SHELL, BUILD_SCRIPT_NAME, CODEQL, CODEQL_RULE_SET, CODEQL_NUM_THREADS
 from sfa.logic.tools.base import SASTToolRunner, SASTToolOutput, convert_sarif
 from sfa.utils.io import copy_dir, read
+from sfa.utils.error import log_assert
 
 
 class CodeQL(SASTToolRunner):
@@ -13,7 +14,7 @@ class CodeQL(SASTToolRunner):
         super().__init__(subject_dir)
 
     def _setup(self, temp_dir: str) -> str:
-        assert path.exists(path.join(self._subject_dir, BUILD_SCRIPT_NAME))
+        log_assert(path.exists(path.join(self._subject_dir, BUILD_SCRIPT_NAME)))
 
         result_dir = path.join(temp_dir, "codeql_res")
 
@@ -46,7 +47,7 @@ class CodeQL(SASTToolRunner):
 
         proc.run(exec_cmd, shell=True)
 
-        assert path.exists(result_file)
+        log_assert(path.exists(result_file))
 
         return read(result_file)
 
