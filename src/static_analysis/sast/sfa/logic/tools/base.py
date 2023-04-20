@@ -6,7 +6,7 @@ from os import environ, path
 from typing import Set, Dict, TypeAlias, ClassVar, Optional
 
 
-@dataclass
+@dataclass(frozen=True)
 class SASTToolFlag:
     """Container for SAST tool flag information."""
     tool_name: str
