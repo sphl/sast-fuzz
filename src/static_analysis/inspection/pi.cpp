@@ -8,7 +8,8 @@
 
 #include <iostream>
 
-#define LLVM_DWARF_VERSION(moduleSet) ((moduleSet)->getMainLLVMModule()->getDwarfVersion())
+#define LLVM_MODULE(moduleSet) ((moduleSet)->getMainLLVMModule())
+#define LLVM_DWARF_VERSION(moduleSet) (LLVM_MODULE(moduleSet)->getDwarfVersion())
 
 using namespace std;
 
@@ -37,7 +38,19 @@ vector<FuncInfo> getFuncInfo(SVF::SVFModule *svfModule) {
                 LineRange lineRange = LLVMUtils::computeRange(lineNumbers);
                 bool reachableFromMain = callNode.second->isReachableFromProgEntry();
 
-                funcInfos.emplace_back(FuncInfo(name, filename, lineNumbers, lineRange, reachableFromMain));
+                set<BBInfo> blockInfos;
+                for (auto &bb : llvmFunc) {
+                    auto optBBLineNumbers = LLVMUtils::getBBLines(bb);
+                    if (optBBLineNumbers.has_value()) {
+                        BBId id = LLVMUtils::getBBId(bb).value();
+                        Lines bbLines = optBBLineNumbers.value();
+                        LineRange bbLineRange = LLVMUtils::computeRange(bbLines);
+
+                        blockInfos.insert(BBInfo(id, bbLines, bbLineRange));
+                    }
+                }
+
+                funcInfos.emplace_back(FuncInfo(name, filename, lineNumbers, lineRange, reachableFromMain, blockInfos));
             }
         }
     }
@@ -50,17 +63,20 @@ int main(int argc, char **argv) {
     char **arg_value = new char *[argc];
     std::vector<std::string> moduleNameVec;
     SVF::SVFUtil::processArguments(argc, argv, arg_num, arg_value, moduleNameVec);
-    llvm::cl::ParseCommandLineOptions(arg_num, arg_value, "SASTFuzz Program Inspector\n");
+    llvm::cl::ParseCommandLineOptions(arg_num, arg_value, "SASTFuzz Inspector\n");
 
     SVF::SVFModule *svfModule = SVF::LLVMModuleSet::getLLVMModuleSet()->buildSVFModule(moduleNameVec);
 
     assert(LLVM_DWARF_VERSION(SVF::LLVMModuleSet::getLLVMModuleSet()) > 0 &&
            "ERROR: Bitcode file doesn't contain debug information!");
 
+    LLVMUtils::setBBIds(*LLVM_MODULE(SVF::LLVMModuleSet::getLLVMModuleSet()));
+
     vector<FuncInfo> funcInfos = getFuncInfo(svfModule);
 
-    string json = PrettyPrinter::convertToJSON(funcInfos);
-    IO::writeFile(outputFile, json);
+    JSONPrinter printer;
+
+    printer.printToFile(outputFile, funcInfos);
 
     return 0;
 }
