@@ -75,6 +75,7 @@ map<BBId, set<BBId>> getICFGInfo(SVF::PAG *pag) {
                 if (dstNode->getBB() != nullptr) {
                     BBId dstBBId = LLVMUtils::getBBId(*dstNode->getBB()).value();
 
+                    // TODO: Only allow "srcBBId == dstBBId" if rec. function call (... or loop iteration)
                     icfgInfo[srcBBId].insert(dstBBId);
                 }
             }
