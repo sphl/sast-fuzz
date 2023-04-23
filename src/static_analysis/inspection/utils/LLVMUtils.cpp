@@ -46,10 +46,10 @@ std::optional<BBId> LLVMUtils::getBBId(const BasicBlock &bb) {
 
     if (!inst->hasMetadata(BLOCK_ID_KEY)) {
         return nullopt;
-    } {
-        auto temp = cast<MDString>(inst->getMetadata(BLOCK_ID_KEY)->getOperand(0));
-        return stoul(temp->getString().str());
     }
+
+    auto temp = cast<MDString>(inst->getMetadata(BLOCK_ID_KEY)->getOperand(0));
+    return stoul(temp->getString().str());
 }
 
 optional<Lines> LLVMUtils::getBBLines(const BasicBlock &bb) {

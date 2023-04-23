@@ -6,8 +6,6 @@
 #include "utils/LLVMUtils.h"
 #include "utils/PrettyPrinter.h"
 
-#include <iostream>
-
 #define LLVM_MODULE(moduleSet) ((moduleSet)->getMainLLVMModule())
 #define LLVM_DWARF_VERSION(moduleSet) (LLVM_MODULE(moduleSet)->getDwarfVersion())
 
@@ -17,10 +15,7 @@ static llvm::cl::opt<std::string> inputFile(llvm::cl::Positional, llvm::cl::desc
 
 static llvm::cl::opt<std::string> outputFile(llvm::cl::Positional, llvm::cl::desc("<JSON file>"));
 
-vector<FuncInfo> getFuncInfo(SVF::SVFModule *svfModule) {
-    SVF::PAGBuilder builder;
-    SVF::PAG *pag = builder.build(svfModule);
-
+vector<FuncInfo> getFuncInfo(SVF::PAG *pag) {
     SVF::Andersen *ander = SVF::AndersenWaveDiff::createAndersenWaveDiff(pag);
 
     SVF::PTACallGraph *callGraph = ander->getPTACallGraph();
@@ -58,6 +53,37 @@ vector<FuncInfo> getFuncInfo(SVF::SVFModule *svfModule) {
     return funcInfos;
 }
 
+map<BBId, set<BBId>> getICFGInfo(SVF::PAG *pag) {
+    SVF::ICFG *icfg = pag->getICFG();
+
+    map<BBId, set<BBId>> icfgInfo;
+
+    for (auto nodeInfo : *icfg) {
+        SVF::ICFGNode *srcNode = nodeInfo.second;
+
+        if (srcNode->getBB() != nullptr) {
+            // TODO: Check return values!
+            BBId srcBBId = LLVMUtils::getBBId(*srcNode->getBB()).value();
+
+            cout << "Node-ID: " << srcNode->getId() << " --> BB-ID: " << srcBBId << endl;
+
+            for (auto edge : srcNode->getOutEdges()) {
+                assert(srcNode->getId() == edge->getSrcNode()->getId());
+
+                SVF::ICFGNode *dstNode = edge->getDstNode();
+
+                if (dstNode->getBB() != nullptr) {
+                    BBId dstBBId = LLVMUtils::getBBId(*dstNode->getBB()).value();
+
+                    icfgInfo[srcBBId].insert(dstBBId);
+                }
+            }
+        }
+    }
+
+    return icfgInfo;
+}
+
 int main(int argc, char **argv) {
     int arg_num = 0;
     char **arg_value = new char *[argc];
@@ -70,13 +96,17 @@ int main(int argc, char **argv) {
     assert(LLVM_DWARF_VERSION(SVF::LLVMModuleSet::getLLVMModuleSet()) > 0 &&
            "ERROR: Bitcode file doesn't contain debug information!");
 
+    SVF::PAGBuilder builder;
+    SVF::PAG *pag = builder.build(svfModule);
+
     LLVMUtils::setBBIds(*LLVM_MODULE(SVF::LLVMModuleSet::getLLVMModuleSet()));
 
-    vector<FuncInfo> funcInfos = getFuncInfo(svfModule);
+    auto funcInfos = getFuncInfo(pag);
+    auto icfgInfos = getICFGInfo(pag);
 
     JSONPrinter printer;
 
-    printer.printToFile(outputFile, funcInfos);
+    printer.printToFile(outputFile, funcInfos, icfgInfos);
 
     return 0;
 }
