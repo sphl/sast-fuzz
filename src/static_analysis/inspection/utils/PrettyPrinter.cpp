@@ -1,4 +1,4 @@
-#include "PrettyPrinter.h"
+#include <sast-fuzz/PrettyPrinter.h>
 
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/writer.h"

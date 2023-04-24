@@ -1,7 +1,7 @@
 #ifndef PI_LLVMUTILS_H
 #define PI_LLVMUTILS_H
 
-#include "../PITypes.h"
+#include <sast-fuzz/PITypes.h>
 
 #include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/Function.h"

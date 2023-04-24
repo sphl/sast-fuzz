@@ -1,8 +1,8 @@
 #ifndef PI_PRETTYPRINTER_H
 #define PI_PRETTYPRINTER_H
 
-#include "../container/FuncInfo.h"
-#include "IO.h"
+#include <sast-fuzz/FuncInfo.h>
+#include <sast-fuzz/IO.h>
 
 #include <map>
 #include <set>

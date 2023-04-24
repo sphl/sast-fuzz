@@ -1,4 +1,4 @@
-#include "FuncInfo.h"
+#include <sast-fuzz/FuncInfo.h>
 
 FuncInfo::FuncInfo(const std::string &name,
                    const std::string &filename,
@@ -7,7 +7,7 @@ FuncInfo::FuncInfo(const std::string &name,
                    bool reachableFromMain,
                    std::set<BBInfo> blockInfos)
     : name(name), filename(filename), lineNumbers(lineNumbers), lineRange(lineRange),
-      reachableFromMain(reachableFromMain), blockInfos(blockInfos) {}
+      reachableFromMain(reachableFromMain), blockInfos(std::move(blockInfos)) {}
 
 const std::string &FuncInfo::getName() const { return name; }
 

@@ -1,4 +1,4 @@
-#include "BBInfo.h"
+#include <sast-fuzz/BBInfo.h>
 
 BBInfo::BBInfo(BBId id, const Lines &lineNumbers, const LineRange &lineRange)
     : id(id), lineNumbers(lineNumbers), lineRange(lineRange) {}

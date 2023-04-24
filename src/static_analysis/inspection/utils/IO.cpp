@@ -1,4 +1,4 @@
-#include "IO.h"
+#include <sast-fuzz/IO.h>
 
 #include <fstream>
 #include <iterator>

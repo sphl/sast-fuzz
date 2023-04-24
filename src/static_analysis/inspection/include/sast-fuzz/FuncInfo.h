@@ -1,8 +1,8 @@
 #ifndef PI_FUNCTIONINFO_H
 #define PI_FUNCTIONINFO_H
 
-#include "../PITypes.h"
-#include "BBInfo.h"
+#include <sast-fuzz/PITypes.h>
+#include <sast-fuzz/BBInfo.h>
 
 #include <ostream>
 #include <set>

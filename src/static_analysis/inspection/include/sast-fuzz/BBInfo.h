@@ -1,7 +1,7 @@
 #ifndef PI_BBINFO_H
 #define PI_BBINFO_H
 
-#include "../PITypes.h"
+#include <sast-fuzz/PITypes.h>
 
 #include <ostream>
 

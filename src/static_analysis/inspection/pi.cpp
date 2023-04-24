@@ -1,10 +1,10 @@
 #include "SVF-FE/LLVMUtil.h"
 #include "SVF-FE/PAGBuilder.h"
 #include "WPA/Andersen.h"
-#include "container/FuncInfo.h"
-#include "utils/IO.h"
-#include "utils/LLVMUtils.h"
-#include "utils/PrettyPrinter.h"
+#include <sast-fuzz/FuncInfo.h>
+#include <sast-fuzz/IO.h>
+#include <sast-fuzz/LLVMUtils.h>
+#include <sast-fuzz/PrettyPrinter.h>
 
 #define LLVM_MODULE(moduleSet) ((moduleSet)->getMainLLVMModule())
 #define LLVM_DWARF_VERSION(moduleSet) (LLVM_MODULE(moduleSet)->getDwarfVersion())
