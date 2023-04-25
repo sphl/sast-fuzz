@@ -1,33 +1,34 @@
 #ifndef PI_LLVMUTILS_H
 #define PI_LLVMUTILS_H
 
+#include <llvm/IR/BasicBlock.h>
+#include <llvm/IR/Function.h>
+#include <llvm/IR/Module.h>
 #include <sast-fuzz/PITypes.h>
-
-#include "llvm/IR/BasicBlock.h"
-#include "llvm/IR/Function.h"
-#include "llvm/IR/Module.h"
-
 #include <string>
 
-class LLVMUtils {
-  public:
-    static LineRange computeRange(const Lines &lineNumbers);
+namespace sfi {
 
-    static std::string getFilename(const llvm::Function &func);
+namespace LLVMUtils {
+LineRange computeRange(const Lines &lineNumbers);
 
-    static void setBBId(llvm::BasicBlock &bb, BBId id);
+std::string getFilename(const llvm::Function &func);
 
-    static void setBBIds(llvm::Module &mod);
+void setBBId(llvm::BasicBlock &bb, BBId id);
 
-    static std::optional<BBId> getBBId(const llvm::BasicBlock &bb);
+void setBBIds(llvm::Module &mod);
 
-    static std::optional<Lines> getBBLines(const llvm::BasicBlock &bb);
+std::optional<BBId> getBBId(const llvm::BasicBlock &bb);
 
-    static std::optional<LineRange> getBBLineRange(const llvm::BasicBlock &bb);
+std::optional<Lines> getBBLines(const llvm::BasicBlock &bb);
 
-    static std::optional<Lines> getFunctionLines(const llvm::Function &func);
+std::optional<LineRange> getBBLineRange(const llvm::BasicBlock &bb);
 
-    static std::optional<LineRange> getFunctionLineRange(const llvm::Function &func);
-};
+std::optional<Lines> getFunctionLines(const llvm::Function &func);
+
+std::optional<LineRange> getFunctionLineRange(const llvm::Function &func);
+};  // namespace LLVMUtils
+
+}  // namespace sfi
 
 #endif  // PI_LLVMUTILS_H

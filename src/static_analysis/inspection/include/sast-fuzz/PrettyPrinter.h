@@ -1,13 +1,14 @@
 #ifndef PI_PRETTYPRINTER_H
 #define PI_PRETTYPRINTER_H
 
+#include <map>
 #include <sast-fuzz/FuncInfo.h>
 #include <sast-fuzz/IO.h>
-
-#include <map>
 #include <set>
 #include <string>
 #include <vector>
+
+namespace sfi {
 
 class Printer {
   public:
@@ -23,5 +24,7 @@ class JSONPrinter : public Printer {
   public:
     std::string format(std::vector<FuncInfo> &funcInfos, std::map<BBId, std::set<BBId>> &icfgInfos) override;
 };
+
+}  // namespace sfi
 
 #endif  // PI_PRETTYPRINTER_H

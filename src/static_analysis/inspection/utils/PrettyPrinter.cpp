@@ -1,10 +1,10 @@
+#include <rapidjson/stringbuffer.h>
+#include <rapidjson/writer.h>
 #include <sast-fuzz/PrettyPrinter.h>
-
-#include "rapidjson/stringbuffer.h"
-#include "rapidjson/writer.h"
 
 using namespace std;
 using namespace rapidjson;
+using namespace sfi;
 
 string JSONPrinter::format(vector<FuncInfo> &funcInfos, map<BBId, set<BBId>> &icfgInfos) {
     StringBuffer sb;

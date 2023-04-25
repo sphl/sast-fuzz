@@ -1,9 +1,9 @@
-#include <sast-fuzz/IO.h>
-
 #include <fstream>
 #include <iterator>
+#include <sast-fuzz/IO.h>
 
 using namespace std;
+using namespace sfi;
 
 string IO::readFile(const string &filepath) {
     string text;

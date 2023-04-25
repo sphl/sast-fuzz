@@ -1,8 +1,6 @@
-#include <sast-fuzz/LLVMUtils.h>
-
-#include "llvm/IR/DebugInfo.h"
-
 #include <filesystem>
+#include <llvm/IR/DebugInfo.h>
+#include <sast-fuzz/LLVMUtils.h>
 #include <set>
 
 #define BLOCK_ID_KEY "sast-fuzz.block.id"
@@ -11,6 +9,7 @@
 using namespace std;
 using namespace std::filesystem;
 using namespace llvm;
+using namespace sfi;
 
 LineRange LLVMUtils::computeRange(const Lines &lineNumbers) {
     LineNumber min = *min_element(lineNumbers.begin(), lineNumbers.end());

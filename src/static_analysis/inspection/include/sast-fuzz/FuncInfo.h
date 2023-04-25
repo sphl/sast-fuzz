@@ -1,12 +1,13 @@
 #ifndef PI_FUNCTIONINFO_H
 #define PI_FUNCTIONINFO_H
 
-#include <sast-fuzz/PITypes.h>
-#include <sast-fuzz/BBInfo.h>
-
 #include <ostream>
 #include <set>
+#include <sast-fuzz/BBInfo.h>
+#include <sast-fuzz/PITypes.h>
 #include <string>
+
+namespace sfi {
 
 class FuncInfo {
   private:
@@ -41,5 +42,7 @@ class FuncInfo {
 
     bool operator!=(const FuncInfo &rhs) const;
 };
+
+}  // namespace sfi
 
 #endif  // PI_FUNCTIONINFO_H

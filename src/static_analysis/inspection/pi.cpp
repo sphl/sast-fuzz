@@ -1,6 +1,6 @@
-#include "SVF-FE/LLVMUtil.h"
-#include "SVF-FE/PAGBuilder.h"
-#include "WPA/Andersen.h"
+#include <SVF-FE/LLVMUtil.h>
+#include <SVF-FE/PAGBuilder.h>
+#include <WPA/Andersen.h>
 #include <sast-fuzz/FuncInfo.h>
 #include <sast-fuzz/IO.h>
 #include <sast-fuzz/LLVMUtils.h>
@@ -10,6 +10,7 @@
 #define LLVM_DWARF_VERSION(moduleSet) (LLVM_MODULE(moduleSet)->getDwarfVersion())
 
 using namespace std;
+using namespace sfi;
 
 static llvm::cl::opt<std::string> inputFile(llvm::cl::Positional, llvm::cl::desc("<bitcode file>"));
 

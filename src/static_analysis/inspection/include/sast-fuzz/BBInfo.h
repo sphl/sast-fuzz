@@ -1,9 +1,10 @@
 #ifndef PI_BBINFO_H
 #define PI_BBINFO_H
 
+#include <ostream>
 #include <sast-fuzz/PITypes.h>
 
-#include <ostream>
+namespace sfi {
 
 class BBInfo {
   private:
@@ -24,7 +25,9 @@ class BBInfo {
 
     bool operator!=(const BBInfo &rhs) const;
 
-    bool operator <(const BBInfo &rhs) const;
+    bool operator<(const BBInfo &rhs) const;
 };
+
+}  // namespace sfi
 
 #endif  // PI_BBINFO_H

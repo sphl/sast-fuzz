@@ -1,5 +1,7 @@
 #include <sast-fuzz/BBInfo.h>
 
+using namespace sfi;
+
 BBInfo::BBInfo(BBId id, const Lines &lineNumbers, const LineRange &lineRange)
     : id(id), lineNumbers(lineNumbers), lineRange(lineRange) {}
 

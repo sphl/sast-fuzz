@@ -1,5 +1,7 @@
 #include <sast-fuzz/FuncInfo.h>
 
+using namespace sfi;
+
 FuncInfo::FuncInfo(const std::string &name,
                    const std::string &filename,
                    const Lines &lineNumbers,

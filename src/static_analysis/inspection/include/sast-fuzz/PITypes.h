@@ -2,11 +2,16 @@
 #define PI_PITYPES_H
 
 #include <set>
+#include <utility>
 
-typedef unsigned long LineNumber;
-typedef std::set<LineNumber> Lines;
-typedef std::pair<LineNumber, LineNumber> LineRange;
+namespace sfi {
 
-typedef unsigned long BBId;
+using LineNumber = unsigned long;
+using Lines = std::set<LineNumber>;
+using LineRange = std::pair<LineNumber, LineNumber>;
+
+using BBId = unsigned long;
+
+}  // namespace sfi
 
 #endif  // PI_PITYPES_H
