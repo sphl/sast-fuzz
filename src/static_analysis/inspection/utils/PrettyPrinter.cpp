@@ -38,7 +38,6 @@ string JSONPrinter::format(vector<FuncInfo> &funcInfos, map<BBId, set<BBId>> &ic
 
         writer.Key("LoC");
         writer.Uint(funcInfo.getLineNumbers().size());
-        writer.EndObject();
 
         writer.Key("basic_blocks");
         writer.StartArray();
@@ -65,6 +64,7 @@ string JSONPrinter::format(vector<FuncInfo> &funcInfos, map<BBId, set<BBId>> &ic
             writer.EndObject();
         }
         writer.EndArray();  // BBs
+        writer.EndObject();
     }
     writer.EndArray();  // functions
 
