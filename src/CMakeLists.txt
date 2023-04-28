@@ -37,5 +37,5 @@ foreach (target ${afl_targets})
 endforeach ()
 
 add_subdirectory(static_analysis)
-#add_subdirectory(instrumentation)
-#add_subdirectory(libs)
+add_subdirectory(instrumentation)
+add_subdirectory(libs)

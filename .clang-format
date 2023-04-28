@@ -15,7 +15,7 @@ IncludeBlocks: Regroup
 IncludeCategories:
   - Regex:    '^".+\.h"$'
     Priority: 1
-  - Regex:    '^<[a-zA-Z]+>$'
+  - Regex:    '^<[a-zA-Z_]+>$'
     Priority: 3
   - Regex:    '^<(llvm|llvm-c|clang|clang-c)/.+>$'
     Priority: 4

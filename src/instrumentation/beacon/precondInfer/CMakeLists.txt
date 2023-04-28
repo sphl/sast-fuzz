@@ -81,18 +81,18 @@ if (DEFINED CMAKE_CONFIGURATION_TYPES)
 else ()
     # Single configuration generator (e.g. Unix Makefiles, Ninja)
     set(available_build_types
-        Debug
-        Release
-        RelWithDebInfo
-        MinSizeRel
-    )
+            Debug
+            Release
+            RelWithDebInfo
+            MinSizeRel
+            )
     if (NOT CMAKE_BUILD_TYPE)
         message(STATUS "CMAKE_BUILD_TYPE is not set. Setting default")
         message(STATUS "The available build types are: ${available_build_types}")
         set(CMAKE_BUILD_TYPE
-            RelWithDebInfo
-            CACHE String "Options are ${available_build_types}" FORCE
-        )
+                RelWithDebInfo
+                CACHE String "Options are ${available_build_types}" FORCE
+                )
         # Provide drop down menu options in cmake-gui
         set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS ${available_build_types})
     endif ()
@@ -100,15 +100,15 @@ else ()
 
     # Check the selected build type is valid
     list(
-        FIND
-        available_build_types
-        "${CMAKE_BUILD_TYPE}"
-        _build_type_index
+            FIND
+            available_build_types
+            "${CMAKE_BUILD_TYPE}"
+            _build_type_index
     )
     if ("${_build_type_index}" EQUAL "-1")
         message(FATAL_ERROR "\"${CMAKE_BUILD_TYPE}\" is an invalid build type.\n"
-                            "Use one of the following build types ${available_build_types}"
-        )
+                "Use one of the following build types ${available_build_types}"
+                )
     endif ()
 endif ()
 
@@ -161,20 +161,20 @@ include("${CMAKE_SOURCE_DIR}/cmake/add_global_flag.cmake")
 # ----------------------------------------------------------------------------------------------------------------------
 # include(${CMAKE_SOURCE_DIR}/cmake/find_llvm.cmake)
 set(NEEDED_LLVM_VARS
-    LLVM_PACKAGE_VERSION
-    LLVM_VERSION_MAJOR
-    LLVM_VERSION_MINOR
-    LLVM_VERSION_PATCH
-    LLVM_DEFINITIONS
-    LLVM_ENABLE_ASSERTIONS
-    LLVM_ENABLE_EH
-    LLVM_ENABLE_RTTI
-    LLVM_INCLUDE_DIRS
-    LLVM_LIBRARY_DIRS
-    LLVM_TOOLS_BINARY_DIR
-    LLVM_ENABLE_VISIBILITY_INLINES_HIDDEN
-    TARGET_TRIPLE
-)
+        LLVM_PACKAGE_VERSION
+        LLVM_VERSION_MAJOR
+        LLVM_VERSION_MINOR
+        LLVM_VERSION_PATCH
+        LLVM_DEFINITIONS
+        LLVM_ENABLE_ASSERTIONS
+        LLVM_ENABLE_EH
+        LLVM_ENABLE_RTTI
+        LLVM_INCLUDE_DIRS
+        LLVM_LIBRARY_DIRS
+        LLVM_TOOLS_BINARY_DIR
+        LLVM_ENABLE_VISIBILITY_INLINES_HIDDEN
+        TARGET_TRIPLE
+        )
 
 foreach (vname ${NEEDED_LLVM_VARS})
     message(STATUS "${vname}: \"${${vname}}\"")
@@ -194,12 +194,12 @@ endif ()
 # which can change things like data layout.
 if (LLVM_ENABLE_ASSERTIONS AND (NOT ENABLE_KLEE_ASSERTS))
     message(WARNING "LLVM was built with assertions but KLEE will be built without them.\n"
-                    "This might lead to unexpected behaviour."
-    )
+            "This might lead to unexpected behaviour."
+            )
 elseif ((NOT LLVM_ENABLE_ASSERTIONS) AND ENABLE_KLEE_ASSERTS)
     message(WARNING "LLVM was built without assertions but KLEE will be built with them.\n"
-                    "This might lead to unexpected behaviour."
-    )
+            "This might lead to unexpected behaviour."
+            )
 endif ()
 
 if (LLVM_ENABLE_VISIBILITY_INLINES_HIDDEN)
@@ -300,17 +300,17 @@ endif ()
 check_include_file("sys/capability.h" HAVE_SYS_CAPABILITY_H)
 if (HAVE_SYS_CAPABILITY_H)
     find_library(
-        LIBCAP_LIBRARIES
-        NAMES cap
-        DOC "libcap library"
+            LIBCAP_LIBRARIES
+            NAMES cap
+            DOC "libcap library"
     )
     # On FreeBSD <sys/capabilities.h> is present in libc, so we don't require libcap there.
     if (NOT LIBCAP_LIBRARIES
-        AND NOT
+            AND NOT
             CMAKE_SYSTEM_NAME
             STREQUAL
             "FreeBSD"
-    )
+            )
         message(FATAL_ERROR "Found \"sys/capability.h\" but could not find libcap")
     endif ()
 else ()
@@ -326,10 +326,10 @@ if (HAVE_PTY_H OR HAVE_UTIL_H)
     check_function_exists(openpty openpty_in_libc)
     if (NOT openpty_in_libc)
         check_library_exists(
-            util
-            openpty
-            ""
-            openpty_in_libutil
+                util
+                openpty
+                ""
+                openpty_in_libutil
         )
         if (openpty_in_libutil)
             set(LIBUTIL_LIBRARIES util)
@@ -352,7 +352,8 @@ check_include_file(sys/statfs.h HAVE_SYSSTATFS_H)
 # Generate `config.h`
 # ----------------------------------------------------------------------------------------------------------------------
 configure_file(
-    "${CMAKE_SOURCE_DIR}/include/klee/Config/config.h.cmin" "${CMAKE_BINARY_DIR}/include/klee/Config/config.h"
+        "${CMAKE_CURRENT_SOURCE_DIR}/include/klee/Config/config.h.cmin"
+        "${CMAKE_CURRENT_BINARY_DIR}/include/klee/Config/config.h"
 )
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -361,15 +362,15 @@ configure_file(
 set(KLEE_GIT_SHA1HASH "unknown")
 set(AUTO_GEN_MSG "AUTOMATICALLY GENERATED. DO NOT EDIT!")
 configure_file(
-    "${CMAKE_SOURCE_DIR}/include/klee/Config/CompileTimeInfo.h.cmin"
-    "${CMAKE_BINARY_DIR}/include/klee/Config/CompileTimeInfo.h"
+        "${CMAKE_CURRENT_SOURCE_DIR}/include/klee/Config/CompileTimeInfo.h.cmin"
+        "${CMAKE_CURRENT_BINARY_DIR}/include/klee/Config/CompileTimeInfo.h"
 )
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Global include directories
 # ----------------------------------------------------------------------------------------------------------------------
-include_directories("${CMAKE_BINARY_DIR}/include")
-include_directories("${CMAKE_SOURCE_DIR}/include")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/include")
+include_directories("${CMAKE_CURRENT_BINARY_DIR}/include")
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Report the value of various variables to aid debugging
@@ -384,19 +385,12 @@ message(STATUS "KLEE_COMPONENT_EXTRA_LIBRARIES: '${KLEE_COMPONENT_EXTRA_LIBRARIE
 # ----------------------------------------------------------------------------------------------------------------------
 include("${CMAKE_SOURCE_DIR}/cmake/klee_add_component.cmake")
 
-add_subdirectory(Support)
-add_subdirectory(Expr)
-add_subdirectory(BackwardAnalysis)
-
 # ----------------------------------------------------------------------------------------------------------------------
 # KLEE tools (precondInfer)
 # ----------------------------------------------------------------------------------------------------------------------
-klee_get_llvm_libs(LLVM_LIBS irreader)
-
-add_executable(precondInfer backward-ai.cpp)
-target_link_libraries(precondInfer PRIVATE backwardAI ${LLVM_LIBS})
+add_subdirectory(src)
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Miscellaneous install
 # ----------------------------------------------------------------------------------------------------------------------
-# INSTALL(FILES include/klee/klee.h DESTINATION include/klee)
+INSTALL(FILES include/klee/klee.h DESTINATION include/klee)
