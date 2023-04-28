@@ -22,6 +22,7 @@ add_library(
         utils/pretty_printer.cpp
 )
 
+target_include_directories(libpi PUBLIC ${SFI_INCLUDE_DIR})
 target_link_libraries(libpi PRIVATE ${LLVM_LIBS})
 set_target_properties(libpi PROPERTIES PREFIX "")
 

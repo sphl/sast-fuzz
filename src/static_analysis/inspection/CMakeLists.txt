@@ -4,7 +4,7 @@ if (CODE_COVERAGE AND UNIX)
     append_coverage_compiler_flags()
 endif (CODE_COVERAGE AND UNIX)
 
-include_directories(include)
+set(SFI_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
 add_subdirectory(src)
 
