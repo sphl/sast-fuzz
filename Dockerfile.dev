@@ -72,7 +72,7 @@ ENV LLVM_VERSION="12.0.0"
 
 RUN if [ "$LLVM_VARIANT" = "custom" ]; then ( \
         cd /opt \
-            && wget https://github.com/sphl/llvm-project/archive/refs/tags/llvmorg-${LLVM_VERSION}c.tar.gz \
+            && wget https://github.com/tum-i4/llvm-project/archive/refs/tags/llvmorg-${LLVM_VERSION}c.tar.gz \
             && tar xf llvmorg-${LLVM_VERSION}c.tar.gz && rm -f llvmorg-${LLVM_VERSION}c.tar.gz \
             && mv llvm-project-llvmorg-${LLVM_VERSION}c llvm-${LLVM_VERSION} \
     ); else ( \
