@@ -1,13 +1,15 @@
-#ifndef PI_PRETTYPRINTER_H
-#define PI_PRETTYPRINTER_H
-
-#include "../container/FuncInfo.h"
-#include "IO.h"
+#ifndef SFI_PRETTY_PRINTER_H
+#define SFI_PRETTY_PRINTER_H
 
 #include <map>
 #include <set>
 #include <string>
 #include <vector>
+
+#include <sfi/func_info.h>
+#include <sfi/io.h>
+
+namespace sfi {
 
 class Printer {
   public:
@@ -15,7 +17,7 @@ class Printer {
 
     void
     printToFile(std::string &filepath, std::vector<FuncInfo> &funcInfos, std::map<BBId, std::set<BBId>> &icfgInfos) {
-        IO::writeFile(filepath, format(funcInfos, icfgInfos));
+        io::writeFile(filepath, format(funcInfos, icfgInfos));
     }
 };
 
@@ -24,4 +26,6 @@ class JSONPrinter : public Printer {
     std::string format(std::vector<FuncInfo> &funcInfos, std::map<BBId, std::set<BBId>> &icfgInfos) override;
 };
 
-#endif  // PI_PRETTYPRINTER_H
+}  // namespace sfi
+
+#endif  // SFI_PRETTY_PRINTER_H

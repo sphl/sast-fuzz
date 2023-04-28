@@ -1,9 +1,9 @@
-#include "LLVMUtils.h"
-
-#include "llvm/IR/DebugInfo.h"
-
 #include <filesystem>
 #include <set>
+
+#include <llvm/IR/DebugInfo.h>
+
+#include <sfi/llvm_utils.h>
 
 #define BLOCK_ID_KEY "sast-fuzz.block.id"
 #define BLOCK_ENTRY(bb) ((bb).getFirstNonPHI())
@@ -11,19 +11,20 @@
 using namespace std;
 using namespace std::filesystem;
 using namespace llvm;
+using namespace sfi;
 
-LineRange LLVMUtils::computeRange(const Lines &lineNumbers) {
+LineRange llvm_utils::computeRange(const Lines &lineNumbers) {
     LineNumber min = *min_element(lineNumbers.begin(), lineNumbers.end());
     LineNumber max = *max_element(lineNumbers.begin(), lineNumbers.end());
 
     return LineRange(min, max);
 }
 
-string LLVMUtils::getFilename(const Function &func) {
+string llvm_utils::getFilename(const Function &func) {
     return path(func.getSubprogram()->getFilename().str()).filename();
 }
 
-void LLVMUtils::setBBId(BasicBlock &bb, BBId id) {
+void llvm_utils::setBBId(BasicBlock &bb, BBId id) {
     Instruction *inst = BLOCK_ENTRY(bb);
     LLVMContext &C = inst->getContext();
 
@@ -32,7 +33,7 @@ void LLVMUtils::setBBId(BasicBlock &bb, BBId id) {
     inst->setMetadata(BLOCK_ID_KEY, node);
 }
 
-void LLVMUtils::setBBIds(Module &mod) {
+void llvm_utils::setBBIds(Module &mod) {
     BBId id = 0;
     for (auto &func : mod) {
         for (auto &bb : func) {
@@ -41,7 +42,7 @@ void LLVMUtils::setBBIds(Module &mod) {
     }
 }
 
-std::optional<BBId> LLVMUtils::getBBId(const BasicBlock &bb) {
+std::optional<BBId> llvm_utils::getBBId(const BasicBlock &bb) {
     const Instruction *inst = BLOCK_ENTRY(bb);
 
     if (!inst->hasMetadata(BLOCK_ID_KEY)) {
@@ -52,7 +53,7 @@ std::optional<BBId> LLVMUtils::getBBId(const BasicBlock &bb) {
     return stoul(temp->getString().str());
 }
 
-optional<Lines> LLVMUtils::getBBLines(const BasicBlock &bb) {
+optional<Lines> llvm_utils::getBBLines(const BasicBlock &bb) {
     Lines lineNumbers;
 
     const Function *parentFunc = bb.getParent();
@@ -78,7 +79,7 @@ optional<Lines> LLVMUtils::getBBLines(const BasicBlock &bb) {
     }
 }
 
-optional<LineRange> LLVMUtils::getBBLineRange(const BasicBlock &bb) {
+optional<LineRange> llvm_utils::getBBLineRange(const BasicBlock &bb) {
     auto optLines = getBBLines(bb);
 
     if (!optLines.has_value()) {
@@ -90,7 +91,7 @@ optional<LineRange> LLVMUtils::getBBLineRange(const BasicBlock &bb) {
     }
 }
 
-optional<Lines> LLVMUtils::getFunctionLines(const Function &func) {
+optional<Lines> llvm_utils::getFunctionLines(const Function &func) {
     assert(!func.isDeclaration());
 
     if (!func.hasMetadata()) {
@@ -114,7 +115,7 @@ optional<Lines> LLVMUtils::getFunctionLines(const Function &func) {
     }
 }
 
-optional<LineRange> LLVMUtils::getFunctionLineRange(const Function &func) {
+optional<LineRange> llvm_utils::getFunctionLineRange(const Function &func) {
     auto optLines = getFunctionLines(func);
 
     if (!optLines.has_value()) {

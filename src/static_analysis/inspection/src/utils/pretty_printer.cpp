@@ -1,10 +1,11 @@
-#include "PrettyPrinter.h"
+#include <rapidjson/stringbuffer.h>
+#include <rapidjson/writer.h>
 
-#include "rapidjson/stringbuffer.h"
-#include "rapidjson/writer.h"
+#include <sfi/pretty_printer.h>
 
 using namespace std;
 using namespace rapidjson;
+using namespace sfi;
 
 string JSONPrinter::format(vector<FuncInfo> &funcInfos, map<BBId, set<BBId>> &icfgInfos) {
     StringBuffer sb;
@@ -38,7 +39,6 @@ string JSONPrinter::format(vector<FuncInfo> &funcInfos, map<BBId, set<BBId>> &ic
 
         writer.Key("LoC");
         writer.Uint(funcInfo.getLineNumbers().size());
-        writer.EndObject();
 
         writer.Key("basic_blocks");
         writer.StartArray();
@@ -65,6 +65,7 @@ string JSONPrinter::format(vector<FuncInfo> &funcInfos, map<BBId, set<BBId>> &ic
             writer.EndObject();
         }
         writer.EndArray();  // BBs
+        writer.EndObject();
     }
     writer.EndArray();  // functions
 

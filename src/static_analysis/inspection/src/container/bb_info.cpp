@@ -1,4 +1,6 @@
-#include "BBInfo.h"
+#include <sfi/bb_info.h>
+
+using namespace sfi;
 
 BBInfo::BBInfo(BBId id, const Lines &lineNumbers, const LineRange &lineRange)
     : id(id), lineNumbers(lineNumbers), lineRange(lineRange) {}
@@ -15,4 +17,4 @@ bool BBInfo::operator==(const BBInfo &rhs) const {
 
 bool BBInfo::operator!=(const BBInfo &rhs) const { return !(rhs == *this); }
 
-bool BBInfo::operator <(const BBInfo &rhs) const { return id < rhs.id; }
+bool BBInfo::operator<(const BBInfo &rhs) const { return id < rhs.id; }

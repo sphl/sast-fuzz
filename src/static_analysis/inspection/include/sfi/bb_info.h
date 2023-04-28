@@ -1,9 +1,11 @@
-#ifndef PI_BBINFO_H
-#define PI_BBINFO_H
-
-#include "../PITypes.h"
+#ifndef SFI_BB_INFO_H
+#define SFI_BB_INFO_H
 
 #include <ostream>
+
+#include <sfi/types.h>
+
+namespace sfi {
 
 class BBInfo {
   private:
@@ -24,7 +26,9 @@ class BBInfo {
 
     bool operator!=(const BBInfo &rhs) const;
 
-    bool operator <(const BBInfo &rhs) const;
+    bool operator<(const BBInfo &rhs) const;
 };
 
-#endif  // PI_BBINFO_H
+}  // namespace sfi
+
+#endif  // SFI_BB_INFO_H

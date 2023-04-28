@@ -1,33 +1,12 @@
-klee_get_llvm_libs(
-    LLVM_LIBS
-    bitwriter
-    core
-    ipo
-    irreader
-    instcombine
-    instrumentation
-    target
-    linker
-    analysis
-    scalaropts
-    support
-)
+# Add CXX coverage compiler flags
+if (CODE_COVERAGE AND UNIX)
+    include("${CMAKE_SOURCE_DIR}/cmake/code_coverage.cmake")
+    append_coverage_compiler_flags()
+endif (CODE_COVERAGE AND UNIX)
 
-add_executable(
-    pi
-    container/BBInfo.cpp
-    container/BBInfo.h
-    container/FuncInfo.cpp
-    container/FuncInfo.h
-    pi.cpp
-    PITypes.h
-    utils/IO.cpp
-    utils/IO.h
-    utils/LLVMUtils.cpp
-    utils/LLVMUtils.h
-    utils/PrettyPrinter.cpp
-    utils/PrettyPrinter.h
-)
-target_compile_options(pi PRIVATE -O3 -fno-rtti -fPIC)
-target_include_directories(pi PRIVATE ${SVF_INCLUDE_DIR})
-target_link_libraries(pi PRIVATE ${SVF_LIB} ${LLVM_LIBS})
+include_directories(include)
+
+add_subdirectory(src)
+
+enable_testing()
+add_subdirectory(tests)
