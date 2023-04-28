@@ -1,16 +1,14 @@
-#ifndef PI_IO_H
-#define PI_IO_H
+#ifndef SFI_IO_H
+#define SFI_IO_H
 
 #include <string>
 
-namespace sfi {
+namespace sfi::io {
 
-namespace IO {
 std::string readFile(const std::string &filepath);
 
 void writeFile(const std::string &filepath, const std::string &text);
-};  // namespace IO
 
-}  // namespace sfi
+}  // namespace sfi::io
 
-#endif  // PI_IO_H
+#endif  // SFI_IO_H

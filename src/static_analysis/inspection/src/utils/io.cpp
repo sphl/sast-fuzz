@@ -1,11 +1,12 @@
 #include <fstream>
 #include <iterator>
-#include <sast-fuzz/IO.h>
+
+#include <sfi/io.h>
 
 using namespace std;
 using namespace sfi;
 
-string IO::readFile(const string &filepath) {
+string io::readFile(const string &filepath) {
     string text;
     ifstream inputFile(filepath);
 
@@ -17,7 +18,7 @@ string IO::readFile(const string &filepath) {
     return text;
 }
 
-void IO::writeFile(const string &filepath, const string &text) {
+void io::writeFile(const string &filepath, const string &text) {
     ofstream outputFile(filepath);
 
     if (outputFile.is_open()) {

@@ -1,4 +1,4 @@
-#include <sast-fuzz/FuncInfo.h>
+#include <sfi/func_info.h>
 
 using namespace sfi;
 

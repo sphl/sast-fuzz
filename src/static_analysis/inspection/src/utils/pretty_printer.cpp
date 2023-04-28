@@ -1,6 +1,7 @@
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
-#include <sast-fuzz/PrettyPrinter.h>
+
+#include <sfi/pretty_printer.h>
 
 using namespace std;
 using namespace rapidjson;

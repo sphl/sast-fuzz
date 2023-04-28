@@ -1,11 +1,11 @@
-#ifndef PI_FUNCTIONINFO_H
-#define PI_FUNCTIONINFO_H
+#ifndef SFI_FUNC_INFO_H
+#define SFI_FUNC_INFO_H
 
 #include <ostream>
 #include <set>
-#include <sast-fuzz/BBInfo.h>
-#include <sast-fuzz/PITypes.h>
 #include <string>
+
+#include <sfi/bb_info.h>
 
 namespace sfi {
 
@@ -45,4 +45,4 @@ class FuncInfo {
 
 }  // namespace sfi
 
-#endif  // PI_FUNCTIONINFO_H
+#endif  // SFI_FUNC_INFO_H

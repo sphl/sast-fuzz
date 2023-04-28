@@ -1,15 +1,16 @@
-#ifndef PI_LLVMUTILS_H
-#define PI_LLVMUTILS_H
+#ifndef SFI_LLVM_UTILS_H
+#define SFI_LLVM_UTILS_H
+
+#include <string>
 
 #include <llvm/IR/BasicBlock.h>
 #include <llvm/IR/Function.h>
 #include <llvm/IR/Module.h>
-#include <sast-fuzz/PITypes.h>
-#include <string>
 
-namespace sfi {
+#include <sfi/types.h>
 
-namespace LLVMUtils {
+namespace sfi::llvm_utils {
+
 LineRange computeRange(const Lines &lineNumbers);
 
 std::string getFilename(const llvm::Function &func);
@@ -27,8 +28,7 @@ std::optional<LineRange> getBBLineRange(const llvm::BasicBlock &bb);
 std::optional<Lines> getFunctionLines(const llvm::Function &func);
 
 std::optional<LineRange> getFunctionLineRange(const llvm::Function &func);
-};  // namespace LLVMUtils
 
-}  // namespace sfi
+}  // namespace sfi::llvm_utils
 
-#endif  // PI_LLVMUTILS_H
+#endif  // SFI_LLVM_UTILS_H

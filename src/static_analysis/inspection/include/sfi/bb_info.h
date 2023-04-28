@@ -1,8 +1,9 @@
-#ifndef PI_BBINFO_H
-#define PI_BBINFO_H
+#ifndef SFI_BB_INFO_H
+#define SFI_BB_INFO_H
 
 #include <ostream>
-#include <sast-fuzz/PITypes.h>
+
+#include <sfi/types.h>
 
 namespace sfi {
 
@@ -30,4 +31,4 @@ class BBInfo {
 
 }  // namespace sfi
 
-#endif  // PI_BBINFO_H
+#endif  // SFI_BB_INFO_H

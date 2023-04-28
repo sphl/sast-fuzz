@@ -1,5 +1,5 @@
-#ifndef PI_PITYPES_H
-#define PI_PITYPES_H
+#ifndef SFI_TYPES_H
+#define SFI_TYPES_H
 
 #include <set>
 #include <utility>
@@ -14,4 +14,4 @@ using BBId = unsigned long;
 
 }  // namespace sfi
 
-#endif  // PI_PITYPES_H
+#endif  // SFI_TYPES_H

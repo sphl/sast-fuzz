@@ -1,10 +1,11 @@
 #include <SVF-FE/LLVMUtil.h>
 #include <SVF-FE/PAGBuilder.h>
 #include <WPA/Andersen.h>
-#include <sast-fuzz/FuncInfo.h>
-#include <sast-fuzz/IO.h>
-#include <sast-fuzz/LLVMUtils.h>
-#include <sast-fuzz/PrettyPrinter.h>
+
+#include <sfi/func_info.h>
+#include <sfi/io.h>
+#include <sfi/llvm_utils.h>
+#include <sfi/pretty_printer.h>
 
 #define LLVM_MODULE(moduleSet) ((moduleSet)->getMainLLVMModule())
 #define LLVM_DWARF_VERSION(moduleSet) (LLVM_MODULE(moduleSet)->getDwarfVersion())
@@ -26,21 +27,21 @@ vector<FuncInfo> getFuncInfo(SVF::PAG *pag) {
     for (auto callNode : *callGraph) {
         const llvm::Function &llvmFunc = *callNode.second->getFunction()->getLLVMFun();
         if (!llvmFunc.isDeclaration()) {
-            auto optLineNumbers = LLVMUtils::getFunctionLines(llvmFunc);
+            auto optLineNumbers = llvm_utils::getFunctionLines(llvmFunc);
             if (optLineNumbers.has_value()) {
                 string name = llvmFunc.getName().str();
-                string filename = LLVMUtils::getFilename(llvmFunc);
+                string filename = llvm_utils::getFilename(llvmFunc);
                 Lines lineNumbers = optLineNumbers.value();
-                LineRange lineRange = LLVMUtils::computeRange(lineNumbers);
+                LineRange lineRange = llvm_utils::computeRange(lineNumbers);
                 bool reachableFromMain = callNode.second->isReachableFromProgEntry();
 
                 set<BBInfo> blockInfos;
                 for (auto &bb : llvmFunc) {
-                    auto optBBLineNumbers = LLVMUtils::getBBLines(bb);
+                    auto optBBLineNumbers = llvm_utils::getBBLines(bb);
                     if (optBBLineNumbers.has_value()) {
-                        BBId id = LLVMUtils::getBBId(bb).value();
+                        BBId id = llvm_utils::getBBId(bb).value();
                         Lines bbLines = optBBLineNumbers.value();
-                        LineRange bbLineRange = LLVMUtils::computeRange(bbLines);
+                        LineRange bbLineRange = llvm_utils::computeRange(bbLines);
 
                         blockInfos.insert(BBInfo(id, bbLines, bbLineRange));
                     }
@@ -64,7 +65,7 @@ map<BBId, set<BBId>> getICFGInfo(SVF::PAG *pag) {
 
         if (srcNode->getBB() != nullptr) {
             // TODO: Check return values!
-            BBId srcBBId = LLVMUtils::getBBId(*srcNode->getBB()).value();
+            BBId srcBBId = llvm_utils::getBBId(*srcNode->getBB()).value();
 
             cout << "Node-ID: " << srcNode->getId() << " --> BB-ID: " << srcBBId << endl;
 
@@ -74,7 +75,7 @@ map<BBId, set<BBId>> getICFGInfo(SVF::PAG *pag) {
                 SVF::ICFGNode *dstNode = edge->getDstNode();
 
                 if (dstNode->getBB() != nullptr) {
-                    BBId dstBBId = LLVMUtils::getBBId(*dstNode->getBB()).value();
+                    BBId dstBBId = llvm_utils::getBBId(*dstNode->getBB()).value();
 
                     // TODO: Only allow "srcBBId == dstBBId" if rec. function call (... or loop iteration)
                     icfgInfo[srcBBId].insert(dstBBId);
@@ -101,7 +102,7 @@ int main(int argc, char **argv) {
     SVF::PAGBuilder builder;
     SVF::PAG *pag = builder.build(svfModule);
 
-    LLVMUtils::setBBIds(*LLVM_MODULE(SVF::LLVMModuleSet::getLLVMModuleSet()));
+    llvm_utils::setBBIds(*LLVM_MODULE(SVF::LLVMModuleSet::getLLVMModuleSet()));
 
     auto funcInfos = getFuncInfo(pag);
     auto icfgInfos = getICFGInfo(pag);

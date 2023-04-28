@@ -5,13 +5,28 @@ BinPackParameters: false
 ColumnLimit: 120
 ContinuationIndentWidth: 8
 FixNamespaceComments: true
-IncludeBlocks: Regroup
 IndentWidth: 4
 KeepEmptyLinesAtTheStartOfBlocks: false
 Language: Cpp
 MaxEmptyLinesToKeep: 1
 ReflowComments: true
 SortIncludes: CaseSensitive
+IncludeBlocks: Regroup
+IncludeCategories:
+  - Regex:    '^".+\.h"$'
+    Priority: 1
+  - Regex:    '^<[a-zA-Z]+>$'
+    Priority: 3
+  - Regex:    '^<(llvm|llvm-c|clang|clang-c)/.+>$'
+    Priority: 4
+  - Regex:    '^<(SVF|SVF-FE|WPA|klee)/.+>$'
+    Priority: 5
+  - Regex:    '^<(gtest|rapidjson)/.+>$'
+    Priority: 6
+  - Regex:    '^<(sfi)/.+>$'
+    Priority: 7
+  - Regex:    '^<.+\.h>$'
+    Priority: 2
 SortUsingDeclarations: true
 SpacesBeforeTrailingComments: 2
 Standard: Auto
