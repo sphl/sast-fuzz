@@ -1,3 +1,5 @@
+#include <filesystem>
+
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Module.h>
 #include <llvm/IRReader/IRReader.h>
@@ -11,6 +13,8 @@
 using namespace testing;
 using namespace llvm;
 using namespace sfi;
+
+namespace fs = std::filesystem;
 
 class LLVMUtilsTestSuite : public Test {
   protected:
@@ -32,20 +36,33 @@ class LLVMUtilsTestSuite : public Test {
     void TearDown() override { llvmModule.release(); }
 };
 
+TEST_F(LLVMUtilsTestSuite, GetFilenameTest) {
+    // Arrange
+    std::string expected = fs::path(bitcodeFile).filename();
+
+    for (auto &func : *llvmModule) {
+        // Act
+        auto actual = llvm_utils::getFilename(func);
+
+        // Assert
+        ASSERT_EQ(expected, actual);
+    }
+}
+
 TEST_F(LLVMUtilsTestSuite, SetGetBBIdTest) {
     // Arrange
-    BBId bbId = 42;
+    BBId expected = 42;
 
     for (auto &func : *llvmModule) {
         for (auto &bb : func) {
             // Act
-            llvm_utils::setBBId(bb, bbId);
+            llvm_utils::setBBId(bb, expected);
 
-            auto ret = llvm_utils::getBBId(bb);
+            auto actual = llvm_utils::getBBId(bb);
 
             // Assert
-            ASSERT_TRUE(ret.has_value());
-            ASSERT_EQ(ret.value(), bbId);
+            ASSERT_TRUE(actual.has_value());
+            ASSERT_EQ(expected, actual.value());
         }
     }
 }
