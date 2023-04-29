@@ -12,7 +12,7 @@ using namespace sfi;
 
 namespace fs = std::filesystem;
 
-class IOUtilTestSuite : public Test {
+class IOTestSuite : public Test {
   protected:
     void SetUp() override {
         tempFile = fs::temp_directory_path() / "test.txt";
@@ -30,15 +30,15 @@ class IOUtilTestSuite : public Test {
     fs::path tempFile;
 };
 
-TEST_F(IOUtilTestSuite, ReadyEmptyFile) {
+TEST_F(IOTestSuite, ReadyEmptyFile) {
     std::ofstream ofs(tempFile);
     ofs.close();
     auto actual = io::readFile(tempFile);
     ASSERT_TRUE(actual.empty());
 }
 
-TEST_F(IOUtilTestSuite, WriteAndRead) {
-    io::writeFile("foo", tempFile);
+TEST_F(IOTestSuite, WriteAndRead) {
+    io::writeFile(tempFile, "foo");
     ASSERT_TRUE(fs::exists(tempFile));
     auto actual = io::readFile(tempFile);
     ASSERT_EQ(actual, "foo");
