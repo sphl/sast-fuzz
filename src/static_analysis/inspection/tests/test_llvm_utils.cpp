@@ -1,4 +1,6 @@
 #include <filesystem>
+#include <map>
+#include <set>
 
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Module.h>
@@ -20,6 +22,10 @@ class LLVMUtilsTestSuite : public Test {
   protected:
     std::unique_ptr<Module> llvmModule;
     std::string bitcodeFile = "./artifacts/llvm_bc/quicksort.bc";
+
+    template <typename Container, typename T> bool contains(const Container &container, const T &element) {
+        return std::find(container.begin(), container.end(), element) != container.end();
+    }
 
     void SetUp() override {
         LLVMContext ctx;
@@ -64,5 +70,29 @@ TEST_F(LLVMUtilsTestSuite, SetGetBBIdTest) {
             ASSERT_TRUE(actual.has_value());
             ASSERT_EQ(expected, actual.value());
         }
+    }
+}
+
+TEST_F(LLVMUtilsTestSuite, GetFunctionLineRange) {
+    // Arrange
+    std::map<std::string, std::map<std::string, std::set<LineNumber>>> expected = {
+            {"swap", {{"start", {6, 7}}, {"end", {9, 10}}}},
+            {"partition", {{"start", {13, 14, 15}}, {"end", {37, 38}}}},
+            {"quickSort", {{"start", {40, 41}}, {"end", {51, 52, 53}}}},
+            {"printArray", {{"start", {56, 57}}, {"end", {60, 61}}}},
+            {"main", {{"start", {64, 65}}, {"end", {76, 77}}}},
+    };
+
+    for (auto &func : *llvmModule) {
+        std::string funcName = func.getName().str();
+
+        // Act
+        auto actual = llvm_utils::getFunctionLineRange(func);
+
+        // Assert
+        ASSERT_TRUE(actual.has_value());
+
+        ASSERT_TRUE(contains(expected[funcName]["start"], actual.value().first));
+        ASSERT_TRUE(contains(expected[funcName]["end"], actual.value().second));
     }
 }
