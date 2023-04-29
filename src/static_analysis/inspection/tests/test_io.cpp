@@ -14,6 +14,8 @@ namespace fs = std::filesystem;
 
 class IOTestSuite : public Test {
   protected:
+    fs::path tempFile;
+
     void SetUp() override {
         tempFile = fs::temp_directory_path() / "test.txt";
         if (fs::exists(tempFile)) {
@@ -26,8 +28,6 @@ class IOTestSuite : public Test {
             fs::remove(tempFile);
         }
     }
-
-    fs::path tempFile;
 };
 
 TEST_F(IOTestSuite, ReadyEmptyFile) {
