@@ -4,7 +4,14 @@ file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/artifacts" DESTINATION "${CMAKE_CURRENT_B
 include("${CMAKE_SOURCE_DIR}/cmake/google_test.cmake")
 
 # create binary for test execution
-add_executable(sfi_tests main.cpp test_bb_info.cpp test_io.cpp test_llvm_utils.cpp)
+add_executable(
+    sfi_tests
+    main.cpp
+    test_bb_info.cpp
+    test_func_info.cpp
+    test_io.cpp
+    test_llvm_utils.cpp
+)
 
 # link gtest as static library
 target_link_libraries(
