@@ -33,12 +33,10 @@ Inspector::Inspector(string bitcodeFile) noexcept(false) {
         // Throw a MissingDebugInfoException if debug information is missing
         throw MissingDebugInfoException();
     }
-
     // Set basic block IDs for the LLVM module
     llvm_utils::setBBIds(*LLVM_MODULE(SVF::LLVMModuleSet::getLLVMModuleSet()));
 
     // Build a PAG (Pointer Analysis Graph) object from the SVFModule object using a PAGBuilder
-    // and assign it to a unique_ptr variable named 'pag'
     SVF::PAGBuilder builder;
     pag = unique_ptr<SVF::PAG>(builder.build(svfModule));
 }
@@ -50,7 +48,7 @@ vector<FuncInfo> Inspector::getFuncInfos() {
     // Get the pointer analysis call graph
     SVF::PTACallGraph *callGraph = ander->getPTACallGraph();
 
-    // Create an empty vector of function info
+    // Create an empty vector of function infos
     vector<FuncInfo> funcInfos;
 
     // Iterate over all the call nodes in the call graph
@@ -65,14 +63,14 @@ vector<FuncInfo> Inspector::getFuncInfos() {
 
             // Check if the line numbers are available
             if (optLineNumbers.has_value()) {
-                // Extract the necessary information of the function
+                // Extract the required information of the function
                 string name = llvmFunc.getName().str();
                 string filename = llvm_utils::getFilename(llvmFunc);
                 Lines lineNumbers = optLineNumbers.value();
                 LineRange lineRange = llvm_utils::computeRange(lineNumbers);
                 bool reachableFromMain = callNode.second->isReachableFromProgEntry();
 
-                // Create an empty set of basic block info
+                // Create an empty set of basic block infos
                 set<BBInfo> blockInfos;
 
                 // Iterate over all the basic blocks in the function
@@ -82,7 +80,7 @@ vector<FuncInfo> Inspector::getFuncInfos() {
 
                     // Check if the line numbers are available
                     if (optBBLineNumbers.has_value()) {
-                        // Extract the necessary information of the basic block
+                        // Extract the required information of the basic block
                         BBId id = llvm_utils::getBBId(bb).value();
                         Lines bbLines = optBBLineNumbers.value();
                         LineRange bbLineRange = llvm_utils::computeRange(bbLines);
@@ -96,6 +94,6 @@ vector<FuncInfo> Inspector::getFuncInfos() {
             }
         }
     }
-    // Return the vector of function info
+    // Return the vector of function infos
     return funcInfos;
 }
