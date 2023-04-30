@@ -1,0 +1,56 @@
+#ifndef SFI_INSPECTOR_H
+#define SFI_INSPECTOR_H
+
+#include <exception>
+#include <string>
+#include <vector>
+
+#include <SVF-FE/PAGBuilder.h>
+
+#include <sfi/func_info.h>
+
+class MissingDebugInfoException : public std::exception {
+  private:
+    std::string message;
+
+  public:
+    MissingDebugInfoException() : message("LLVM module doesn't contain debug information!") {}
+
+    explicit MissingDebugInfoException(const std::string &message) : message(message) {}
+
+    [[nodiscard]] const char *what() const noexcept override { return message.c_str(); }
+};
+
+class Inspector {
+  private:
+    std::unique_ptr<SVF::PAG> pag;
+
+  public:
+    /**
+     * Constructor for Inspector class
+     *
+     * Builds an SVFModule object from the bitcode file provided as a parameter, then checks if the DWARF version of the
+     * LLVM module is 0 to ensure debug information is present. If debug information is missing, a
+     * MissingDebugInfoException is thrown. The basic block IDs for the LLVM module are set and a PAG (Pointer Analysis
+     * Graph) object is built from the SVFModule object using a PAGBuilder.
+     *
+     * @param bitcodeFile The path to the LLVM bitcode file to be analyzed
+     * @throw MissingDebugInfoException If debug information is missing
+     * @throw std::runtime_error If an error occurs during PAG construction
+     */
+    explicit Inspector(std::string bitcodeFile) noexcept(false);
+
+    /**
+     * Retrieves information about functions in the program
+     *
+     * This function uses pointer analysis to extract information about functions in the program, including their names,
+     * filenames, line numbers, and if they are reachable from the main function. For each function it also extracts
+     * basic block information such as IDs, line numbers, and ranges, for each function. The function returns a vector
+     * of FuncInfo objects that contain the extracted information.
+     *
+     * @return A vector of FuncInfo objects containing information about each function in the program
+     */
+    std::vector<sfi::FuncInfo> getFuncInfos();
+};
+
+#endif  // SFI_INSPECTOR_H
