@@ -10,6 +10,8 @@
 
 #include <sfi/func_info.h>
 
+namespace sfi {
+
 class MissingDebugInfoException : public std::exception {
   private:
     std::string message;
@@ -64,5 +66,7 @@ class Inspector {
      */
     std::map<sfi::BBId, std::set<sfi::BBId>> getICFGInfos();
 };
+
+}  // namespace sfi
 
 #endif  // SFI_INSPECTOR_H
