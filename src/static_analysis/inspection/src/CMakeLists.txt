@@ -30,4 +30,6 @@ set_target_properties(libsfi PROPERTIES PREFIX "")
 add_executable(sfi main.cpp)
 
 target_compile_options(sfi PRIVATE -O3 -fno-rtti -fPIC)
+# Note that creating static libraries does not involve a linking steps, so we need to link "sfi" against SVF and cannot
+# simply use it through "libsfi".
 target_link_libraries(sfi PRIVATE libsfi ${SVF_LIB})
