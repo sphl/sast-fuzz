@@ -1,5 +1,4 @@
 #include <SVF-FE/LLVMUtil.h>
-#include <SVF-FE/PAGBuilder.h>
 #include <WPA/Andersen.h>
 
 #include <sfi/inspector.h>
@@ -96,4 +95,46 @@ vector<FuncInfo> Inspector::getFuncInfos() {
     }
     // Return the vector of function infos
     return funcInfos;
+}
+
+map<BBId, set<BBId>> Inspector::getICFGInfos() {
+    // Get the pointer analysis inter-procedural control-flow graph (iCFG)
+    SVF::ICFG *icfg = pag->getICFG();
+
+    // Create an empty map to store iCFG information
+    map<BBId, set<BBId>> icfgInfos;
+
+    // Iterate over all the node information in the iCFG
+    for (auto nodeInfo : *icfg) {
+        // Get the source node
+        SVF::ICFGNode *srcNode = nodeInfo.second;
+
+        // Check if the source node has a basic block
+        if (srcNode->getBB() != nullptr) {
+            // Get the ID of the source basic block
+            BBId srcBBId = llvm_utils::getBBId(*srcNode->getBB()).value();
+
+            // Iterate over all the outgoing edges of the source node
+            for (auto edge : srcNode->getOutEdges()) {
+                // Assert that the source node ID matches the edge source node ID
+                assert(srcNode->getId() == edge->getSrcNode()->getId());
+
+                // Get the destination node
+                SVF::ICFGNode *dstNode = edge->getDstNode();
+
+                // Check if the destination node has a basic block
+                if (dstNode->getBB() != nullptr) {
+                    // Get the ID of the destination basic block
+                    BBId dstBBId = llvm_utils::getBBId(*dstNode->getBB()).value();
+
+                    // TODO: Only allow "srcBBId == dstBBId" if recursive function call or loop iteration
+                    // Insert the destination basic block ID into the set of outgoing basic block IDs for the source
+                    // basic block
+                    icfgInfos[srcBBId].insert(dstBBId);
+                }
+            }
+        }
+    }
+    // Return the map containing iCFG information
+    return icfgInfos;
 }

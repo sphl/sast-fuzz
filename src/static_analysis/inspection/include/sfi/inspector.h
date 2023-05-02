@@ -2,6 +2,7 @@
 #define SFI_INSPECTOR_H
 
 #include <exception>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -14,7 +15,7 @@ class MissingDebugInfoException : public std::exception {
     std::string message;
 
   public:
-    MissingDebugInfoException() : message("LLVM module doesn't contain debug information!") {}
+    MissingDebugInfoException() : message("ERROR: LLVM module doesn't contain debug information!") {}
 
     explicit MissingDebugInfoException(const std::string &message) : message(message) {}
 
@@ -51,6 +52,17 @@ class Inspector {
      * @return A vector of FuncInfo objects containing information about each function in the program
      */
     std::vector<sfi::FuncInfo> getFuncInfos();
+
+    /**
+     * Returns a map that represents the inter-procedural control-flow graph (iCFG) of the program.
+     *
+     * This function retrieves the iCFG from the pointer analysis graph (PAG) of the program and constructs a map that
+     * represents the iCFG. Each key of the map is a basic block ID of a source node, and its value is a set of basic
+     * block IDs of destination nodes reachable from the source node via the control flow graph.
+     *
+     * @return A map that represents the iCFG of the program.
+     */
+    std::map<sfi::BBId, std::set<sfi::BBId>> getICFGInfos();
 };
 
 #endif  // SFI_INSPECTOR_H
