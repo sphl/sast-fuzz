@@ -46,6 +46,6 @@ class SASTToolRunnerFactory:
         elif type(tool) is SASTTool:
             key = tool
         else:
-            raise NotImplementedError()
+            raise ValueError("Wrong argument type!")
 
         return self._creators[key]

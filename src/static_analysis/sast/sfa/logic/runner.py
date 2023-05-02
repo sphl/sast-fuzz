@@ -2,7 +2,9 @@ from itertools import chain
 from multiprocessing import Pool
 from typing import List
 
-from sfa.logic.tools.base import SASTToolRunner, SASTToolOutput
+from sfa.logic import SASTToolOutput
+from sfa.logic.filters.base import SASTOutputFilter
+from sfa.logic.tools.base import SASTToolRunner
 
 
 def _starter(tool: SASTToolRunner) -> SASTToolOutput:
@@ -14,7 +16,9 @@ def _starter(tool: SASTToolRunner) -> SASTToolOutput:
     return tool.run()
 
 
-def run_sast_tools(runners: List[SASTToolRunner], exec_parallel: bool = True) -> SASTToolOutput:
+def run_sast_tools(runners: List[SASTToolRunner], filters: List[SASTOutputFilter],
+                   exec_parallel: bool = True) -> SASTToolOutput:
+    # TODO: Update doc!
     """Run multiple SAST tools.
 
     This function executes the passed SAST tool runners in parallel resp. sequence, followed by merging the tools'
@@ -33,5 +37,8 @@ def run_sast_tools(runners: List[SASTToolRunner], exec_parallel: bool = True) ->
             temp_res = pool.map(_starter, runners)
 
     findings = set(chain(*temp_res))
+
+    for f in filters:
+        findings = f.filter(findings)
 
     return findings

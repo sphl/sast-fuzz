@@ -2,11 +2,11 @@ from collections import defaultdict
 from functools import lru_cache
 from typing import Set, Dict
 
-from sfa.logic.filters.base import SASTToolOutputFilter, SASTToolOutput
+from sfa.logic.filters.base import SASTOutputFilter, SASTToolOutput
 from sfa.utils.io import read_json
 
 
-class ReachabilityFilter(SASTToolOutputFilter):
+class ReachabilityFilter(SASTOutputFilter):
     """Reachability filter implementation."""
 
     def __init__(self, sfi_file: str) -> None:

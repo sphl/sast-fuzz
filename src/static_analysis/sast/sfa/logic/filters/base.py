@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from sfa.logic import SASTToolFlag, SASTToolOutput
 
 
-class SASTToolOutputFilter(ABC):
+class SASTOutputFilter(ABC):
     """SAST tool output filter skeleton."""
 
     def __init__(self, sfi_file: str) -> None:
