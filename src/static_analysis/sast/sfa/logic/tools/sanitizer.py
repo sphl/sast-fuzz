@@ -14,7 +14,7 @@ class SanitizerType(Enum):
     MSAN = auto()
 
 
-class Sanitizer(SASTToolRunner):
+class SanitizerRunner(SASTToolRunner):
     """Address-/MemorySanitizer runner implementation."""
 
     _result_file_name: ClassVar[str] = "report.csv"

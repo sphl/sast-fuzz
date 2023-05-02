@@ -5,7 +5,7 @@ from argparse import Namespace
 from os import path
 
 from sfa.logic.runner import run_sast_tools
-from sfa.logic.tools.factory import SASTTool, SASTToolFactory
+from sfa.logic.tools.factory import SASTTool, SASTToolRunnerFactory
 from sfa.utils.error import log_assert
 
 
@@ -42,7 +42,7 @@ def sfa() -> int:
 
     logger.info("Selected SAST tools: [%s]", ", ".join(selected_tools))
 
-    factory = SASTToolFactory(subject_dir)
+    factory = SASTToolRunnerFactory(subject_dir)
     runners = list(map(factory.get_runner, selected_tools))
 
     findings = run_sast_tools(runners, args.exec_parallel)

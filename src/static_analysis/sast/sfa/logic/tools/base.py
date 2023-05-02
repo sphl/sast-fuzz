@@ -1,23 +1,11 @@
 import json
 import tempfile
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
 from os import environ, path
-from typing import Set, Dict, TypeAlias, ClassVar, Optional
+from typing import Dict, ClassVar, Optional
 
 from sfa.utils.error import log_assert
-
-
-@dataclass(frozen=True)
-class SASTToolFlag:
-    """Container for SAST tool flag information."""
-    tool_name: str
-    file_name: str
-    code_line: int
-    vuln_type: str
-
-
-SASTToolOutput: TypeAlias = Set[SASTToolFlag]
+from sfa.logic import SASTToolFlag, SASTToolOutput
 
 
 def convert_sarif(findings: str, tool_name: Optional[str] = None) -> SASTToolOutput:

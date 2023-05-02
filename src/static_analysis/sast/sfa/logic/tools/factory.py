@@ -2,11 +2,11 @@ from enum import Enum
 from typing import List, Union
 
 from sfa.logic.tools.base import SASTToolRunner
-from sfa.logic.tools.clangsa import ClangSA
-from sfa.logic.tools.codeql import CodeQL
-from sfa.logic.tools.flawfinder import Flawfinder
-from sfa.logic.tools.infer import Infer
-from sfa.logic.tools.sanitizer import Sanitizer, SanitizerType
+from sfa.logic.tools.clangsa import ClangSARunner
+from sfa.logic.tools.codeql import CodeQLRunner
+from sfa.logic.tools.flawfinder import FlawfinderRunner
+from sfa.logic.tools.infer import InferRunner
+from sfa.logic.tools.sanitizer import SanitizerRunner, SanitizerType
 
 
 class SASTTool(Enum):
@@ -22,17 +22,17 @@ class SASTTool(Enum):
         return [tool.value for tool in cls]
 
 
-class SASTToolFactory:
+class SASTToolRunnerFactory:
     """Factory for creating SAST tool runners."""
 
     def __init__(self, subject_dir: str):
         self._creators = {
-            SASTTool.FLF: Flawfinder(subject_dir),
-            SASTTool.IFR: Infer(subject_dir),
-            SASTTool.CQL: CodeQL(subject_dir),
-            SASTTool.CSA: ClangSA(subject_dir),
-            SASTTool.ASN: Sanitizer(subject_dir, SanitizerType.ASAN),
-            SASTTool.MSN: Sanitizer(subject_dir, SanitizerType.MSAN)
+            SASTTool.FLF: FlawfinderRunner(subject_dir),
+            SASTTool.IFR: InferRunner(subject_dir),
+            SASTTool.CQL: CodeQLRunner(subject_dir),
+            SASTTool.CSA: ClangSARunner(subject_dir),
+            SASTTool.ASN: SanitizerRunner(subject_dir, SanitizerType.ASAN),
+            SASTTool.MSN: SanitizerRunner(subject_dir, SanitizerType.MSAN)
         }
 
     def get_runner(self, tool: Union[str, SASTTool]) -> SASTToolRunner:

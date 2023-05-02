@@ -8,7 +8,7 @@ from sfa.utils.error import log_assert
 from sfa.utils.io import copy_dir, read
 
 
-class Infer(SASTToolRunner):
+class InferRunner(SASTToolRunner):
     """Infer runner implementation."""
 
     def __init__(self, subject_dir: str):

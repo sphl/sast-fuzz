@@ -9,7 +9,7 @@ from sfa.utils.error import log_assert
 from sfa.utils.io import read_json, copy_dir, find_files
 
 
-class ClangSA(SASTToolRunner):
+class ClangSARunner(SASTToolRunner):
     """Clang SA (scan-build) runner implementation."""
 
     def __init__(self, subject_dir: str):

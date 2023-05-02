@@ -4,7 +4,7 @@ from sfa.config import FLAWFINDER, FLAWFINDER_FLAG_SET
 from sfa.logic.tools.base import SASTToolRunner, SASTToolOutput, convert_sarif
 
 
-class Flawfinder(SASTToolRunner):
+class FlawfinderRunner(SASTToolRunner):
     """Flawfinder runner implementation."""
 
     def __init__(self, subject_dir: str):

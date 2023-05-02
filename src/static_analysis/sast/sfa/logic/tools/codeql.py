@@ -7,7 +7,7 @@ from sfa.utils.error import log_assert
 from sfa.utils.io import copy_dir, read
 
 
-class CodeQL(SASTToolRunner):
+class CodeQLRunner(SASTToolRunner):
     """CodeQL runner implementation."""
 
     def __init__(self, subject_dir: str):
