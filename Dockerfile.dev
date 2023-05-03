@@ -116,11 +116,11 @@ RUN cd /opt \
 # Note: Make sure that 'LLVM_DIR' is set to the right directory! Otherwise SVF's
 # build script will download pre-built LLVM binaries which may conflict with the
 # version installed above.
-RUN cd /opt/SVF-${SVF_VERSION} \
+RUN cd /opt/svf-${SVF_VERSION} \
     && ./build.sh debug \
     && ./build.sh
 
-ENV SVF_DIR="/opt/SVF-${SVF_VERSION}"
+ENV SVF_DIR="/opt/svf-${SVF_VERSION}"
 
 # Install WLLVM
 RUN python3 -m pip install --upgrade pip
