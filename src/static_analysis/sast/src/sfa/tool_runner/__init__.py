@@ -1,7 +1,7 @@
 import json
 import tempfile
-from enum import Enum
 from abc import ABC, abstractmethod
+from enum import Enum
 from os import environ, path
 from typing import List, Dict, ClassVar, Optional
 

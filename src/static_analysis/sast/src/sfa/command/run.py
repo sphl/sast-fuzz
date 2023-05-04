@@ -29,7 +29,7 @@ def run(
             dir_okay=True,
             resolve_path=True,
             help="Directory path to the program to be analyzed."
-            )],
+        )],
         output_file: Annotated[str, typer.Option(
             "--output",
             "-o",
@@ -40,14 +40,14 @@ def run(
             dir_okay=True,
             resolve_path=True,
             help="Path to the output CSV file."
-            )],
+        )],
         excluded_tools: Annotated[List[SASTTool], typer.Option(
             "--exclude-tool",
             "-x",
             help="SAST tool(s) to be excluded from the analysis."
-            )] = list(),
+        )] = list(),
         parallel: Annotated[bool, typer.Option(help="Execute the SAST tools in parallel.")] = True
-        ) -> None:
+) -> None:
     tool_runners = [tool for tool in SASTTool if tool not in excluded_tools]
 
     factory = RunnerFactory(subject_dir)

@@ -1,6 +1,6 @@
+from abc import ABC, abstractmethod
 from enum import Enum
 from typing import List
-from abc import ABC, abstractmethod
 
 from sfa import SASTToolOutput
 

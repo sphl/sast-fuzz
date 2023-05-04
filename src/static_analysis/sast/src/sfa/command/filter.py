@@ -22,7 +22,7 @@ def filter(
             dir_okay=True,
             resolve_path=True,
             help="Path to the file containing the SAST tool(s) flags."
-            )],
+        )],
         sfi_file: Annotated[str, typer.Option(
             "--program-info",
             metavar="SFI_FILE",
@@ -32,7 +32,7 @@ def filter(
             dir_okay=True,
             resolve_path=True,
             help="Path to the SFI program inspection file."
-            )],
+        )],
         output_file: Annotated[str, typer.Option(
             "--output",
             "-o",
@@ -43,10 +43,10 @@ def filter(
             dir_okay=True,
             resolve_path=True,
             help="Path to the output CSV file."
-            )],
+        )],
         flag_filters: Annotated[List[SASTFilter], typer.Option("--filter", "-f", help="SAST output filter(s).")] = [
             SASTFilter.REH]
-        ) -> None:
+) -> None:
     factory = FilterFactory(sfi_file)
     filters = list(map(factory.get_instance, flag_filters))
 
