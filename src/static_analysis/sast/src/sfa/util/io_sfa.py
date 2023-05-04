@@ -1,4 +1,5 @@
 from pathlib import Path
+from dataclasses import asdict
 
 import pandas as pd
 
@@ -23,6 +24,6 @@ def write_flags(file: Path, flags: SASTToolOutput) -> None:
     :param flags: SAST tool flags
     :return: None
     """
-    df = pd.DataFrame.from_records([flag.as_dict() for flag in flags])
+    df = pd.DataFrame.from_records([asdict(flag) for flag in flags])
 
     df.to_csv(file, header=True)

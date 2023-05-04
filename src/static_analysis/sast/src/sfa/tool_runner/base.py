@@ -26,14 +26,6 @@ class SASTToolFlag:
     line: int
     vuln: str
 
-    def as_dict(self) -> Dict[str, str | int]:
-        return {
-            "tool": self.tool,
-            "file": self.file,
-            "line": self.line,
-            "vuln": self.vuln
-        }
-
 
 SASTToolOutput: TypeAlias = Set[SASTToolFlag]
 
