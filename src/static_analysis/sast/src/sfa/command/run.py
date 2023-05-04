@@ -1,8 +1,7 @@
 import logging
 from itertools import chain
 from multiprocessing import Pool, cpu_count
-from typing import List
-from typing_extensions import Annotated
+from typing import List, Annotated
 
 import typer
 

@@ -6,7 +6,6 @@ from os import environ, path
 from typing import List, Dict, ClassVar, Optional
 
 from sfa import SASTToolFlag, SASTToolOutput
-from sfa.util.error import log_assert
 
 
 class SASTTool(Enum):
@@ -31,7 +30,7 @@ def convert_sarif(flags: str, tool: Optional[SASTTool] = None) -> SASTToolOutput
     """
     sarif_data = json.loads(flags)
 
-    log_assert(sarif_data["version"] == "2.1.0", "Unsupported SARIF version!")
+    assert sarif_data["version"] == "2.1.0", "Unsupported SARIF version!"
 
     result_set = set()
 
@@ -45,7 +44,7 @@ def convert_sarif(flags: str, tool: Optional[SASTTool] = None) -> SASTToolOutput
         rule_dict = {rule["id"]: rule["name"] for rule in run["tool"]["driver"]["rules"]}
 
         for finding in run["results"]:
-            log_assert(finding["ruleId"] in rule_dict.keys())
+            assert finding["ruleId"] in rule_dict.keys()
 
             vuln = rule_dict[finding["ruleId"]]
 
@@ -107,11 +106,11 @@ class SASTToolRunner(ABC):
 
         :return: None
         """
-        log_assert(path.exists(self._subject_dir))
+        assert path.exists(self._subject_dir)
 
         with tempfile.TemporaryDirectory() as temp_dir:
             working_dir = self._setup(temp_dir)
 
-            log_assert(path.exists(working_dir))
+            assert path.exists(working_dir)
 
             return self._format(self._analyze(working_dir))
