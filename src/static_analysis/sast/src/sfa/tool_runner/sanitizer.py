@@ -1,33 +1,12 @@
 import subprocess as proc
-from enum import (
-    Enum,
-    auto
-)
-from os import (
-    path,
-    linesep
-)
-from typing import (
-    Dict,
-    ClassVar
-)
+from enum import Enum, auto
+from os import path, linesep
+from typing import Dict, ClassVar
 
-from sfa import (
-    SASTToolFlag,
-    SASTToolOutput
-)
-from sfa.config import (
-    SHELL,
-    BUILD_SCRIPT_NAME
-)
-from sfa.tool_runner import (
-    SASTTool,
-    SASTToolRunner
-)
-from sfa.util.io import (
-    copy_dir,
-    read
-)
+from sfa import SASTToolFlag, SASTToolOutput
+from sfa.config import SHELL, BUILD_SCRIPT_NAME
+from sfa.tool_runner import SASTTool, SASTToolRunner
+from sfa.util.io import copy_dir, read
 
 
 class SanitizerType(Enum):
