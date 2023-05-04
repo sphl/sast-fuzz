@@ -1,16 +1,17 @@
 from collections import defaultdict
 from functools import lru_cache
+from pathlib import Path
 from typing import Set, Dict
 
-from sfa import SASTToolOutput
-from sfa.filter import SASTOutputFilter
+from sfa.filter.base import SASTOutputFilter
+from sfa.tool_runner.base import SASTToolOutput
 from sfa.util.io import read_json
 
 
 class ReachabilityFilter(SASTOutputFilter):
     """Reachability filter."""
 
-    def __init__(self, sfi_file: str) -> None:
+    def __init__(self, sfi_file: Path) -> None:
         super().__init__(sfi_file)
         self._reachable_code: Dict[str, Set] = defaultdict(set)
 

@@ -1,22 +1,23 @@
 import json
 import re
 import shutil
-from os import linesep, path, walk
+from os import linesep, walk
+from pathlib import Path
 from typing import List, Dict, Optional
 
 
-def read(file: str, mode: str = "r") -> str:
+def read(file: Path, mode: str = "r") -> str:
     """Read the text of a file.
 
     :param file: File path
     :param mode: File reading mode
     :return: String
     """
-    with open(file, mode) as fh:
+    with file.open(mode) as fh:
         return fh.read()
 
 
-def write(file: str, text: str, mode: str = "w") -> None:
+def write(file: Path, text: str, mode: str = "w") -> None:
     """Write a text to a file.
 
     :param file: File path
@@ -24,11 +25,11 @@ def write(file: str, text: str, mode: str = "w") -> None:
     :param mode: File writing mode
     :return: None
     """
-    with open(file, mode) as fh:
+    with file.open(mode) as fh:
         fh.write(text)
 
 
-def append(file: str, line: str) -> None:
+def append(file: Path, line: str) -> None:
     """Append a line to a file.
 
     :param file: File path
@@ -38,7 +39,7 @@ def append(file: str, line: str) -> None:
     write(file, line + linesep, "a")
 
 
-def read_json(file: str) -> Dict:
+def read_json(file: Path) -> Dict:
     """Read the dictionary of a JSON file.
 
     :param file: File path
@@ -47,7 +48,7 @@ def read_json(file: str) -> Dict:
     return json.loads(read(file))
 
 
-def write_json(file: str, data: Dict) -> None:
+def write_json(file: Path, data: Dict) -> None:
     """Write a dictionary to a JSON file.
 
     :param file: File path
@@ -57,7 +58,7 @@ def write_json(file: str, data: Dict) -> None:
     write(file, json.dumps(data, sort_keys=False, indent=4))
 
 
-def copy_dir(source_dir: str, dest_root: str) -> str:
+def copy_dir(source_dir: Path, dest_root: Path) -> Path:
     """Copy the content of a source directory to a destination (root) directory.
 
     :param source_dir: Source directory path
@@ -65,14 +66,14 @@ def copy_dir(source_dir: str, dest_root: str) -> str:
     :return: None
     """
     src = source_dir
-    dst = path.join(dest_root, path.basename(src))
+    dst = dest_root / source_dir.name
 
     shutil.copytree(src, dst)
 
     return dst
 
 
-def find_files(root_dir: str, file_ext: Optional[str] = None, rec_search: bool = True) -> List[str]:
+def find_files(root_dir: Path, file_ext: Optional[str] = None, rec_search: bool = True) -> List[Path]:
     """Search for (certain) files in a directory.
 
     Starting in a root directory, this function returns the (absolute) path of all files that match the specified file
@@ -93,7 +94,7 @@ def find_files(root_dir: str, file_ext: Optional[str] = None, rec_search: bool =
 
     for root, _, files in walk(root_dir):
         for file in filter(lambda f: regex.match(f), files):
-            file_list.append(path.join(root, file))
+            file_list.append(Path(root) / Path(file))
 
         if not rec_search:
             break

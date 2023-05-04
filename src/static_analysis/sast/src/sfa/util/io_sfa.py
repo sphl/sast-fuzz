@@ -1,9 +1,11 @@
+from pathlib import Path
+
 import pandas as pd
 
-from sfa import SASTToolFlag, SASTToolOutput
+from sfa.tool_runner.base import SASTToolFlag, SASTToolOutput
 
 
-def read_flags(file: str) -> SASTToolOutput:
+def read_flags(file: Path) -> SASTToolOutput:
     """Read the SAST tool flags from a CSV file.
 
     :param file: Path to CSV file
@@ -14,7 +16,7 @@ def read_flags(file: str) -> SASTToolOutput:
     return set([SASTToolFlag(*row) for row in data.iterrows()])
 
 
-def write_flags(file: str, flags: SASTToolOutput) -> None:
+def write_flags(file: Path, flags: SASTToolOutput) -> None:
     """Write the SAST tool flags to a CSV file.
 
     :param file: Path to CSV file

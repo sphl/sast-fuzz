@@ -1,7 +1,3 @@
-from dataclasses import dataclass
-from typing import Set, Dict, Any, TypeAlias
-
-
 # from pkg_resources import get_distribution, DistributionNotFound
 #
 # try:
@@ -12,23 +8,3 @@ from typing import Set, Dict, Any, TypeAlias
 #     __version__ = "unknown"
 # finally:
 #     del get_distribution, DistributionNotFound
-
-
-@dataclass(frozen=True)
-class SASTToolFlag:
-    """Container for a SAST tool flag."""
-    tool: str
-    file: str
-    line: int
-    vuln: str
-
-    def as_dict(self) -> Dict[str, Any]:
-        return {
-            "tool": self.tool,
-            "file": self.file,
-            "line": self.line,
-            "vuln": self.vuln
-        }
-
-
-SASTToolOutput: TypeAlias = Set[SASTToolFlag]
