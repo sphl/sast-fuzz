@@ -1,10 +1,10 @@
 import subprocess as proc
 from os import path
 
+from sfa import SASTToolOutput
 from sfa.config import SHELL, BUILD_SCRIPT_NAME, CODEQL, CODEQL_RULE_SET, CODEQL_NUM_THREADS
-from sfa.logic.tools.base import SASTToolRunner, SASTToolOutput, convert_sarif
-from sfa.utils.error import log_assert
-from sfa.utils.io import copy_dir, read
+from sfa.tool_runner import SASTTool, SASTToolRunner, convert_sarif
+from sfa.util.io import copy_dir, read
 
 
 class CodeQLRunner(SASTToolRunner):
@@ -14,7 +14,7 @@ class CodeQLRunner(SASTToolRunner):
         super().__init__(subject_dir)
 
     def _setup(self, temp_dir: str) -> str:
-        log_assert(path.exists(path.join(self._subject_dir, BUILD_SCRIPT_NAME)))
+        assert path.exists(path.join(self._subject_dir, BUILD_SCRIPT_NAME))
 
         result_dir = path.join(temp_dir, "codeql_res")
 
@@ -47,9 +47,9 @@ class CodeQLRunner(SASTToolRunner):
 
         proc.run(exec_cmd, shell=True)
 
-        log_assert(path.exists(result_file))
+        assert path.exists(result_file)
 
         return read(result_file)
 
-    def _format(self, findings: str) -> SASTToolOutput:
-        return convert_sarif(findings)
+    def _format(self, flags: str) -> SASTToolOutput:
+        return convert_sarif(flags, SASTTool.CQL)

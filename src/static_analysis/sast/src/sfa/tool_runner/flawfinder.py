@@ -1,11 +1,12 @@
 import subprocess as proc
 
+from sfa import SASTToolOutput
 from sfa.config import FLAWFINDER, FLAWFINDER_FLAG_SET
-from sfa.logic.tools.base import SASTToolRunner, SASTToolOutput, convert_sarif
+from sfa.tool_runner import SASTTool, SASTToolRunner, convert_sarif
 
 
 class FlawfinderRunner(SASTToolRunner):
-    """Flawfinder runner implementation."""
+    """Flawfinder runner."""
 
     def __init__(self, subject_dir: str):
         super().__init__(subject_dir)
@@ -22,5 +23,5 @@ class FlawfinderRunner(SASTToolRunner):
 
         return proc.run(exec_cmd, shell=True, capture_output=True, text=True, encoding="utf-8").stdout
 
-    def _format(self, findings: str) -> SASTToolOutput:
-        return convert_sarif(findings)
+    def _format(self, flags: str) -> SASTToolOutput:
+        return convert_sarif(flags, SASTTool.FLF)

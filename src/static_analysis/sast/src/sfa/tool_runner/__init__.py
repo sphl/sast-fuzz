@@ -1,31 +1,45 @@
 import json
 import tempfile
+from enum import Enum
 from abc import ABC, abstractmethod
 from os import environ, path
-from typing import Dict, ClassVar, Optional
+from typing import List, Dict, ClassVar, Optional
 
-from sfa.utils.error import log_assert
-from sfa.logic import SASTToolFlag, SASTToolOutput
+from sfa import SASTToolFlag, SASTToolOutput
+from sfa.util.error import log_assert
 
 
-def convert_sarif(findings: str, tool_name: Optional[str] = None) -> SASTToolOutput:
+class SASTTool(Enum):
+    FLF = "flawfinder"
+    IFR = "infer"
+    CQL = "codeql"
+    CLS = "clang-scan"
+    ASN = "asan"
+    MSN = "msan"
+
+    @classmethod
+    def values(cls) -> List[str]:
+        return [tool.value for tool in cls]
+
+
+def convert_sarif(flags: str, tool: Optional[SASTTool] = None) -> SASTToolOutput:
     """Convert SARIF output into common data format.
 
-    :param findings: SAST tool output
-    :param tool_name: SAST tool name
+    :param flags: SAST tool output
+    :param tool: SAST tool name
     :return: Formatted output
     """
-    sarif_data = json.loads(findings)
+    sarif_data = json.loads(flags)
 
     log_assert(sarif_data["version"] == "2.1.0", "Unsupported SARIF version!")
 
     result_set = set()
 
     for run in sarif_data["runs"]:
-        if tool_name is None:
-            tool_name = run["tool"]["driver"]["name"]
-
-        tool_name = tool_name.lower()
+        if tool is None:
+            _tool = run["tool"]["driver"]["name"]
+        else:
+            _tool = tool.value.lower()
 
         # Create a mapping from the rule ID to its corresponding name.
         rule_dict = {rule["id"]: rule["name"] for rule in run["tool"]["driver"]["rules"]}
@@ -33,19 +47,19 @@ def convert_sarif(findings: str, tool_name: Optional[str] = None) -> SASTToolOut
         for finding in run["results"]:
             log_assert(finding["ruleId"] in rule_dict.keys())
 
-            rule_name = rule_dict[finding["ruleId"]]
+            vuln = rule_dict[finding["ruleId"]]
 
             for loc in finding["locations"]:
-                file_name = path.basename(loc["physicalLocation"]["artifactLocation"]["uri"])
-                code_line = int(loc["physicalLocation"]["region"]["startLine"])
+                file = path.basename(loc["physicalLocation"]["artifactLocation"]["uri"])
+                line = int(loc["physicalLocation"]["region"]["startLine"])
 
-                result_set.add(SASTToolFlag(tool_name, file_name, code_line, rule_name))
+                result_set.add(SASTToolFlag(_tool, file, line, vuln))
 
     return result_set
 
 
 class SASTToolRunner(ABC):
-    """SAST tool runner skeleton."""
+    """Abstract SAST tool runner."""
 
     _setup_env: ClassVar[Dict[str, str]] = {
         **environ.copy(),
@@ -75,15 +89,15 @@ class SASTToolRunner(ABC):
         """Execute SAST tool on target program.
 
         :param working_dir: Working directory path
-        :return: SAST tool output
+        :return: SAST tool flags
         """
         pass
 
     @abstractmethod
-    def _format(self, findings: str) -> SASTToolOutput:
+    def _format(self, flags: str) -> SASTToolOutput:
         """Convert SAST tool-specific output into common data format.
 
-        :param findings: SAST tool output
+        :param flags: SAST tool flags
         :return: Formatted output
         """
         pass

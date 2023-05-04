@@ -2,20 +2,20 @@ import json
 import subprocess as proc
 from os import path
 
+from sfa import SASTToolFlag, SASTToolOutput
 from sfa.config import SHELL, BUILD_SCRIPT_NAME, INFER, INFER_RULE_SET, INFER_NUM_THREADS
-from sfa.logic.tools.base import SASTToolRunner, SASTToolFlag, SASTToolOutput
-from sfa.utils.error import log_assert
-from sfa.utils.io import copy_dir, read
+from sfa.tool_runner import SASTTool, SASTToolRunner
+from sfa.util.io import copy_dir, read
 
 
 class InferRunner(SASTToolRunner):
-    """Infer runner implementation."""
+    """Infer runner."""
 
     def __init__(self, subject_dir: str):
         super().__init__(subject_dir)
 
     def _setup(self, temp_dir: str) -> str:
-        log_assert(path.exists(path.join(self._subject_dir, BUILD_SCRIPT_NAME)))
+        assert path.exists(path.join(self._subject_dir, BUILD_SCRIPT_NAME))
 
         result_dir = path.join(temp_dir, "infer_res")
 
@@ -42,19 +42,19 @@ class InferRunner(SASTToolRunner):
         # By default, Infer writes the results into the 'report.json' file once the analysis is complete.
         result_file = path.join(working_dir, "report.json")
 
-        log_assert(path.exists(result_file))
+        assert path.exists(result_file)
 
         return read(result_file)
 
-    def _format(self, findings: str) -> SASTToolOutput:
+    def _format(self, flags: str) -> SASTToolOutput:
         result_set = set()
 
-        for finding in json.loads(findings):
-            tool_name = "infer"
-            file_name = path.basename(finding["file"])
-            code_line = int(finding["line"])
-            vuln_type = finding["bug_type"]
+        for finding in json.loads(flags):
+            tool = SASTTool.IFR.value
+            file = path.basename(finding["file"])
+            line = int(finding["line"])
+            vuln = finding["bug_type"]
 
-            result_set.add(SASTToolFlag(tool_name, file_name, code_line, vuln_type))
+            result_set.add(SASTToolFlag(tool, file, line, vuln))
 
         return result_set
