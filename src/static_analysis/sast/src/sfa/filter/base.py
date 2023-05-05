@@ -1,11 +1,11 @@
 from abc import ABC, abstractmethod
+from enum import Enum
 from pathlib import Path
 
 from sfa.tool_runner.base import SASTToolOutput
-from sfa.util.ext_enum import ExtendedEnum
 
 
-class SASTFilter(ExtendedEnum):
+class SASTFilter(Enum):
     REH = "reachability"
 
 

@@ -1,5 +1,5 @@
-from pathlib import Path
 from dataclasses import asdict
+from pathlib import Path
 
 import pandas as pd
 

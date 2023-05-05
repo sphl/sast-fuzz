@@ -2,14 +2,13 @@ import json
 import tempfile
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from enum import Enum
 from os import environ
 from pathlib import Path
 from typing import Set, Dict, ClassVar, Optional, TypeAlias
 
-from sfa.util.ext_enum import ExtendedEnum
 
-
-class SASTTool(ExtendedEnum):
+class SASTTool(Enum):
     FLF = "flawfinder"
     IFR = "infer"
     CQL = "codeql"
