@@ -1,20 +1,18 @@
-import multiprocessing as mp
+from sfa.util.proc import get_cpu_count
 
-SHELL = "/bin/bash"
-"""Path to the shell program."""
-
+# Name of the subjects' build script
 BUILD_SCRIPT_NAME = "build.sh"
-"""Name of the subjects' build script."""
 
+# Path to the Flawfinder analyzer
 FLAWFINDER = "/opt/flawfinder-2.0.19/flawfinder.py"
-"""Path to the Flawfinder analyzer."""
 
+# Flags of Flawfinder
 FLAWFINDER_FLAG_SET = ["--falsepositive", "--minlevel=3", "--neverignore"]
-"""Flags of Flawfinder."""
 
+# Path to the Infer analyzer
 INFER = "/opt/infer-1.1.0/bin/infer"
-"""Path to the Infer analyzer."""
 
+# Flags/checks of Infer
 INFER_RULE_SET = [
     "--no-default-checkers",
     "--biabduction",
@@ -27,18 +25,17 @@ INFER_RULE_SET = [
     # "--starvation",
     "--uninit"
 ]
-"""Flags/checks of Infer."""
 
-INFER_NUM_THREADS = mp.cpu_count() - 1
-"""Number of threads used by Infer."""
+# Number of threads used by Infer
+INFER_NUM_THREADS = get_cpu_count() - 1
 
+# Path to the CodeQL analyzer
 CODEQL = "/opt/codeql-2.12.0/cli/codeql"
-"""Path to the CodeQL analyzer."""
 
+# Path to the CodeQL library directory root
 CODEQL_LIB_ROOT = "/opt/codeql-2.12.0/lib"
-"""Path to the CodeQL library directory root."""
 
-# TODO: Filter out relevant CodeQL rules!
+# Queries (checks) of CodeQL
 CODEQL_RULE_SET = [
     # f"{CODEQL_LIB_ROOT}/cpp/ql/src/AlertSuppression.ql",
     # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Architecture/FeatureEnvy.ql",
@@ -620,15 +617,15 @@ CODEQL_RULE_SET = [
     # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Summary/LinesOfCode.ql",
     # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Summary/LinesOfUserCode.ql"
 ]
-"""Queries (checks) of CodeQL."""
 
-CODEQL_NUM_THREADS = mp.cpu_count() - 1
-"""Number of threads used by CodeQL."""
+# Number of threads used by CodeQL
+CODEQL_NUM_THREADS = get_cpu_count() - 1
 
-CLANGSA = "/opt/llvm-12.0.0/build/bin/scan-build"
-"""Path to the Clang SA (scan-build) program."""
+# Path to the Clang SA (scan-build) program
+CLANG_SCAN = "/opt/llvm-12.0.0/build/bin/scan-build"
 
-CLANGSA_RULE_SET = [
+# Checks of Clang SA
+CLANG_SCAN_RULE_SET = [
     "-disable-checker core.CallAndMessage",
     "-enable-checker core.DivideZero",
     "-enable-checker core.NonNullParamChecker",
@@ -720,4 +717,3 @@ CLANGSA_RULE_SET = [
     "-disable-checker webkit.RefCntblBaseVirtualDtor",
     "-disable-checker webkit.UncountedLambdaCapturesChecker"
 ]
-"""Checks of Clang SA."""

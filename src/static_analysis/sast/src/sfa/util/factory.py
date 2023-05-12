@@ -1,23 +1,24 @@
 from abc import ABC, abstractmethod
-from typing import Dict, TypeVar, Generic
-
-D = TypeVar("D")
-E = TypeVar("E")
-F = TypeVar("F")
+from typing import Dict, Any, Iterable
 
 
-class Factory(ABC, Generic[D, E, F]):
-    """Abstract factory."""
+class Factory(ABC):
+    """
+    Abstract factory.
+    """
 
     @abstractmethod
-    def _get_creators(self, param: D) -> Dict[E, F]:
+    def _create_instances(self, param: Any) -> Dict:
         pass
 
-    def __init__(self, param: D) -> None:
-        self._creators = self._get_creators(param)
+    def __init__(self, param: Any) -> None:
+        if param is None:
+            self._instances = {}
+        else:
+            self._instances = self._create_instances(param)
 
-    def get_instance(self, key: E) -> F:
-        if key not in self._creators.keys():
-            raise ValueError("No instance for key found!")
+    def get_instance(self, key: Any) -> Any:
+        return self._instances[key]
 
-        return self._creators[key]
+    def get_instances(self, keys: Iterable) -> Iterable:
+        return map(self.get_instance, keys)
