@@ -3,7 +3,7 @@
 import logging
 import multiprocessing as mp
 import os
-import subprocess # nosec
+import subprocess  # nosec
 from pathlib import Path
 from typing import Callable, Dict, Iterable, List, Optional
 
@@ -25,7 +25,7 @@ def run_shell_command(
     cmd_cwd = cwd or Path.cwd()
     cmd_env = env or os.environ.copy()
 
-    assert cmd_cwd.exists() # nosec
+    assert cmd_cwd.exists()  # nosec
 
     logging.info(f"Running command: '{cmd_str}'")
 
@@ -38,7 +38,7 @@ def run_shell_command(
             capture_output=True,
             text=True,
             encoding="utf-8",
-        ).stdout # nosec
+        ).stdout  # nosec
 
     except subprocess.CalledProcessError as e:
         logging.error(e)
