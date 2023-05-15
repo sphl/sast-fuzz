@@ -21,20 +21,8 @@ jobs:
         export PATH="/github/home/.local/bin:$PATH"
         cd src/static_analysis/sast
         poetry install
-    - name: Check license
-      run: |-
-        export PATH="/github/home/.local/bin:$PATH"
         poetry run reuse lint
-    - name: Check format
-      run: |-
-        export PATH="/github/home/.local/bin:$PATH"
         poetry run black --check src
         poetry run isort --profile black --check src
-    - name: Static Type Checking
-      run: |-
-        export PATH="/github/home/.local/bin:$PATH"
         poetry run mypy
-    - name: Staic Security testing with bandit
-      run: |-
-        export PATH="/github/home/.local/bin:$PATH"
         poetry run bandit --recursive --confidence src
