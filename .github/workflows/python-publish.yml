@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2023 Stephan Lipp, Technical University of Munich (TUM), et al.
 # SPDX-License-Identifier: Apache-2.0
-name: Check Reuse
+name: Check License Usage with Python Reuse
 
 on:
   push:
@@ -9,16 +9,15 @@ permissions:
   contents: read
 
 jobs:
-  deploy:
+  check_license:
     container:
-      image: tumi4/python-3.9-bullseye-poetry-1.2.1
-      options: --user 1001
+      image: python:3.11.3-slim-bullseye
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v3
     - name: Build package
       run: |
+        curl -sSL https://install.python-poetry.org | python3 -
         cd src/static_analysis/sast
         poetry install
         poetry run reuse lint
