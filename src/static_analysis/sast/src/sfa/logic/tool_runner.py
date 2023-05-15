@@ -7,20 +7,20 @@ from enum import Enum
 from itertools import chain
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Dict, Any, ClassVar
+from typing import Any, ClassVar, Dict
 
 from sfa.config import (
     BUILD_SCRIPT_NAME,
+    CLANG_SCAN,
+    CLANG_SCAN_RULE_SET,
+    CODEQL,
+    CODEQL_NUM_THREADS,
+    CODEQL_RULE_SET,
     FLAWFINDER,
     FLAWFINDER_FLAG_SET,
     INFER,
-    INFER_RULE_SET,
     INFER_NUM_THREADS,
-    CODEQL,
-    CODEQL_RULE_SET,
-    CODEQL_NUM_THREADS,
-    CLANG_SCAN,
-    CLANG_SCAN_RULE_SET,
+    INFER_RULE_SET,
 )
 from sfa.logic import SAST_SETUP_ENV, SASTToolFlag, SASTToolFlags, convert_sarif
 from sfa.util.factory import Factory
@@ -99,7 +99,9 @@ class FlawfinderRunner(SASTToolRunner):
         return self._subject_dir
 
     def _analyze(self, working_dir: Path) -> str:
-        return run_shell_command(f"{FLAWFINDER} --dataonly --sarif {' '.join(FLAWFINDER_FLAG_SET)} {working_dir}")
+        return run_shell_command(
+            f"{FLAWFINDER} --dataonly --sarif {' '.join(FLAWFINDER_FLAG_SET)} {working_dir}"
+        )
 
     def _format(self, string: str) -> SASTToolFlags:
         return convert_sarif(string)
@@ -174,7 +176,9 @@ class CodeQLRunner(SASTToolRunner):
         )
 
         if not result_file.exists():
-            raise Exception(f"CodeQL: Failed to create the result file '{result_file}'!")
+            raise Exception(
+                f"CodeQL: Failed to create the result file '{result_file}'!"
+            )
 
         return read(result_file)
 
@@ -206,7 +210,9 @@ class ClangScanRunner(SASTToolRunner):
 
         # Clang analyzer writes the results of each checker into a separate SARIF file. Therefore, we append the results
         # (JSON string) of each file as one line to the return string.
-        return os.linesep.join(map(lambda f: json.dumps(json.loads(read(f)), indent=None), result_files))
+        return os.linesep.join(
+            map(lambda f: json.dumps(json.loads(read(f)), indent=None), result_files)
+        )
 
     def _format(self, string: str) -> SASTToolFlags:
         flags = map(convert_sarif, string.split(os.linesep))
@@ -229,11 +235,15 @@ class SanitizerRunner(SASTToolRunner):
         result_file = temp_dir / Path(self._report_name)
 
         run_shell_command(
-            f"./{BUILD_SCRIPT_NAME}", cwd=copy_dir(self._subject_dir, temp_dir), env=self._env_vars(result_file)
+            f"./{BUILD_SCRIPT_NAME}",
+            cwd=copy_dir(self._subject_dir, temp_dir),
+            env=self._env_vars(result_file),
         )
 
         if not result_file.exists():
-            raise Exception(f"Sanitizer: Failed to create the result file '{result_file}'!")
+            raise Exception(
+                f"Sanitizer: Failed to create the result file '{result_file}'!"
+            )
 
         return temp_dir
 

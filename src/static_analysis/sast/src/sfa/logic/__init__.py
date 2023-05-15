@@ -4,7 +4,7 @@ import json
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Set, Dict, Tuple, Optional, Generator
+from typing import Dict, Generator, Optional, Set, Tuple
 
 from sfa.config import BUILD_SCRIPT_NAME
 
@@ -17,7 +17,12 @@ SARIF_VERSION: str = "2.1.0"
 # SAST tool setup environment variables
 SAST_SETUP_ENV: Dict[str, str] = {
     **os.environ.copy(),
-    **{"CC": "clang", "CXX": "clang++", "CFLAGS": "-O0 -fno-inline", "CXXFLAGS": "-O0 -fno-inline"},
+    **{
+        "CC": "clang",
+        "CXX": "clang++",
+        "CFLAGS": "-O0 -fno-inline",
+        "CXXFLAGS": "-O0 -fno-inline",
+    },
 }
 
 
@@ -105,7 +110,9 @@ def convert_sarif(string: str) -> SASTToolFlags:
         tool = run["tool"]["driver"]["name"].lower()
 
         # Create a mapping between rule ID and rule/vuln. name
-        rule_dict = {rule["id"]: rule["name"] for rule in run["tool"]["driver"]["rules"]}
+        rule_dict = {
+            rule["id"]: rule["name"] for rule in run["tool"]["driver"]["rules"]
+        }
 
         for flag in run["results"]:
             vuln = rule_dict[flag["ruleId"]]

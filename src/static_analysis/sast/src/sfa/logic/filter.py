@@ -6,7 +6,7 @@ from collections import defaultdict
 from enum import Enum
 from functools import lru_cache
 from pathlib import Path
-from typing import Set, Dict, Any
+from typing import Any, Dict, Set
 
 from sfa.logic import SASTToolFlags
 from sfa.util.factory import Factory
@@ -43,7 +43,9 @@ class ReachabilityFilter(SASTFlagFilter):
 
         for func in data["functions"]:
             if func["location"]["reachable_from_main"]:
-                self._reachable_code[func["location"]["filename"]].add(func["location"]["line"])
+                self._reachable_code[func["location"]["filename"]].add(
+                    func["location"]["line"]
+                )
 
     @lru_cache(maxsize=None)
     def _is_reachable(self, file: str, line: int) -> bool:
@@ -68,7 +70,9 @@ class ReachabilityFilter(SASTFlagFilter):
         :param flags:
         :return:
         """
-        return SASTToolFlags(set(filter(lambda f: self._is_reachable(f.file, int(f.line)), flags)))
+        return SASTToolFlags(
+            set(filter(lambda f: self._is_reachable(f.file, int(f.line)), flags))
+        )
 
 
 class FilterFactory(Factory):

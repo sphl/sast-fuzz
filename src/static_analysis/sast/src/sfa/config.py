@@ -25,7 +25,7 @@ INFER_RULE_SET = [
     # "--racerd",
     "--siof",
     # "--starvation",
-    "--uninit"
+    "--uninit",
 ]
 
 # Number of threads used by Infer
@@ -717,5 +717,5 @@ CLANG_SCAN_RULE_SET = [
     "-enable-checker valist.Unterminated",
     "-disable-checker webkit.NoUncountedMemberChecker",
     "-disable-checker webkit.RefCntblBaseVirtualDtor",
-    "-disable-checker webkit.UncountedLambdaCapturesChecker"
+    "-disable-checker webkit.UncountedLambdaCapturesChecker",
 ]

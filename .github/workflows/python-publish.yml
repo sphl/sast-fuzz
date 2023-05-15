@@ -11,13 +11,19 @@ permissions:
 jobs:
   check_license:
     container:
-      image: python:3.11.3-slim-bullseye
+      image: python:3.11.3-bullseye
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - name: Build package
-      run: |
+    - name: Install Dep with Poetry
+      run: |-
         curl -sSL https://install.python-poetry.org | python3 -
         cd src/static_analysis/sast
         poetry install
+    - name: Check license
+      run: |-
         poetry run reuse lint
+    - name: Check format
+      run: |-
+        poetry run black --check src
+        poetry run isort --profile black --check src

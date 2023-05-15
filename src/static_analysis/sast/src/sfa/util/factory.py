@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2023 Stephan Lipp, Technical University of Munich (TUM), et al.
 # SPDX-License-Identifier: Apache-2.0
 from abc import ABC, abstractmethod
-from typing import Dict, Any, Iterable
+from typing import Any, Dict, Iterable
 
 
 class Factory(ABC):

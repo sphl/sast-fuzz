@@ -5,10 +5,14 @@ import multiprocessing as mp
 import os
 import subprocess
 from pathlib import Path
-from typing import List, Dict, Iterable, Callable, Optional
+from typing import Callable, Dict, Iterable, List, Optional
 
 
-def run_shell_command(cmd: str | List[str], cwd: Optional[Path] = None, env: Optional[Dict[str, str]] = None) -> str:
+def run_shell_command(
+    cmd: str | List[str],
+    cwd: Optional[Path] = None,
+    env: Optional[Dict[str, str]] = None,
+) -> str:
     """
     Run command as shell sub-process.
 
@@ -27,7 +31,13 @@ def run_shell_command(cmd: str | List[str], cwd: Optional[Path] = None, env: Opt
 
     try:
         return subprocess.run(
-            cmd_str, shell=True, cwd=cmd_cwd, env=cmd_env, capture_output=True, text=True, encoding="utf-8"
+            cmd_str,
+            shell=True,
+            cwd=cmd_cwd,
+            env=cmd_env,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
         ).stdout
 
     except subprocess.CalledProcessError as e:
@@ -45,7 +55,9 @@ def get_cpu_count() -> int:
     return mp.cpu_count()
 
 
-def run_with_multi_processing(func: Callable, iterable: Iterable, n_cpu: int = get_cpu_count() - 1) -> List:
+def run_with_multi_processing(
+    func: Callable, iterable: Iterable, n_cpu: int = get_cpu_count() - 1
+) -> List:
     """
     Run a function for each element in an iterable with multi-processing.
 
