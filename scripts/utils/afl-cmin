@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# SPDX-FileCopyrightText: 2023 Stephan Lipp, Technical University of Munich (TUM), et al.
+# SPDX-License-Identifier: Apache-2.0
 #
 # american fuzzy lop - corpus minimization tool
 # ---------------------------------------------

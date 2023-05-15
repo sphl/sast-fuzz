@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: 2023 Stephan Lipp, Technical University of Munich (TUM), et al.
+// SPDX-License-Identifier: Apache-2.0
 //===-- KInstruction.h ------------------------------------------*- C++ -*-===//
 //
 //                     The KLEE Symbolic Virtual Machine

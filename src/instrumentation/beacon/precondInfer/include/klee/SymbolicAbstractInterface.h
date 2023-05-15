@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: 2023 Stephan Lipp, Technical University of Munich (TUM), et al.
+// SPDX-License-Identifier: Apache-2.0
 #ifndef ABSD_SYMBOLIC_ABSTRACT_INTERFACE_H
 #define ABSD_SYMBOLIC_ABSTRACT_INTERFACE_H
 #include "klee/Expr.h"

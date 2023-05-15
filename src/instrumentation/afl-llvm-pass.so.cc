@@ -29,6 +29,9 @@
    in ../afl-as.h.
 */
 
+// SPDX-FileCopyrightText: 2023 Stephan Lipp, Technical University of Munich (TUM), et al.
+// SPDX-License-Identifier: Apache-2.0
+
 #define AFL_LLVM_PASS
 
 #include "config.h"
@@ -104,7 +107,7 @@ bool AFLCoverage::runOnModule(Module &M) {
 
   /* Get globals for the SHM region and the previous location. Note that
      __afl_prev_loc is thread-local. */
-  
+
 	GlobalVariable *AFLMapPtr = (GlobalVariable*)M.getOrInsertGlobal("__afl_area_ptr",PointerType::get(Int8Ty, 0),[]() -> GlobalVariable* {
       return new GlobalVariable(*M2, PointerType::get(IntegerType::getInt8Ty(M2->getContext()), 0), false,
                          GlobalValue::ExternalLinkage, 0, "__afl_area_ptr");

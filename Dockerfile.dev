@@ -10,6 +10,8 @@
 #
 # ssh credentials (test user):
 #   user@password
+# SPDX-FileCopyrightText: 2023 Stephan Lipp, Technical University of Munich (TUM), et al.
+# SPDX-License-Identifier: Apache-2.0
 
 FROM ubuntu:20.04
 

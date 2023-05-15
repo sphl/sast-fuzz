@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2023 Stephan Lipp, Technical University of Munich (TUM), et al.
+# SPDX-License-Identifier: Apache-2.0
 add_executable(afl-clang-fast afl-clang-fast.c)
 target_link_libraries(afl-clang-fast PRIVATE afl_config)
 

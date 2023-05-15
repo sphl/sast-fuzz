@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: 2023 Stephan Lipp, Technical University of Munich (TUM), et al.
+// SPDX-License-Identifier: Apache-2.0
 /* -*- Mode: C; tab-width: 4; c-basic-offset: 4; indent-tabs-mode: nil -*- */
 /*
  *     Copyright 2012 Couchbase, Inc.
