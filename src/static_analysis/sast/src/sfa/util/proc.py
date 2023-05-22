@@ -43,16 +43,16 @@ def get_cpu_count() -> int:
     return mp.cpu_count()
 
 
-def run_with_multi_processing(func: Callable, iterable: Iterable, n_cpu: int = get_cpu_count() - 1) -> List:
+def run_with_multi_processing(func: Callable, iterable: Iterable, n_jobs: int = get_cpu_count() - 1) -> List:
     """
     Run a function for each element in an iterable with multi-processing.
 
     :param func:
     :param iterable:
-    :param n_cpu:
+    :param n_jobs:
     :return:
     """
-    with mp.Pool(n_cpu) as pool:
+    with mp.Pool(n_jobs) as pool:
         try:
             results: List = pool.starmap(func, iterable)
 
