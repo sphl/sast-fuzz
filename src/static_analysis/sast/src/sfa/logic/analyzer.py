@@ -7,6 +7,8 @@ from sfa.logic.filter import SASTFilter, FilterFactory
 from sfa.logic.tool_runner import SASTTool, SASTToolFlags, RunnerFactory
 from sfa.util.proc import run_with_multi_processing
 
+import logging
+
 
 class Analyzer:
     """
@@ -25,6 +27,8 @@ class Analyzer:
         :param n_jobs:
         :return:
         """
+        logging.info(f"SAST tools: {[str(t) for t in tools]}")
+
         runners = self._runner_factory.get_instances(tools)
 
         nested_flags = run_with_multi_processing(lambda r: r.run(), runners, n_jobs)
@@ -40,6 +44,8 @@ class Analyzer:
         :param filters:
         :return:
         """
+        logging.info(f"Filters: {[str(f) for f in filters]}")
+
         filters = self._filter_factory.get_instances(filters)
 
         return reduce(lambda acc, f: f.filter(acc), filters, flags)

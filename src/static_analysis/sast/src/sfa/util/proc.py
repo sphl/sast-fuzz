@@ -21,7 +21,7 @@ def run_shell_command(cmd: str | List[str], cwd: Optional[Path] = None, env: Opt
 
     assert cmd_cwd.exists()
 
-    logging.info(f"Running command: '{cmd_str}'")
+    logging.debug(f"Running command: '{cmd_str}'")
 
     try:
         return subprocess.run(
