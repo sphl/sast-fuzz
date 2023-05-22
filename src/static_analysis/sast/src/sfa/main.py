@@ -117,7 +117,7 @@ def run(
     analyzer = Analyzer(inspec_file, subject_dir)
 
     try:
-        flags = analyzer.run(SASTTool.all_but(exclude_tools), SASTFilter.all_but(exclude_filters), n_jobs)
+        flags = analyzer.run(SASTTool.all_but(exclude_tools or []), SASTFilter.all_but(exclude_filters or []), n_jobs)
         flags.to_csv(output_file)
 
         return 0
