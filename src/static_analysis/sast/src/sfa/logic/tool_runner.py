@@ -33,7 +33,7 @@ class SASTTool(ExtendedEnum):
     CQL = "codeql"
     CLS = "clang-scan"
     ASN = "asan"
-    MSN = "msan"
+    # MSN = "msan"
 
 
 class SASTToolRunner(ABC):
@@ -299,5 +299,5 @@ class RunnerFactory(Factory):
             SASTTool.CQL: CodeQLRunner(param),
             SASTTool.CLS: ClangScanRunner(param),
             SASTTool.ASN: AddressSanitizerRunner(param),
-            SASTTool.MSN: MemorySanitizerRunner(param),
+            # SASTTool.MSN: MemorySanitizerRunner(param),
         }
