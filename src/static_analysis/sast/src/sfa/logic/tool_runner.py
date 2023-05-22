@@ -1,7 +1,6 @@
 import json
 import os
 from abc import ABC, abstractmethod
-from enum import Enum
 from itertools import chain
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -21,13 +20,14 @@ from sfa.config import (
     CLANG_SCAN_RULE_SET,
 )
 from sfa.logic import SAST_SETUP_ENV, SASTToolFlag, SASTToolFlags, convert_sarif
+from sfa.util.ext_enum import ExtendedEnum
 from sfa.util.factory import Factory
 from sfa.util.fs import copy_dir, find_files
 from sfa.util.io import read
 from sfa.util.proc import run_shell_command
 
 
-class SASTTool(Enum):
+class SASTTool(ExtendedEnum):
     FLF = "flawfinder"
     IFR = "infer"
     CQL = "codeql"

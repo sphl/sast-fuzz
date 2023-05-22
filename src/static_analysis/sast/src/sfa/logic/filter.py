@@ -1,16 +1,16 @@
 import json
 from abc import ABC, abstractmethod
 from collections import defaultdict
-from enum import Enum
 from functools import lru_cache
 from pathlib import Path
 from typing import Set, Dict, Any
 
 from sfa.logic import SASTToolFlags
+from sfa.util.ext_enum import ExtendedEnum
 from sfa.util.factory import Factory
 
 
-class SASTFilter(Enum):
+class SASTFilter(ExtendedEnum):
     REH = "reachability"
 
 

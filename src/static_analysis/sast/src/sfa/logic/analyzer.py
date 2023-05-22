@@ -1,6 +1,7 @@
 from functools import reduce
 from itertools import chain
-from typing import List
+from pathlib import Path
+from typing import List, Optional
 
 from sfa.logic.filter import SASTFilter, FilterFactory
 from sfa.logic.tool_runner import SASTTool, SASTToolFlags, RunnerFactory
@@ -9,10 +10,10 @@ from sfa.util.proc import run_with_multi_processing
 
 class Analyzer:
     """
-    Main analyzer functionality.
+    Main analyzer component.
     """
 
-    def __init__(self, subject_dir: str, inspec_file: str) -> None:
+    def __init__(self, inspec_file: Path, subject_dir: Optional[Path] = None) -> None:
         self._runner_factory = RunnerFactory(subject_dir)
         self._filter_factory = FilterFactory(inspec_file)
 
