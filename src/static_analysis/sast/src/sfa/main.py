@@ -56,12 +56,14 @@ def filter(
     filters: Annotated[
         List[SASTFilter], typer.Option("--filter", "-f", help="SAST output filter(s) to be excluded from the analysis.")
     ],
-) -> None:
+) -> int:
     analyzer = Analyzer(inspec_file)
 
     flags = analyzer.filter(SASTToolFlags.from_csv(flags_file), filters)
 
     flags.to_csv(output_file)
+
+    return 0
 
 
 @app.command()
@@ -111,9 +113,16 @@ def run(
         typer.Option("--exclude-filter", help="SAST output filter(s) to be excluded from the analysis."),
     ] = None,
     n_jobs: Annotated[Optional[int], typer.Option("--jobs", "-j", min=1, max=get_cpu_count())] = 1,
-) -> None:
+) -> int:
     analyzer = Analyzer(inspec_file, subject_dir)
 
-    flags = analyzer.run(SASTTool.all_but(exclude_tools), SASTFilter.all_but(exclude_filters), n_jobs)
+    try:
+        flags = analyzer.run(SASTTool.all_but(exclude_tools), SASTFilter.all_but(exclude_filters), n_jobs)
+        flags.to_csv(output_file)
 
-    flags.to_csv(output_file)
+        return 0
+
+    except Exception as ex:
+        logging.error(ex)
+
+        return 1
