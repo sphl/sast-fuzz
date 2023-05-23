@@ -3,10 +3,12 @@ import multiprocessing as mp
 import os
 import subprocess
 from pathlib import Path
-from typing import List, Dict, Iterable, Callable, Optional, Union
+from typing import List, Dict, Callable, Optional, Union
 
 
-def run_shell_command(cmd: Union[str, List[str]], cwd: Optional[Path] = None, env: Optional[Dict[str, str]] = None) -> str:
+def run_shell_command(
+    cmd: Union[str, List[str]], cwd: Optional[Path] = None, env: Optional[Dict[str, str]] = None
+) -> str:
     """
     Run command as shell sub-process.
 
@@ -43,22 +45,22 @@ def get_cpu_count() -> int:
     return mp.cpu_count()
 
 
-def run_with_multi_processing(func: Callable, iterable: Iterable, n_jobs: int = get_cpu_count() - 1) -> List:
+def run_with_multi_processing(func: Callable, items: List, n_jobs: int = get_cpu_count() - 1) -> List:
     """
     Run a function for each element in an iterable with multi-processing.
 
     :param func:
-    :param iterable:
+    :param items:
     :param n_jobs:
     :return:
     """
     with mp.Pool(n_jobs) as pool:
         try:
-            results: List = pool.starmap(func, iterable)
+            results: List = pool.starmap(func, items)
 
         except TypeError as e:
             try:
-                results = pool.map(func, iterable)
+                results = pool.map(func, items)
 
             except TypeError as e:
                 logging.error(e)

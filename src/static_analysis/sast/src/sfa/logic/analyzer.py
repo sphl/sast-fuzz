@@ -1,3 +1,4 @@
+import logging
 from functools import reduce
 from itertools import chain
 from pathlib import Path
@@ -6,8 +7,6 @@ from typing import List, Optional
 from sfa.logic.filter import SASTFilter, FilterFactory
 from sfa.logic.tool_runner import SASTTool, SASTToolFlags, SASTToolRunner, RunnerFactory
 from sfa.util.proc import run_with_multi_processing
-
-import logging
 
 
 def _starter(runner: SASTToolRunner) -> SASTToolFlags:
@@ -33,7 +32,7 @@ class Analyzer:
         """
         logging.info(f"SAST tools: {[t.value for t in tools]}")
 
-        runners = self._runner_factory.get_instances(tools)
+        runners = list(self._runner_factory.get_instances(tools))
 
         nested_flags = run_with_multi_processing(_starter, runners, n_jobs)
         flags = SASTToolFlags(set(chain(*nested_flags)))

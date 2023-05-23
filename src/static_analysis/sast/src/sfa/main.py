@@ -6,11 +6,8 @@ from typing import List, Optional
 import typer
 from typing_extensions import Annotated
 
-from sfa.util.proc import get_cpu_count
 from sfa.logic import has_build_script
 from sfa.logic.analyzer import SASTTool, SASTFilter, SASTToolFlags, Analyzer
-
-from sfa.util.fs import find_files
 
 logging.basicConfig(format="%(asctime)s SFA[%(levelname)s]: %(message)s", level=logging.DEBUG, stream=sys.stdout)
 
@@ -115,11 +112,16 @@ def run(
         Optional[List[SASTFilter]],
         typer.Option("--exclude-filter", help="SAST output filter(s) to be excluded from the analysis."),
     ] = None,
-    n_jobs: Annotated[Optional[int], typer.Option("--jobs", "-j", min=1, max=get_cpu_count())] = 1,
+    parallel: Annotated[Optional[bool], typer.Option("--parallel", help="Run SAST tools in parallel.")] = True,
 ) -> int:
     assert has_build_script(subject_dir), "ERROR: Could not find build (shell-)script!"
 
     analyzer = Analyzer(inspec_file, subject_dir)
+
+    if not parallel:
+        n_jobs = 1
+    else:
+        n_jobs = len(SASTTool.values())
 
     try:
         flags = analyzer.run(SASTTool.all_but(exclude_tools or []), SASTFilter.all_but(exclude_filters or []), n_jobs)
