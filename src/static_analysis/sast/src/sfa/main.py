@@ -10,6 +10,8 @@ from sfa.util.proc import get_cpu_count
 from sfa.logic import has_build_script
 from sfa.logic.analyzer import SASTTool, SASTFilter, SASTToolFlags, Analyzer
 
+from sfa.util.fs import find_files
+
 logging.basicConfig(format="%(asctime)s SFA[%(levelname)s]: %(message)s", level=logging.DEBUG, stream=sys.stdout)
 
 app = typer.Typer()

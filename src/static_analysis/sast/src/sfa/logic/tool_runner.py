@@ -197,7 +197,7 @@ class ClangScanRunner(SASTToolRunner):
         return result_dir
 
     def _analyze(self, working_dir: Path) -> str:
-        result_files = find_files(working_dir, exts=["sarif"])
+        result_files = find_files(working_dir, exts=[".sarif"])
 
         if len(result_files) == 0:
             raise Exception("Clang-Scan: Failed to create the result file(s)!")

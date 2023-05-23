@@ -68,7 +68,7 @@ def find_files(dir: Path, exts: Optional[List[str]] = None, rec: bool = True) ->
     files: List[Path] = []
 
     for root, _, _files in walk(dir):
-        files.extend([Path(root) / Path(file) for file in _files if exts is None or has_extension(Path(file), exts)])
+        files.extend([Path(root) / Path(file) for file in _files if (exts is None or has_extension(Path(file), exts))])
 
         if not rec:
             break
