@@ -112,20 +112,17 @@ def run(
         Optional[List[SASTFilter]],
         typer.Option("--exclude-filter", help="SAST output filter(s) to be excluded from the analysis."),
     ] = None,
-    parallel: Annotated[Optional[bool], typer.Option("--parallel", help="Run SAST tools in parallel.")] = True,
+    parallel: Annotated[Optional[bool], typer.Option("--parallel", help="Run SAST tools in parallel.")] = False,
 ) -> int:
     assert has_build_script(subject_dir), "ERROR: Could not find build (shell-)script!"
 
     analyzer = Analyzer(inspec_file, subject_dir)
 
-    if not parallel:
-        n_jobs = 1
-    else:
-        n_jobs = len(SASTTool.values())
-
     try:
-        flags = analyzer.run(SASTTool.all_but(exclude_tools or []), SASTFilter.all_but(exclude_filters or []), n_jobs)
+        flags = analyzer.run(SASTTool.all_but(exclude_tools or []), SASTFilter.all_but(exclude_filters or []), parallel)
         flags.to_csv(output_file)
+
+        print(analyzer.info)
 
         return 0
 
