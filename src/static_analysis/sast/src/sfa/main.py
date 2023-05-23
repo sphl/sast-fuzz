@@ -106,23 +106,35 @@ def run(
         ),
     ],
     exclude_tools: Annotated[
-        Optional[List[SASTTool]], typer.Option("--exclude-tool", help="SAST tool(s) to be excluded from the analysis.")
-    ] = None,
+        List[SASTTool], typer.Option("--exclude-tool", help="SAST tool(s) to be excluded from the analysis.")
+    ] = [],
     exclude_filters: Annotated[
-        Optional[List[SASTFilter]],
+        List[SASTFilter],
         typer.Option("--exclude-filter", help="SAST output filter(s) to be excluded from the analysis."),
-    ] = None,
-    parallel: Annotated[Optional[bool], typer.Option("--parallel", help="Run SAST tools in parallel.")] = False,
+    ] = [],
+    parallel: Annotated[bool, typer.Option("--parallel", help="Run SAST tools in parallel.")] = False,
+    summary_file: Annotated[
+        Path,
+        typer.Option(
+            "--summary",
+            writable=True,
+            exists=False,
+            file_okay=True,
+            dir_okay=False,
+            resolve_path=True,
+            help="Path to the (analysis) summary JSON file.",
+        ),
+    ] = (Path.cwd() / Path("summary.json")),
 ) -> int:
     assert has_build_script(subject_dir), "ERROR: Could not find build (shell-)script!"
 
     analyzer = Analyzer(inspec_file, subject_dir)
 
     try:
-        flags = analyzer.run(SASTTool.all_but(exclude_tools or []), SASTFilter.all_but(exclude_filters or []), parallel)
+        flags = analyzer.run(SASTTool.all_but(exclude_tools), SASTFilter.all_but(exclude_filters), parallel)
         flags.to_csv(output_file)
 
-        print(analyzer.info)
+        analyzer.info.to_json(summary_file)
 
         return 0
 
