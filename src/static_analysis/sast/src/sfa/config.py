@@ -186,7 +186,7 @@ CODEQL_RULE_SET = [
     # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Underspecified\ Functions/TooFewArguments.ql",
     # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Underspecified\ Functions/TooManyArguments.ql",
     # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/UseInOwnInitializer.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/PointsTo/TaintedFormatStrings.ql",
+    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/PointsTo/TaintedFormatStrings.ql",
     f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-014/MemsetMayBeDeleted.ql",
     # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-020/CountUntrustedDataToExternalAPI.ql",
     # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-020/IRCountUntrustedDataToExternalAPI.ql",
