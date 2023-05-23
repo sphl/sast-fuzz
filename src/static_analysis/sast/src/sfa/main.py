@@ -6,8 +6,9 @@ from typing import List, Optional
 import typer
 from typing_extensions import Annotated
 
-from sfa.logic.analyzer import SASTTool, SASTFilter, SASTToolFlags, Analyzer
 from sfa.util.proc import get_cpu_count
+from sfa.logic import has_build_script
+from sfa.logic.analyzer import SASTTool, SASTFilter, SASTToolFlags, Analyzer
 
 logging.basicConfig(format="%(asctime)s SFA[%(levelname)s]: %(message)s", level=logging.DEBUG, stream=sys.stdout)
 
@@ -114,6 +115,8 @@ def run(
     ] = None,
     n_jobs: Annotated[Optional[int], typer.Option("--jobs", "-j", min=1, max=get_cpu_count())] = 1,
 ) -> int:
+    assert has_build_script(subject_dir), "ERROR: Could not find build (shell-)script!"
+
     analyzer = Analyzer(inspec_file, subject_dir)
 
     try:

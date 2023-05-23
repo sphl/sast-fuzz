@@ -4,10 +4,14 @@ from pathlib import Path
 from typing import List, Optional
 
 from sfa.logic.filter import SASTFilter, FilterFactory
-from sfa.logic.tool_runner import SASTTool, SASTToolFlags, RunnerFactory
+from sfa.logic.tool_runner import SASTTool, SASTToolFlags, SASTToolRunner, RunnerFactory
 from sfa.util.proc import run_with_multi_processing
 
 import logging
+
+
+def _starter(runner: SASTToolRunner) -> SASTToolFlags:
+    return runner.run()
 
 
 class Analyzer:
@@ -27,12 +31,12 @@ class Analyzer:
         :param n_jobs:
         :return:
         """
-        logging.info(f"SAST tools: {[str(t) for t in tools]}")
+        logging.info(f"SAST tools: {[t.value for t in tools]}")
 
         runners = self._runner_factory.get_instances(tools)
 
-        nested_flags = run_with_multi_processing(lambda r: r.run(), runners, n_jobs)
-        flags = set(chain(*nested_flags))
+        nested_flags = run_with_multi_processing(_starter, runners, n_jobs)
+        flags = SASTToolFlags(set(chain(*nested_flags)))
 
         return flags
 
@@ -44,7 +48,7 @@ class Analyzer:
         :param filters:
         :return:
         """
-        logging.info(f"Filters: {[str(f) for f in filters]}")
+        logging.info(f"Filters: {[f.value for f in filters]}")
 
         filters = self._filter_factory.get_instances(filters)
 

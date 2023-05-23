@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from collections import defaultdict
 from functools import lru_cache
 from pathlib import Path
-from typing import Set, Dict, Any
+from typing import List, Dict, Any
 
 from sfa.logic import SASTToolFlags
 from sfa.util.ext_enum import ExtendedEnum
@@ -34,14 +34,14 @@ class ReachabilityFilter(SASTFlagFilter):
 
     def __init__(self, inspec_file: Path) -> None:
         super().__init__(inspec_file)
-        self._reachable_code: Dict[str, Set[Dict]] = defaultdict(set)
+        self._reachable_code: Dict[str, List[Dict]] = defaultdict(list)
 
         with inspec_file.open("r") as json_file:
             data = json.load(json_file)
 
         for func in data["functions"]:
             if func["location"]["reachable_from_main"]:
-                self._reachable_code[func["location"]["filename"]].add(func["location"]["line"])
+                self._reachable_code[func["location"]["filename"]].append(func["location"]["line"])
 
     @lru_cache(maxsize=None)
     def _is_reachable(self, file: str, line: int) -> bool:

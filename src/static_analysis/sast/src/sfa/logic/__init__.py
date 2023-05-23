@@ -54,7 +54,7 @@ class SASTToolFlags:
     def to_csv(self, file: Path) -> None:
         with file.open("w+") as csv_file:
             for flag in self._flags:
-                csv_file.write(CSV_SEP.join(flag.as_tuple()) + os.linesep)
+                csv_file.write(CSV_SEP.join(map(str, flag.as_tuple())) + os.linesep)
 
     @classmethod
     def from_csv(cls, file: Path) -> "SASTToolFlags":
@@ -94,8 +94,8 @@ def convert_sarif(string: str) -> SASTToolFlags:
     """
     sarif_data = json.loads(string)
 
-    if sarif_data["version"] == SARIF_VERSION:
-        raise Exception("Unsupported SARIF version!")
+    if sarif_data["version"] != SARIF_VERSION:
+        raise Exception(f"Unsupported SARIF version ({sarif_data['version']})!")
 
     flags = SASTToolFlags()
 
