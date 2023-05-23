@@ -4,7 +4,7 @@ from sfa.util.proc import get_cpu_count
 BUILD_SCRIPT_NAME = "build.sh"
 
 # Path to the Flawfinder analyzer
-FLAWFINDER = "/opt/flawfinder-2.0.19/flawfinder.py"
+FLAWFINDER = "python2 /opt/flawfinder-2.0.19/flawfinder.py"
 
 # Flags of Flawfinder
 FLAWFINDER_FLAG_SET = ["--falsepositive", "--minlevel=3", "--neverignore"]
