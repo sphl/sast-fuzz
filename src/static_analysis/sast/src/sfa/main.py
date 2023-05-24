@@ -132,9 +132,8 @@ def run(
 
     try:
         flags = analyzer.run(SASTTool.all_but(exclude_tools), SASTFilter.all_but(exclude_filters), parallel)
-        flags.to_csv(output_file)
 
-        analyzer.info.to_json(summary_file)
+        flags.to_csv(output_file)
 
         return 0
 
