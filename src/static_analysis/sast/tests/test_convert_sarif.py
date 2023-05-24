@@ -7,7 +7,7 @@ from sfa.util.io import read
 
 class TestConvertSarif(unittest.TestCase):
     def setUp(self) -> None:
-        self.sarif_file = Path("./data/test.sarif")
+        self.sarif_file = Path("data") / "test.sarif"
 
     def test_convert_sarif(self):
         # Arrange

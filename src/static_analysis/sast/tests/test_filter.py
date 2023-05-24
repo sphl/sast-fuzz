@@ -7,7 +7,7 @@ from sfa.logic.filter import ReachabilityFilter
 
 class TestReachabilityFilter(unittest.TestCase):
     def setUp(self) -> None:
-        self.filter = ReachabilityFilter(Path("./data/sfi/quicksort.json"))
+        self.filter = ReachabilityFilter(Path("data") / "sfi" / "quicksort.json")
 
     def test_filter_correct(self) -> None:
         # Arrange

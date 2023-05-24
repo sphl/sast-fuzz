@@ -33,7 +33,7 @@ class TestSASTToolFlags(unittest.TestCase):
 
     def test_to_csv(self):
         # Arrange
-        temp_file = Path("./data/test.csv")
+        temp_file = Path("data") / "test.csv"
 
         # Act
         self.flags.to_csv(temp_file)
@@ -49,7 +49,7 @@ class TestSASTToolFlags(unittest.TestCase):
 
     def test_from_csv(self):
         # Arrange
-        temp_file = Path("./data/test.csv")
+        temp_file = Path("data") / "test.csv"
         lines = [
             CSV_SEP.join(["ToolA", "FileA", "10", "VulnA"]) + os.linesep,
             CSV_SEP.join(["ToolB", "FileB", "20", "VulnB"]) + os.linesep,
