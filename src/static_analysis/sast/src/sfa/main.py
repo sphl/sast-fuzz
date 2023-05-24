@@ -113,18 +113,6 @@ def run(
         typer.Option("--exclude-filter", help="SAST output filter(s) to be excluded from the analysis."),
     ] = [],
     parallel: Annotated[bool, typer.Option("--parallel", help="Run SAST tools in parallel.")] = False,
-    summary_file: Annotated[
-        Path,
-        typer.Option(
-            "--summary",
-            writable=True,
-            exists=False,
-            file_okay=True,
-            dir_okay=False,
-            resolve_path=True,
-            help="Path to the (analysis) summary JSON file.",
-        ),
-    ] = (Path.cwd() / Path("summary.json")),
 ) -> int:
     assert has_build_script(subject_dir), "ERROR: Could not find build (shell-)script!"
 
