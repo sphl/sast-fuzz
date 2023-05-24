@@ -250,7 +250,7 @@ class SanitizerRunner(SASTToolRunner):
                 line = vals[3]
                 vuln = "-"
 
-                flags.add(SASTToolFlag(tool, file, line, vuln))
+                flags.add(SASTToolFlag(tool, file, int(line), vuln))
 
         return flags
 

@@ -27,7 +27,7 @@ class SASTToolFlag:
 
     tool: str
     file: str
-    line: str
+    line: int
     vuln: str
 
     def as_tuple(self) -> Tuple:
@@ -62,10 +62,16 @@ class SASTToolFlags:
 
         with file.open("r") as csv_file:
             for line in csv_file:
-                flag = SASTToolFlag(*line.split(CSV_SEP))
-                flags.add(flag)
+                vals = line.strip().split(CSV_SEP)
+                flags.add(SASTToolFlag(vals[0], vals[1], int(vals[2]), vals[3]))
 
         return SASTToolFlags(flags)
+
+    def __eq__(self, o: object) -> bool:
+        if not isinstance(o, SASTToolFlags):
+            return False
+
+        return self._flags == o._flags
 
     def __iter__(self) -> Generator[SASTToolFlag, None, None]:
         for flag in self._flags:

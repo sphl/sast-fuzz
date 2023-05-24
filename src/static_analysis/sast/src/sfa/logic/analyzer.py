@@ -43,7 +43,7 @@ class Analyzer:
         nested_flags, exec_time = get_exec_time(lambda: run_with_multi_processing(_starter, runners, n_jobs))
         flags = SASTToolFlags(set(chain(*nested_flags)))
 
-        logging.info(f"Execution time: {exec_time:.2f}")
+        logging.info(f"Execution time: {exec_time:.2f}s")
         logging.info(f"# Flags: {len(flags)}")
 
         return flags
@@ -62,7 +62,7 @@ class Analyzer:
 
         filtered_flags, exec_time = get_exec_time(lambda: reduce(lambda acc, f: f.filter(acc), _filters, flags))
 
-        logging.info(f"Filtering time: {exec_time:.2f}")
+        logging.info(f"Filtering time: {exec_time:.2f}s")
         logging.info(f"# Flags (filtered): {len(filtered_flags)}")
 
         return filtered_flags

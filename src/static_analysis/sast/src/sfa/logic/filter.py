@@ -66,7 +66,7 @@ class ReachabilityFilter(SASTFlagFilter):
         :param flags:
         :return:
         """
-        return SASTToolFlags(set(filter(lambda f: self._is_reachable(f.file, int(f.line)), flags)))
+        return SASTToolFlags(set(filter(lambda f: self._is_reachable(f.file, f.line), flags)))
 
 
 class FilterFactory(Factory):

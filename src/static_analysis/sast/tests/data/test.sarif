@@ -1,0 +1,56 @@
+{
+    "version": "2.1.0",
+    "runs": [
+        {
+            "tool": {
+                "driver": {
+                    "name": "SAST Tool",
+                    "rules": [
+                        {
+                            "id": "rule1",
+                            "name": "Rule 1"
+                        },
+                        {
+                            "id": "rule2",
+                            "name": "Rule 2"
+                        }
+                    ]
+                }
+            },
+            "results": [
+                {
+                    "ruleId": "rule1",
+                    "locations": [
+                        {
+                            "physicalLocation": {
+                                "artifactLocation": {
+                                    "uri": "/path/to/file1",
+                                    "uriBaseId": "%SRCROOT%"
+                                },
+                                "region": {
+                                    "startLine": 10
+                                }
+                            }
+                        }
+                    ]
+                },
+                {
+                    "ruleId": "rule2",
+                    "locations": [
+                        {
+                            "physicalLocation": {
+                                "artifactLocation": {
+                                    "uri": "/path/to/file2",
+                                    "uriBaseId": "%SRCROOT%"
+                                },
+                                "region": {
+                                    "startLine": 20
+                                }
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
