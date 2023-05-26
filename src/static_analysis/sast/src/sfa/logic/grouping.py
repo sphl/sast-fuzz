@@ -62,7 +62,7 @@ class BasicBlockGrouping(Grouping):
 
         for func in json.loads(inspec_file.read_text())["functions"]:
             for bb in func["basic_blocks"]:
-                self._bb_infos[bb["id"]] = {"file": func["file"], "line_range": bb["line"]}
+                self._bb_infos[bb["id"]] = {"file": func["location"]["filename"], "line_range": bb["location"]["line"]}
 
     def group(self, flags: SASTToolFlags) -> SASTToolFlags:
         """

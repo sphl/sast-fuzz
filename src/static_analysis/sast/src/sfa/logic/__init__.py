@@ -19,7 +19,7 @@ SAST_SETUP_ENV: Dict[str, str] = {
 }
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, eq=True)
 class SASTToolFlag:
     """
     Information of a SAST tool flag.
