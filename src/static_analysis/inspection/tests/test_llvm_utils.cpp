@@ -73,6 +73,23 @@ TEST_F(LLVMUtilsTestSuite, SetGetBBIdTest) {
     }
 }
 
+TEST_F(LLVMUtilsTestSuite, UniqueBBIdsTest) {
+    // Arrange + Act
+    llvm_utils::setBBIds(*llvmModule);
+
+    std::vector<BBId> actual;
+    for (auto &func : *llvmModule) {
+        for (auto &bb : func) {
+            actual.emplace_back(llvm_utils::getBBId(bb).value());
+        }
+    }
+
+    std::set<BBId> expected(actual.begin(), actual.end());
+
+    // Assert
+    ASSERT_TRUE(expected.size() == actual.size());
+}
+
 TEST_F(LLVMUtilsTestSuite, GetFunctionLineRange) {
     // Arrange
     std::map<std::string, std::map<std::string, std::set<LineNumber>>> expected = {
