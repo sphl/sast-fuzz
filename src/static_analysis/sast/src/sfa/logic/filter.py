@@ -24,6 +24,12 @@ class SASTFlagFilter(ABC):
 
     @abstractmethod
     def filter(self, flags: SASTToolFlags) -> SASTToolFlags:
+        """
+        Filter out certain SAST flags.
+
+        :param flags:
+        :return:
+        """
         pass
 
 

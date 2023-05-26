@@ -44,16 +44,16 @@ class TestSASTToolFlags(unittest.TestCase):
 
         # Assert
         self.assertEqual(len(self.flags), len(lines))
-        self.assertIn(CSV_SEP.join(["ToolA", "FileA", "10", "VulnA"]), lines)
-        self.assertIn(CSV_SEP.join(["ToolB", "FileB", "20", "VulnB"]), lines)
+        self.assertIn(CSV_SEP.join(["ToolA", "FileA", "10", "VulnA", "1", "1"]), lines)
+        self.assertIn(CSV_SEP.join(["ToolB", "FileB", "20", "VulnB", "1", "1"]), lines)
 
     def test_from_csv(self):
         # Arrange
         temp_file = Path("data") / "test.csv"
         lines = [
-            CSV_SEP.join(["ToolA", "FileA", "10", "VulnA"]) + os.linesep,
-            CSV_SEP.join(["ToolB", "FileB", "20", "VulnB"]) + os.linesep,
-            CSV_SEP.join(["ToolC", "FileC", "30", "VulnC"]) + os.linesep,
+            CSV_SEP.join(["ToolA", "FileA", "10", "VulnA", "1", "1"]) + os.linesep,
+            CSV_SEP.join(["ToolB", "FileB", "20", "VulnB", "1", "1"]) + os.linesep,
+            CSV_SEP.join(["ToolC", "FileC", "30", "VulnC", "1", "1"]) + os.linesep,
         ]
 
         with temp_file.open("w") as file:
@@ -65,9 +65,9 @@ class TestSASTToolFlags(unittest.TestCase):
 
         # Assert
         expected = SASTToolFlags()
-        expected.add(SASTToolFlag("ToolA", "FileA", 10, "VulnA"))
-        expected.add(SASTToolFlag("ToolB", "FileB", 20, "VulnB"))
-        expected.add(SASTToolFlag("ToolC", "FileC", 30, "VulnC"))
+        expected.add(SASTToolFlag("ToolA", "FileA", 10, "VulnA", 1, 1))
+        expected.add(SASTToolFlag("ToolB", "FileB", 20, "VulnB", 1, 1))
+        expected.add(SASTToolFlag("ToolC", "FileC", 30, "VulnC", 1, 1))
 
         self.assertEqual(expected, actual)
 

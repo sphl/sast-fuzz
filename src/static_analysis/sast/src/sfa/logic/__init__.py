@@ -1,6 +1,6 @@
 import json
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Set, Dict, Tuple, Optional, Generator
 
@@ -30,8 +30,11 @@ class SASTToolFlag:
     line: int
     vuln: str
 
+    n_flags: int = field(default=1)
+    n_tools: int = field(default=1)
+
     def as_tuple(self) -> Tuple:
-        return self.tool, self.file, self.line, self.vuln
+        return self.tool, self.file, self.line, self.vuln, self.n_flags, self.n_tools
 
 
 class SASTToolFlags:
@@ -63,7 +66,7 @@ class SASTToolFlags:
         with file.open("r") as csv_file:
             for line in csv_file:
                 vals = line.strip().split(CSV_SEP)
-                flags.add(SASTToolFlag(vals[0], vals[1], int(vals[2]), vals[3]))
+                flags.add(SASTToolFlag(vals[0], vals[1], int(vals[2]), vals[3], int(vals[4]), int(vals[5])))
 
         return SASTToolFlags(flags)
 
