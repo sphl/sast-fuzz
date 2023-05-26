@@ -7,7 +7,7 @@ import typer
 from typing_extensions import Annotated
 
 from sfa.logic import has_build_script
-from sfa.logic.analyzer import SASTTool, SASTFilter, SASTToolFlags, Analyzer
+from sfa.logic.analyzer import SASTTool, SASTFilter, GroupingMode, SASTToolFlags, Analyzer
 
 logging.basicConfig(format="%(asctime)s SFA[%(levelname)s]: %(message)s", level=logging.DEBUG, stream=sys.stdout)
 
@@ -112,6 +112,7 @@ def run(
         List[SASTFilter],
         typer.Option("--exclude-filter", help="SAST output filter(s) to be excluded from the analysis."),
     ] = [],
+    grouping: Annotated[GroupingMode, typer.Option("--grouping", help="SAST flag grouping mode.")] = GroupingMode.NONE,
     parallel: Annotated[bool, typer.Option("--parallel", help="Run SAST tools in parallel.")] = False,
 ) -> int:
     assert has_build_script(subject_dir), "ERROR: Could not find build (shell-)script!"
@@ -119,7 +120,7 @@ def run(
     analyzer = Analyzer(inspec_file, subject_dir)
 
     try:
-        flags = analyzer.run(SASTTool.all_but(exclude_tools), SASTFilter.all_but(exclude_filters), parallel)
+        flags = analyzer.run(SASTTool.all_but(exclude_tools), SASTFilter.all_but(exclude_filters), grouping, parallel)
 
         flags.to_csv(output_file)
 

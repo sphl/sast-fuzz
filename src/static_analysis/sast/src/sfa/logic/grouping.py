@@ -14,8 +14,8 @@ CONCAT_CHAR = "-"
 
 
 class GroupingMode(ExtendedEnum):
-    NONE = 0
-    BASIC_BLOCK = 1
+    NONE = "none"
+    BASIC_BLOCK = "basic_block"
 
 
 class Grouping(ABC):

@@ -9,6 +9,8 @@ from sfa.logic.tool_runner import SASTTool, SASTToolFlags, SASTToolRunner, Runne
 from sfa.util.proc import run_with_multi_processing
 from sfa.util.timer import get_exec_time
 
+from sfa.logic.grouping import GroupingMode, GroupingFactory
+
 
 def _starter(runner: SASTToolRunner) -> SASTToolFlags:
     return runner.run()
@@ -22,6 +24,7 @@ class Analyzer:
     def __init__(self, inspec_file: Path, subject_dir: Optional[Path] = None) -> None:
         self._runner_factory = RunnerFactory(subject_dir)
         self._filter_factory = FilterFactory(inspec_file)
+        self._grouping_factory = GroupingFactory(inspec_file)
 
     def analyze(self, tools: List[SASTTool], parallel: bool) -> SASTToolFlags:
         """
@@ -60,20 +63,36 @@ class Analyzer:
 
         _filters = self._filter_factory.get_instances(filters)
 
-        filtered_flags, exec_time = get_exec_time(lambda: reduce(lambda acc, f: f.filter(acc), _filters, flags))
+        filtered_flags = reduce(lambda acc, f: f.filter(acc), _filters, flags)
 
-        logging.info(f"Filtering time: {exec_time:.2f}s")
         logging.info(f"# Flags (filtered): {len(filtered_flags)}")
 
         return filtered_flags
 
-    def run(self, tools: List[SASTTool], filters: List[SASTFilter], parallel: bool) -> SASTToolFlags:
+    def group(self, flags: SASTToolFlags, grouping: GroupingMode) -> SASTToolFlags:
         """
-        Run SAST tools and filter their flags in one step.
+        Group SAST tool flags.
+
+        :param flags:
+        :param grouping:
+        :return:
+        """
+        logging.info(f"Grouping: {grouping.value}")
+
+        grouped_flags = self._grouping_factory.get_instance(grouping).group(flags)
+
+        logging.info(f"# Flags (grouped): {len(grouped_flags)}")
+
+        return grouped_flags
+
+    def run(self, tools: List[SASTTool], filters: List[SASTFilter], grouping: GroupingMode, parallel: bool) -> SASTToolFlags:
+        """
+        Run SAST tools, filter their flags and group them in one step.
 
         :param tools:
         :param filters:
+        :param grouping:
         :param parallel:
         :return:
         """
-        return self.filter(self.analyze(tools, parallel), filters)
+        return self.group(self.filter(self.analyze(tools, parallel), filters), grouping)
