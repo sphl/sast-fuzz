@@ -21,7 +21,7 @@ namespace fs = std::filesystem;
 class LLVMUtilsTestSuite : public Test {
   protected:
     std::unique_ptr<Module> llvmModule;
-    std::string bitcodeFile = "./artifacts/llvm_bc/quicksort.bc";
+    std::string bitcodeFile = "./data/llvm_bc/quicksort.bc";
 
     template <typename Container, typename T> bool contains(const Container &container, const T &element) {
         return std::find(container.begin(), container.end(), element) != container.end();
