@@ -1,7 +1,7 @@
 import logging
 import sys
 from pathlib import Path
-from typing import List, Optional
+from typing import List
 
 import typer
 from typing_extensions import Annotated

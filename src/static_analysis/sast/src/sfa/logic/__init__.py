@@ -2,7 +2,7 @@ import json
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Set, Dict, Tuple, Optional, Generator
+from typing import Set, Dict, Tuple, Iterable, Optional, Generator
 
 from sfa.config import BUILD_SCRIPT_NAME
 
@@ -49,18 +49,50 @@ class SASTToolFlags:
             self._flags = flags
 
     def add(self, flag: SASTToolFlag) -> None:
+        """
+        Add a single SAST flag.
+        :param flag:
+        :return:
+        """
         self._flags.add(flag)
 
+    def update(self, flags: "SASTToolFlags") -> None:
+        """
+        Add multiple SAST flags.
+
+        :param flags:
+        :return:
+        """
+        self._flags.update(flags._flags)
+
     def remove(self, flag: SASTToolFlag) -> None:
+        """
+        Remove a single SAST flag.
+
+        :param flag:
+        :return:
+        """
         self._flags.remove(flag)
 
     def to_csv(self, file: Path) -> None:
+        """
+        Write SAST flags to a CSV file.
+
+        :param file:
+        :return:
+        """
         with file.open("w+") as csv_file:
             for flag in self._flags:
                 csv_file.write(CSV_SEP.join(map(str, flag.as_tuple())) + os.linesep)
 
     @classmethod
     def from_csv(cls, file: Path) -> "SASTToolFlags":
+        """
+        Read SAST flags from a CSV file.
+
+        :param file:
+        :return:
+        """
         flags = set()
 
         with file.open("r") as csv_file:
@@ -69,6 +101,21 @@ class SASTToolFlags:
                 flags.add(SASTToolFlag(vals[0], vals[1], int(vals[2]), vals[3], int(vals[4]), int(vals[5])))
 
         return SASTToolFlags(flags)
+
+    @classmethod
+    def from_multiple_csvs(cls, files: Iterable[Path]) -> "SASTToolFlags":
+        """
+        Read SAST flags from multiple CSV files.
+
+        :param files:
+        :return:
+        """
+        flags = SASTToolFlags()
+
+        for file in files:
+            flags.update(SASTToolFlags.from_csv(file))
+
+        return flags
 
     def __eq__(self, o: object) -> bool:
         if not isinstance(o, SASTToolFlags):

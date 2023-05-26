@@ -1,13 +1,12 @@
 import json
-from pathlib import Path
-from collections import defaultdict
 from abc import ABC, abstractmethod
-
+from collections import defaultdict
+from pathlib import Path
 from typing import Any, Dict
 
+from sfa.logic import SASTToolFlag, SASTToolFlags
 from sfa.util.ext_enum import ExtendedEnum
 from sfa.util.factory import Factory
-from sfa.logic import SASTToolFlag, SASTToolFlags
 
 # Character for joining multiple values
 CONCAT_CHAR = "-"
@@ -107,7 +106,4 @@ class GroupingFactory(Factory):
     """
 
     def _create_instances(self, param: Any) -> Dict:
-        return {
-            GroupingMode.NONE: NoneGrouping(param),
-            GroupingMode.BASIC_BLOCK: BasicBlockGrouping(param)
-        }
+        return {GroupingMode.NONE: NoneGrouping(param), GroupingMode.BASIC_BLOCK: BasicBlockGrouping(param)}

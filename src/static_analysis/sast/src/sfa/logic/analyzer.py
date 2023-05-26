@@ -5,11 +5,10 @@ from pathlib import Path
 from typing import List, Optional
 
 from sfa.logic.filter import SASTFilter, FilterFactory
+from sfa.logic.grouping import GroupingMode, GroupingFactory
 from sfa.logic.tool_runner import SASTTool, SASTToolFlags, SASTToolRunner, RunnerFactory
 from sfa.util.proc import run_with_multi_processing
 from sfa.util.timer import get_exec_time
-
-from sfa.logic.grouping import GroupingMode, GroupingFactory
 
 
 def _starter(runner: SASTToolRunner) -> SASTToolFlags:
@@ -85,7 +84,9 @@ class Analyzer:
 
         return grouped_flags
 
-    def run(self, tools: List[SASTTool], filters: List[SASTFilter], grouping: GroupingMode, parallel: bool) -> SASTToolFlags:
+    def run(
+        self, tools: List[SASTTool], filters: List[SASTFilter], grouping: GroupingMode, parallel: bool
+    ) -> SASTToolFlags:
         """
         Run SAST tools, filter their flags and group them in one step.
 

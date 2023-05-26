@@ -4,15 +4,15 @@
         {
             "tool": {
                 "driver": {
-                    "name": "SAST Tool",
+                    "name": "SAST-Tool",
                     "rules": [
                         {
                             "id": "rule1",
-                            "name": "Rule 1"
+                            "name": "Rule-1"
                         },
                         {
                             "id": "rule2",
-                            "name": "Rule 2"
+                            "name": "Rule-2"
                         }
                     ]
                 }
