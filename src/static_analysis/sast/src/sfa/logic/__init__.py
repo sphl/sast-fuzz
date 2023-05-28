@@ -56,14 +56,15 @@ class SASTToolFlags:
         """
         self._flags.add(flag)
 
-    def update(self, flags: "SASTToolFlags") -> None:
+    def update(self, *var_flags: "SASTToolFlags") -> None:
         """
         Add multiple SAST flags.
 
-        :param flags:
+        :param var_flags:
         :return:
         """
-        self._flags.update(flags._flags)
+        for flags in var_flags:
+            self._flags.update(flags._flags)
 
     def remove(self, flag: SASTToolFlag) -> None:
         """
@@ -112,8 +113,7 @@ class SASTToolFlags:
         """
         flags = SASTToolFlags()
 
-        for file in files:
-            flags.update(SASTToolFlags.from_csv(file))
+        flags.update(*map(SASTToolFlags.from_csv, files))
 
         return flags
 

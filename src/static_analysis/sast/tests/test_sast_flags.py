@@ -36,6 +36,29 @@ class TestSASTToolFlags(unittest.TestCase):
 
         self.assertEqual(len(self.flags), 4)
 
+    def test_update_multiple(self):
+        # Arrange
+        flag1 = SASTToolFlag("tool1", "file1", 10, "vuln1")
+        flag2 = SASTToolFlag("tool2", "file2", 20, "vuln2")
+        flag3 = SASTToolFlag("tool3", "file3", 30, "vuln3")
+        flag4 = SASTToolFlag("tool4", "file4", 40, "vuln4")
+        flag5 = SASTToolFlag("tool5", "file5", 50, "vuln5")
+        flag6 = SASTToolFlag("tool6", "file6", 60, "vuln6")
+
+        flags1 = SASTToolFlags({flag1, flag2})
+        flags2 = SASTToolFlags({flag3, flag4})
+        flags3 = SASTToolFlags({flag5, flag6})
+
+        expected = SASTToolFlags({flag1, flag2, flag3, flag4, flag5, flag6})
+
+        # Act
+        flags1.update(flags2, flags3)
+
+        actual = flags1
+
+        # Assert
+        self.assertEqual(expected, actual)
+
     def test_remove(self):
         # Arrange
         flag = SASTToolFlag("tool1", "file1", 10, "vuln1")
