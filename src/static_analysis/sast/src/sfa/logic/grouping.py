@@ -86,13 +86,14 @@ class BasicBlockGrouping(Grouping):
 
         for bb_id, bb_flags in flags_per_bb.items():
             bb_tools = set([flag.tool for flag in bb_flags])
+            bb_vulns = set([f"{flag.vuln}:{flag.line}" for flag in bb_flags])
 
             tool = CONCAT_CHAR.join(bb_tools)
             file = self._bb_infos[bb_id]["file"]
             line = self._bb_infos[bb_id]["line_range"]["start"]
-            vuln = CONCAT_CHAR.join([f"{flag.tool}:{flag.vuln}:{flag.line}" for flag in bb_flags])
+            vuln = CONCAT_CHAR.join(bb_vulns)
 
-            n_flags = len(bb_flags)
+            n_flags = len(bb_vulns)
             n_tools = len(bb_tools)
 
             grouped_flags.add(SASTToolFlag(tool, file, line, vuln, n_flags, n_tools))
