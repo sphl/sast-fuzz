@@ -85,7 +85,12 @@ class Analyzer:
         return grouped_flags
 
     def run(
-        self, tools: List[SASTTool], filters: List[SASTFilter], grouping: GroupingMode, parallel: bool
+        self,
+        tools: List[SASTTool],
+        filters: List[SASTFilter],
+        grouping: GroupingMode,
+        parallel: bool,
+        flags: SASTToolFlags = SASTToolFlags(),
     ) -> SASTToolFlags:
         """
         Run SAST tools, filter their flags and group them in one step.
@@ -94,6 +99,9 @@ class Analyzer:
         :param filters:
         :param grouping:
         :param parallel:
+        :param flags:
         :return:
         """
-        return self.group(self.filter(self.analyze(tools, parallel), filters), grouping)
+        flags.update(self.analyze(tools, parallel))
+
+        return self.group(self.filter(flags, filters), grouping)
