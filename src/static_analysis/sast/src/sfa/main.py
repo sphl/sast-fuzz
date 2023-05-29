@@ -7,9 +7,19 @@ import typer
 from typing_extensions import Annotated
 
 from sfa.logic import has_build_script
-from sfa.logic.analyzer import SASTTool, SASTFilter, GroupingMode, SASTToolFlags, Analyzer
+from sfa.logic.analyzer import (
+    SASTTool,
+    SASTFilter,
+    GroupingMode,
+    SASTToolFlags,
+    Analyzer,
+)
 
-logging.basicConfig(format="%(asctime)s SFA[%(levelname)s]: %(message)s", level=logging.DEBUG, stream=sys.stdout)
+logging.basicConfig(
+    format="%(asctime)s SFA[%(levelname)s]: %(message)s",
+    level=logging.DEBUG,
+    stream=sys.stdout,
+)
 
 app = typer.Typer()
 
@@ -54,14 +64,24 @@ def run(
         ),
     ],
     exclude_tools: Annotated[
-        List[SASTTool], typer.Option("--exclude-tool", help="SAST tool(s) to be excluded from the analysis.")
+        List[SASTTool],
+        typer.Option(
+            "--exclude-tool", help="SAST tool(s) to be excluded from the analysis."
+        ),
     ] = [],
     exclude_filters: Annotated[
         List[SASTFilter],
-        typer.Option("--exclude-filter", help="SAST output filter(s) to be excluded from the analysis."),
+        typer.Option(
+            "--exclude-filter",
+            help="SAST output filter(s) to be excluded from the analysis.",
+        ),
     ] = [],
-    grouping: Annotated[GroupingMode, typer.Option("--grouping", help="SAST flag grouping mode.")] = GroupingMode.NONE,
-    parallel: Annotated[bool, typer.Option("--parallel", help="Run SAST tools in parallel.")] = False,
+    grouping: Annotated[
+        GroupingMode, typer.Option("--grouping", help="SAST flag grouping mode.")
+    ] = GroupingMode.NONE,
+    parallel: Annotated[
+        bool, typer.Option("--parallel", help="Run SAST tools in parallel.")
+    ] = False,
     flags_files: Annotated[
         List[Path],
         typer.Option(

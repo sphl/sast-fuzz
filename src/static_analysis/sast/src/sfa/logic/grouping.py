@@ -62,7 +62,10 @@ class BasicBlockGrouping(Grouping):
 
         for func in json.loads(inspec_file.read_text())["functions"]:
             for bb in func["basic_blocks"]:
-                self._bb_infos[bb["id"]] = {"file": func["location"]["filename"], "line_range": bb["location"]["line"]}
+                self._bb_infos[bb["id"]] = {
+                    "file": func["location"]["filename"],
+                    "line_range": bb["location"]["line"],
+                }
 
     def group(self, flags: SASTToolFlags) -> SASTToolFlags:
         """
@@ -78,7 +81,11 @@ class BasicBlockGrouping(Grouping):
             for bb_id, bb_info in self._bb_infos.items():
                 if flag.file == bb_info["file"]:
                     # Check if flagged line is within basic block range
-                    if bb_info["line_range"]["start"] <= flag.line <= bb_info["line_range"]["end"]:
+                    if (
+                        bb_info["line_range"]["start"]
+                        <= flag.line
+                        <= bb_info["line_range"]["end"]
+                    ):
                         flags_per_bb[bb_id].add(flag)
                         break
 
@@ -107,4 +114,7 @@ class GroupingFactory(Factory):
     """
 
     def _create_instances(self, param: Any) -> Dict:
-        return {GroupingMode.NONE: NoneGrouping(param), GroupingMode.BASIC_BLOCK: BasicBlockGrouping(param)}
+        return {
+            GroupingMode.NONE: NoneGrouping(param),
+            GroupingMode.BASIC_BLOCK: BasicBlockGrouping(param),
+        }
