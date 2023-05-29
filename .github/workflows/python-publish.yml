@@ -1,0 +1,25 @@
+name: Check Python files
+
+on:
+  push:
+
+permissions:
+  contents: read
+
+jobs:
+  check_license:
+    container:
+      image: python:3.11.3-bullseye
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Install Dep with Poetry
+      run: |-
+        curl -sSL https://install.python-poetry.org | python3 -
+        export PATH="/github/home/.local/bin:$PATH"
+        cd src/static_analysis/sast
+        poetry install
+        poetry run black --check src
+        poetry run isort --profile black --check src
+        poetry run mypy src
+        poetry run bandit --recursive --confidence src
