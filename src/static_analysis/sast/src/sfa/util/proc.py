@@ -3,7 +3,7 @@ import multiprocessing as mp
 import os
 import subprocess
 from pathlib import Path
-from typing import List, Dict, Callable, Optional, Union
+from typing import Callable, Dict, List, Optional, Union
 
 
 def run_shell_command(

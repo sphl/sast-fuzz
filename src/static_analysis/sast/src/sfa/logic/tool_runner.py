@@ -4,20 +4,20 @@ from abc import ABC, abstractmethod
 from itertools import chain
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Dict, Any, ClassVar
+from typing import Any, ClassVar, Dict
 
 from sfa.config import (
     BUILD_SCRIPT_NAME,
+    CLANG_SCAN,
+    CLANG_SCAN_RULE_SET,
+    CODEQL,
+    CODEQL_NUM_THREADS,
+    CODEQL_RULE_SET,
     FLAWFINDER,
     FLAWFINDER_FLAG_SET,
     INFER,
-    INFER_RULE_SET,
     INFER_NUM_THREADS,
-    CODEQL,
-    CODEQL_RULE_SET,
-    CODEQL_NUM_THREADS,
-    CLANG_SCAN,
-    CLANG_SCAN_RULE_SET,
+    INFER_RULE_SET,
 )
 from sfa.logic import SAST_SETUP_ENV, SASTToolFlag, SASTToolFlags, convert_sarif
 from sfa.util.ext_enum import ExtendedEnum

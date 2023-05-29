@@ -8,11 +8,11 @@ from typing_extensions import Annotated
 
 from sfa.logic import has_build_script
 from sfa.logic.analyzer import (
-    SASTTool,
-    SASTFilter,
-    GroupingMode,
-    SASTToolFlags,
     Analyzer,
+    GroupingMode,
+    SASTFilter,
+    SASTTool,
+    SASTToolFlags,
 )
 
 logging.basicConfig(

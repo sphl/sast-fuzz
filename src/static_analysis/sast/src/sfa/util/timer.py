@@ -1,5 +1,5 @@
 import time
-from typing import Any, Tuple, Callable
+from typing import Any, Callable, Tuple
 
 
 def get_exec_time(func: Callable) -> Tuple[Any, float]:

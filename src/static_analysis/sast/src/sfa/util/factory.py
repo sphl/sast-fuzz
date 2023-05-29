@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Dict, Any, Iterable
+from typing import Any, Dict, Iterable
 
 
 class Factory(ABC):

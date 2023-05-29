@@ -2,7 +2,7 @@ import json
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Set, Dict, Tuple, Iterable, Optional, Generator
+from typing import Dict, Generator, Iterable, Optional, Set, Tuple
 
 from sfa.config import BUILD_SCRIPT_NAME
 

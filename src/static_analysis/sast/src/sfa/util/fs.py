@@ -2,7 +2,7 @@ import logging
 import shutil
 from os import walk
 from pathlib import Path
-from typing import Set, List, Optional
+from typing import List, Optional, Set
 
 
 def get_parent(path: Path, depth: int = 1) -> Path:

@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from collections import defaultdict
 from functools import lru_cache
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
 from sfa.logic import SASTToolFlags
 from sfa.util.ext_enum import ExtendedEnum
