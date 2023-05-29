@@ -94,7 +94,9 @@ def run(
         ),
     ] = [],
 ) -> int:
-    assert has_build_script(subject_dir), "ERROR: Could not find build (shell-)script!"
+    assert has_build_script(
+        subject_dir
+    ), "ERROR: Could not find build (shell-)script!"  # nosec
 
     analyzer = Analyzer(inspec_file, subject_dir)
 
