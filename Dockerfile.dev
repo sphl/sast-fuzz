@@ -30,7 +30,7 @@ ENV LLVM_DIR="/opt/llvm-${LLVM_VERSION}/build"
 ENV PATH="${HOME}/.local/bin:$PATH"
 ENV SVF_DIR="/opt/svf-${SVF_VERSION}"
 
-WORKDIR /opt 
+WORKDIR / 
 
 RUN apt-get update -qq \
     && apt-get install -qqy \
@@ -67,16 +67,48 @@ RUN apt-get update -qq \
     && rm -rf /var/lib/apt/lists/* \
     # Setup Docker user
     && useradd user --create-home --shell /bin/bash \
-    && yes password | passwd user 
-RUN echo 'hi' \
+    && yes password | passwd user \
     && echo "user:password" | chpasswd \
     && adduser user sudo \
     # Install Poetry
     && wget --quiet https://install.python-poetry.org --output-file poetry.py \
     && python3 poetry.py \
-    && rm poetry.py
-
-SHELL ["/bin/bash", "-c"]
+    && rm poetry.py \
+    # Install SVF
+    && wget --quiet "https://github.com/SVF-tools/SVF/archive/refs/tags/SVF-${SVF_VERSION}.tar.gz" \
+    && tar xf "SVF-${SVF_VERSION}.tar.gz" \
+    && rm -f "SVF-${SVF_VERSION}.tar.gz" \
+    && mv "SVF-SVF-${SVF_VERSION}" "/opt/svf-${SVF_VERSION}" \
+    # Install WLLVM
+    && python3 -m pip install --no-cache-dir --upgrade pip \
+    && python3 -m pip install --no-cache-dir wllvm \
+    # Install Flawfinder
+    wget --quiet "https://github.com/david-a-wheeler/flawfinder/archive/refs/tags/${FLAWFINDER_VERSION}.tar.gz" \
+    && tar -xf "${FLAWFINDER_VERSION}.tar.gz" \
+    && rm -f "${FLAWFINDER_VERSION}.tar.gz" \
+    # Install Infer
+    && wget --quiet "https://github.com/facebook/infer/releases/download/v${INFER_VERSION}/infer-linux64-v${INFER_VERSION}.tar.xz" \
+    && tar -xf "infer-linux64-v${INFER_VERSION}.tar.xz" \
+    && rm -f "infer-linux64-v${INFER_VERSION}.tar.xz" \
+    && mv "infer-linux64-v${INFER_VERSION}" "/opt/infer-${INFER_VERSION}" \
+    # Install CodeQL (cli-tool + library)
+    && mkdir "/opt/codeql-${CODEQL_VERSION}" \
+    && wget --quiet "https://github.com/github/codeql-cli-binaries/releases/download/v${CODEQL_VERSION}/codeql-linux64.zip" \
+    && unzip -q codeql-linux64.zip \
+    && rm -f codeql-linux64.zip \
+    && mv codeql "/opt/codeql-${CODEQL_VERSION}/cli" \
+    && wget --quiet "https://github.com/github/codeql/archive/refs/tags/codeql-cli/v${CODEQL_VERSION}.zip" \
+    && unzip -q "v${CODEQL_VERSION}.zip" \
+    && rm -f "v${CODEQL_VERSION}.zip" \
+    && mv "codeql-codeql-cli-v${CODEQL_VERSION}" "/opt/codeql-${CODEQL_VERSION}/lib" \
+    # Setup SSH
+    && ( \
+    echo 'LogLevel DEBUG2'; \
+    echo 'PermitRootLogin yes'; \
+    echo 'PasswordAuthentication yes'; \
+    echo 'Subsystem sftp /usr/lib/openssh/sftp-server'; \
+    ) > /etc/ssh/sshd_config_test \
+    && mkdir /run/sshd
 
 # Install LLVM toolchain
 FROM base as llvm-normal
@@ -119,52 +151,16 @@ RUN cmake -G "Ninja" \
     # Install LLVMgold (LTO) into bfd-plugins
     && mkdir -p /usr/lib/bfd-plugins \
     && cp /usr/local/lib/libLTO.so /usr/lib/bfd-plugins \
-    && cp /usr/local/lib/LLVMgold.so /usr/lib/bfd-plugins \
-    # Install SVF
-    && wget --quiet "https://github.com/SVF-tools/SVF/archive/refs/tags/SVF-${SVF_VERSION}.tar.gz" \
-    && tar xf "SVF-${SVF_VERSION}.tar.gz" \
-    && rm -f "SVF-${SVF_VERSION}.tar.gz" \
-    && mv "SVF-SVF-${SVF_VERSION}" "/opt/svf-${SVF_VERSION}"
-
-WORKDIR /opt/svf-${SVF_VERSION}
+    && cp /usr/local/lib/LLVMgold.so /usr/lib/bfd-plugins
+    
 # Note: Make sure that 'LLVM_DIR' is set to the right directory! Otherwise SVF's
 # build script will download pre-built LLVM binaries which may conflict with the
 # version installed above.
+
+WORKDIR /opt/svf-${SVF_VERSION}
+
 RUN ./build.sh debug \
-    && ./build.sh \
-    # Install WLLVM
-    && python3 -m pip install --no-cache-dir --upgrade pip \
-    && python3 -m pip install --no-cache-dir wllvm
-
-WORKDIR /opt
-
-# Install Flawfinder
-RUN wget --quiet "https://github.com/david-a-wheeler/flawfinder/archive/refs/tags/${FLAWFINDER_VERSION}.tar.gz" \
-    && tar -xf "${FLAWFINDER_VERSION}.tar.gz" \
-    && rm -f "${FLAWFINDER_VERSION}.tar.gz" \
-    # Install Infer
-    && wget --quiet "https://github.com/facebook/infer/releases/download/v${INFER_VERSION}/infer-linux64-v${INFER_VERSION}.tar.xz" \
-    && tar -xf "infer-linux64-v${INFER_VERSION}.tar.xz" \
-    && rm -f "infer-linux64-v${INFER_VERSION}.tar.xz" \
-    && mv "infer-linux64-v${INFER_VERSION}" "/opt/infer-${INFER_VERSION}" \
-    # Install CodeQL (cli-tool + library)
-    && mkdir "/opt/codeql-${CODEQL_VERSION}" \
-    && wget --quiet "https://github.com/github/codeql-cli-binaries/releases/download/v${CODEQL_VERSION}/codeql-linux64.zip" \
-    && unzip -q codeql-linux64.zip \
-    && rm -f codeql-linux64.zip \
-    && mv codeql "/opt/codeql-${CODEQL_VERSION}/cli" \
-    && wget --quiet "https://github.com/github/codeql/archive/refs/tags/codeql-cli/v${CODEQL_VERSION}.zip" \
-    && unzip -q "v${CODEQL_VERSION}.zip" \
-    && rm -f "v${CODEQL_VERSION}.zip" \
-    && mv "codeql-codeql-cli-v${CODEQL_VERSION}" "/opt/codeql-${CODEQL_VERSION}/lib" \
-    # Setup SSH
-    && ( \
-    echo 'LogLevel DEBUG2'; \
-    echo 'PermitRootLogin yes'; \
-    echo 'PasswordAuthentication yes'; \
-    echo 'Subsystem sftp /usr/lib/openssh/sftp-server'; \
-    ) > /etc/ssh/sshd_config_test \
-    && mkdir /run/sshd
+    && ./build.sh
 
 WORKDIR /
 
