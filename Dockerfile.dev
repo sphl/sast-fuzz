@@ -148,26 +148,24 @@ RUN wget --quiet "https://github.com/david-a-wheeler/flawfinder/archive/refs/tag
     && rm -f "infer-linux64-v${INFER_VERSION}.tar.xz" \
     && mv "infer-linux64-v${INFER_VERSION}" "/opt/infer-${INFER_VERSION}" \
     # Install CodeQL (cli-tool + library)
-    && mkdir "/opt/codeql-${CODEQL_VERSION}"
-    
-WORKDIR /opt/codeql-${CODEQL_VERSION}
-
-RUN wget --quiet "https://github.com/github/codeql-cli-binaries/releases/download/v${CODEQL_VERSION}/codeql-linux64.zip" \
-    && unzip codeql-linux64.zip \
+    && mkdir "/opt/codeql-${CODEQL_VERSION}" \
+    && wget --quiet "https://github.com/github/codeql-cli-binaries/releases/download/v${CODEQL_VERSION}/codeql-linux64.zip" \
+    && unzip -q codeql-linux64.zip \
     && rm -f codeql-linux64.zip \
-    && mv codeql cli \
+    && mv codeql "/opt/codeql-${CODEQL_VERSION}/cli" \
     && wget --quiet "https://github.com/github/codeql/archive/refs/tags/codeql-cli/v${CODEQL_VERSION}.zip" \
-    && unzip "v${CODEQL_VERSION}.zip" \
+    && unzip -q "v${CODEQL_VERSION}.zip" \
     && rm -f "v${CODEQL_VERSION}.zip" \
-    && mv "codeql-codeql-cli-v${CODEQL_VERSION}" lib
-
-# Setup SSH
-RUN ( \
+    && mv "codeql-codeql-cli-v${CODEQL_VERSION}" "/opt/codeql-${CODEQL_VERSION}/lib" \
+    # Setup SSH
+    && ( \
     echo 'LogLevel DEBUG2'; \
     echo 'PermitRootLogin yes'; \
     echo 'PasswordAuthentication yes'; \
     echo 'Subsystem sftp /usr/lib/openssh/sftp-server'; \
     ) > /etc/ssh/sshd_config_test \
     && mkdir /run/sshd
+
+WORKDIR /
 
 CMD ["/usr/sbin/sshd", "-D", "-e", "-f", "/etc/ssh/sshd_config_test"]
