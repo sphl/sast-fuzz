@@ -80,8 +80,8 @@ RUN apt-get update -qq \
     && rm -f "SVF-${SVF_VERSION}.tar.gz" \
     && mv "SVF-SVF-${SVF_VERSION}" "/opt/svf-${SVF_VERSION}" \
     # Install WLLVM
-    && python3 -m pip install --no-cache-dir --upgrade pip \
-    && python3 -m pip install --no-cache-dir wllvm \
+    && python3 -m pip install -q --no-cache-dir --upgrade pip \
+    && python3 -m pip install -q --no-cache-dir wllvm \
     # Install Flawfinder
     && wget --quiet "https://github.com/david-a-wheeler/flawfinder/archive/refs/tags/${FLAWFINDER_VERSION}.tar.gz" \
     && tar -xf "${FLAWFINDER_VERSION}.tar.gz" \
