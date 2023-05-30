@@ -83,7 +83,7 @@ RUN apt-get update -qq \
     && python3 -m pip install --no-cache-dir --upgrade pip \
     && python3 -m pip install --no-cache-dir wllvm \
     # Install Flawfinder
-    wget --quiet "https://github.com/david-a-wheeler/flawfinder/archive/refs/tags/${FLAWFINDER_VERSION}.tar.gz" \
+    && wget --quiet "https://github.com/david-a-wheeler/flawfinder/archive/refs/tags/${FLAWFINDER_VERSION}.tar.gz" \
     && tar -xf "${FLAWFINDER_VERSION}.tar.gz" \
     && rm -f "${FLAWFINDER_VERSION}.tar.gz" \
     # Install Infer
