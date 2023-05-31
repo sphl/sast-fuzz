@@ -1,7 +1,8 @@
 name: "Build and deploy the Dev Container Image"
 
 on:
-  push:
+  release:
+    types: [published]
 
 env:
   REGISTRY: ghcr.io
