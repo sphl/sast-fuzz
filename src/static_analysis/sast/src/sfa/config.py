@@ -1,4 +1,9 @@
+from pathlib import Path
+
 from sfa.util.proc import get_cpu_count
+
+# Default output CSV file
+DEFAULT_OUTPUT_FILE = Path.cwd() / "output.csv"
 
 # Name of the subjects' build script
 BUILD_SCRIPT_NAME = "build.sh"
