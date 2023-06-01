@@ -4,9 +4,9 @@ from itertools import chain
 from pathlib import Path
 from typing import List, Optional
 
-from sfa.logic.filter import SASTFilter, FilterFactory
-from sfa.logic.grouping import GroupingMode, GroupingFactory
-from sfa.logic.tool_runner import SASTTool, SASTToolFlags, SASTToolRunner, RunnerFactory
+from sfa.logic.filter import FilterFactory, SASTFilter
+from sfa.logic.grouping import GroupingFactory, GroupingMode
+from sfa.logic.tool_runner import RunnerFactory, SASTTool, SASTToolFlags, SASTToolRunner
 from sfa.util.proc import run_with_multi_processing
 from sfa.util.timer import get_exec_time
 
@@ -42,7 +42,9 @@ class Analyzer:
 
         runners = list(self._runner_factory.get_instances(tools))
 
-        nested_flags, exec_time = get_exec_time(lambda: run_with_multi_processing(_starter, runners, n_jobs))
+        nested_flags, exec_time = get_exec_time(
+            lambda: run_with_multi_processing(_starter, runners, n_jobs)
+        )
         flags = SASTToolFlags(set(chain(*nested_flags)))
 
         logging.info(f"Execution time: {exec_time:.2f}s")
