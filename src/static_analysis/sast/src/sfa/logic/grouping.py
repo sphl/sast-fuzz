@@ -81,11 +81,7 @@ class BasicBlockGrouping(Grouping):
             for bb_id, bb_info in self._bb_infos.items():
                 if flag.file == bb_info["file"]:
                     # Check if flagged line is within basic block range
-                    if (
-                        bb_info["line_range"]["start"]
-                        <= flag.line
-                        <= bb_info["line_range"]["end"]
-                    ):
+                    if bb_info["line_range"]["start"] <= flag.line <= bb_info["line_range"]["end"]:
                         flags_per_bb[bb_id].add(flag)
                         break
 

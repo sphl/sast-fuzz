@@ -56,9 +56,7 @@ def has_extension(file: Path, exts: List[str]) -> bool:
     return file.suffix in exts
 
 
-def find_files(
-    dir: Path, exts: Optional[List[str]] = None, rec: bool = True
-) -> Set[Path]:
+def find_files(dir: Path, exts: Optional[List[str]] = None, rec: bool = True) -> Set[Path]:
     """
     Search for files in a directory.
 
@@ -70,13 +68,7 @@ def find_files(
     files: Set[Path] = set()
 
     for root, _, _files in walk(dir):
-        files.update(
-            [
-                Path(root) / Path(file)
-                for file in _files
-                if (exts is None or has_extension(Path(file), exts))
-            ]
-        )
+        files.update([Path(root) / Path(file) for file in _files if (exts is None or has_extension(Path(file), exts))])
 
         if not rec:
             break

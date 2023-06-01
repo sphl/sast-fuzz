@@ -42,9 +42,7 @@ class Analyzer:
 
         runners = list(self._runner_factory.get_instances(tools))
 
-        nested_flags, exec_time = get_exec_time(
-            lambda: run_with_multi_processing(_starter, runners, n_jobs)
-        )
+        nested_flags, exec_time = get_exec_time(lambda: run_with_multi_processing(_starter, runners, n_jobs))
         flags = SASTToolFlags(set(chain(*nested_flags)))
 
         logging.info(f"Execution time: {exec_time:.2f}s")

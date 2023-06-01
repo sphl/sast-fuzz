@@ -97,9 +97,7 @@ class FlawfinderRunner(SASTToolRunner):
         return self._subject_dir
 
     def _analyze(self, working_dir: Path) -> str:
-        return run_shell_command(
-            f"{FLAWFINDER} --dataonly --sarif {' '.join(FLAWFINDER_FLAG_SET)} {working_dir}"
-        )
+        return run_shell_command(f"{FLAWFINDER} --dataonly --sarif {' '.join(FLAWFINDER_FLAG_SET)} {working_dir}")
 
     def _format(self, string: str) -> SASTToolFlags:
         return convert_sarif(string)
@@ -174,9 +172,7 @@ class CodeQLRunner(SASTToolRunner):
         )
 
         if not result_file.exists():
-            raise Exception(
-                f"CodeQL: Failed to create the result file '{result_file}'!"
-            )
+            raise Exception(f"CodeQL: Failed to create the result file '{result_file}'!")
 
         return read(result_file)
 
@@ -208,9 +204,7 @@ class ClangScanRunner(SASTToolRunner):
 
         # Clang analyzer writes the results of each checker into a separate SARIF file. Therefore, we append the results
         # (JSON string) of each file as one line to the return string.
-        return os.linesep.join(
-            map(lambda f: json.dumps(json.loads(read(f)), indent=None), result_files)
-        )
+        return os.linesep.join(map(lambda f: json.dumps(json.loads(read(f)), indent=None), result_files))
 
     def _format(self, string: str) -> SASTToolFlags:
         flags = map(convert_sarif, string.split(os.linesep))
@@ -239,9 +233,7 @@ class SanitizerRunner(SASTToolRunner):
         )
 
         if not result_file.exists():
-            raise Exception(
-                f"Sanitizer: Failed to create the result file '{result_file}'!"
-            )
+            raise Exception(f"Sanitizer: Failed to create the result file '{result_file}'!")
 
         return temp_dir
 

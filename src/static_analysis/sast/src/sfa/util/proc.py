@@ -53,9 +53,7 @@ def get_cpu_count() -> int:
     return mp.cpu_count()
 
 
-def run_with_multi_processing(
-    func: Callable, items: List, n_jobs: int = get_cpu_count() - 1
-) -> List:
+def run_with_multi_processing(func: Callable, items: List, n_jobs: int = get_cpu_count() - 1) -> List:
     """
     Run a function for each element in an iterable with multi-processing.
 

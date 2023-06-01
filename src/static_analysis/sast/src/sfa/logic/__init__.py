@@ -173,9 +173,7 @@ def convert_sarif(string: str) -> SASTToolFlags:
         tool = run["tool"]["driver"]["name"].lower()
 
         # Create a mapping between rule ID and rule/vuln. name
-        rule_dict = {
-            rule["id"]: rule["name"] for rule in run["tool"]["driver"]["rules"]
-        }
+        rule_dict = {rule["id"]: rule["name"] for rule in run["tool"]["driver"]["rules"]}
 
         for flag in run["results"]:
             vuln = rule_dict[flag["ruleId"]]

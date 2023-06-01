@@ -65,9 +65,7 @@ def run(
     ],
     exclude_tools: Annotated[
         List[SASTTool],
-        typer.Option(
-            "--exclude-tool", help="SAST tool(s) to be excluded from the analysis."
-        ),
+        typer.Option("--exclude-tool", help="SAST tool(s) to be excluded from the analysis."),
     ] = [],
     exclude_filters: Annotated[
         List[SASTFilter],
@@ -76,12 +74,8 @@ def run(
             help="SAST output filter(s) to be excluded from the analysis.",
         ),
     ] = [],
-    grouping: Annotated[
-        GroupingMode, typer.Option("--grouping", help="SAST flag grouping mode.")
-    ] = GroupingMode.NONE,
-    parallel: Annotated[
-        bool, typer.Option("--parallel", help="Run SAST tools in parallel.")
-    ] = False,
+    grouping: Annotated[GroupingMode, typer.Option("--grouping", help="SAST flag grouping mode.")] = GroupingMode.NONE,
+    parallel: Annotated[bool, typer.Option("--parallel", help="Run SAST tools in parallel.")] = False,
     flags_files: Annotated[
         List[Path],
         typer.Option(
@@ -94,9 +88,7 @@ def run(
         ),
     ] = [],
 ) -> int:
-    assert has_build_script(
-        subject_dir
-    ), "ERROR: Could not find build (shell-)script!"  # nosec
+    assert has_build_script(subject_dir), "ERROR: Could not find build (shell-)script!"  # nosec
 
     analyzer = Analyzer(inspec_file, subject_dir)
 
