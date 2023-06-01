@@ -2,6 +2,8 @@ name: Check Python files
 
 on:
   push:
+    paths:
+      - 'src/static_analysis/sast/**.py'
 
 permissions:
   contents: read
@@ -19,7 +21,7 @@ jobs:
         export PATH="/github/home/.local/bin:$PATH"
         cd src/static_analysis/sast
         poetry install
-        poetry run black --check src
-        poetry run isort --profile black --check src
+        poetry run black --check src --line-length 120
+        poetry run isort --check src --profile black
         poetry run mypy src
         poetry run bandit --recursive --confidence src
