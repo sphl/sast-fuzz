@@ -1,10 +1,8 @@
 import json
 import os
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Generator, Iterable, Optional, Set, Tuple
-
-from sfa.config import BUILD_SCRIPT_NAME
+from typing import Dict, Generator, Optional, Set, Tuple
 
 # CSV value separator
 CSV_SEP: str = ","
@@ -15,12 +13,7 @@ SARIF_VERSION: str = "2.1.0"
 # SAST tool setup environment variables
 SAST_SETUP_ENV: Dict[str, str] = {
     **os.environ.copy(),
-    **{
-        "CC": "clang",
-        "CXX": "clang++",
-        "CFLAGS": "-O0 -fno-inline",
-        "CXXFLAGS": "-O0 -fno-inline",
-    },
+    **{"CC": "clang", "CXX": "clang++", "CFLAGS": "-O0 -fno-inline", "CXXFLAGS": "-O0 -fno-inline"},
 }
 
 
@@ -114,11 +107,22 @@ class SASTToolFlags:
             for line in csv_file:
                 vals = line.strip().split(CSV_SEP)
 
-                if len(vals) == 4: # Regular SAST flag
+                if len(vals) == 4:  # Regular SAST flag
                     flags.add(SASTToolFlag(vals[0], vals[1], int(vals[2]), vals[3]))
 
-                if len(vals) == 8: # Grouped SAST flag
-                    flags.add(GroupedSASTToolFlag(vals[0], vals[1], int(vals[2]), vals[3], int(vals[4]), int(vals[5]), int(vals[6]), int(vals[7])))
+                if len(vals) == 8:  # Grouped SAST flag
+                    flags.add(
+                        GroupedSASTToolFlag(
+                            vals[0],
+                            vals[1],
+                            int(vals[2]),
+                            vals[3],
+                            int(vals[4]),
+                            int(vals[5]),
+                            int(vals[6]),
+                            int(vals[7]),
+                        )
+                    )
 
         return SASTToolFlags(flags)
 
@@ -134,16 +138,6 @@ class SASTToolFlags:
 
     def __len__(self) -> int:
         return len(self._flags)
-
-
-def has_build_script(dir: Path) -> bool:
-    """
-    Check if the directory contains the SASTFuzz-specific shell-script to build the target program.
-
-    :param dir:
-    :return:
-    """
-    return (dir / Path(BUILD_SCRIPT_NAME)).exists()
 
 
 def convert_sarif(string: str) -> SASTToolFlags:

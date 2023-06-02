@@ -7,9 +7,7 @@ from typing import Callable, Dict, List, Optional, Union
 
 
 def run_shell_command(
-    cmd: Union[str, List[str]],
-    cwd: Optional[Path] = None,
-    env: Optional[Dict[str, str]] = None,
+    cmd: Union[str, List[str]], cwd: Optional[Path] = None, env: Optional[Dict[str, str]] = None
 ) -> str:
     """
     Run command as shell sub-process.
@@ -29,13 +27,7 @@ def run_shell_command(
 
     try:
         return subprocess.run(
-            cmd_str,
-            shell=True,
-            cwd=cmd_cwd,
-            env=cmd_env,
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
+            cmd_str, shell=True, cwd=cmd_cwd, env=cmd_env, capture_output=True, text=True, encoding="utf-8"
         ).stdout  # nosec
 
     except subprocess.CalledProcessError as e:

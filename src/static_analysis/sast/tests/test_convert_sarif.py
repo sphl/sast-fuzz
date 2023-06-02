@@ -2,7 +2,6 @@ import unittest
 from pathlib import Path
 
 from sfa.logic import SASTToolFlag, SASTToolFlags, convert_sarif
-from sfa.util.io import read
 
 
 class TestConvertSarif(unittest.TestCase):
@@ -16,7 +15,7 @@ class TestConvertSarif(unittest.TestCase):
         expected.add(SASTToolFlag("sast-tool", "file2", 20, "Rule-2"))
 
         # Act
-        actual = convert_sarif(read(self.sarif_file))
+        actual = convert_sarif(self.sarif_file.read_text())
 
         # Assert
         self.assertEqual(expected, actual)

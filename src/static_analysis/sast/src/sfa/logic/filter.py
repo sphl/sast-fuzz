@@ -14,6 +14,15 @@ class SASTFilter(ExtendedEnum):
     REH = "reachability"
 
 
+class FilterFactory(Factory):
+    """
+    SAST flag filter factory.
+    """
+
+    def _create_instances(self, param: Any) -> Dict:
+        return {SASTFilter.REH: ReachabilityFilter(param)}
+
+
 class SASTFlagFilter(ABC):
     """
     Abstract SAST flag filter.
@@ -73,12 +82,3 @@ class ReachabilityFilter(SASTFlagFilter):
         :return:
         """
         return SASTToolFlags(set(filter(lambda f: self._is_reachable(f.file, f.line), flags)))
-
-
-class FilterFactory(Factory):
-    """
-    SAST flag filter factory.
-    """
-
-    def _create_instances(self, param: Any) -> Dict:
-        return {SASTFilter.REH: ReachabilityFilter(param)}

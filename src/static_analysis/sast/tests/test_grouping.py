@@ -1,7 +1,8 @@
 import unittest
 from pathlib import Path
 from typing import Set, Tuple
-from sfa.logic.grouping import CONCAT_CHAR, SASTToolFlag, GroupedSASTToolFlag, SASTToolFlags, BasicBlockGrouping
+from sfa.logic import SASTToolFlag, GroupedSASTToolFlag, SASTToolFlags
+from sfa.logic.grouping import CONCAT_CHAR, BasicBlockGrouping
 
 
 def unfold(flags: SASTToolFlags) -> Set[Tuple]:
@@ -23,13 +24,14 @@ def unfold(flags: SASTToolFlags) -> Set[Tuple]:
             flag.n_run_tools,
             flag.n_all_tools,
         )
-        for flag in flags if isinstance(flag, GroupedSASTToolFlag)
+        for flag in flags
+        if isinstance(flag, GroupedSASTToolFlag)
     }
 
 
 class TestBasicBlockGrouping(unittest.TestCase):
     def setUp(self):
-        self.grouping = BasicBlockGrouping(Path("data") / "sfi" / "quicksort.json", 3)
+        self.grouping = BasicBlockGrouping(Path("data") / "sfi" / "quicksort.json")
 
     def test_group_same_bb(self):
         # Arrange
@@ -39,7 +41,9 @@ class TestBasicBlockGrouping(unittest.TestCase):
         flags.add(SASTToolFlag("tool3", "quicksort.c", 73, "vuln3"))  # Block 16
 
         expected = SASTToolFlags()
-        expected.add(GroupedSASTToolFlag("tool1-tool2-tool3", "quicksort.c", 65, "vuln1:67-vuln2:70-vuln3:73", 3, 8, 3, 3))
+        expected.add(
+            GroupedSASTToolFlag("tool1-tool2-tool3", "quicksort.c", 65, "vuln1:67-vuln2:70-vuln3:73", 3, 8, 3, 3)
+        )
 
         # Act
         actual = self.grouping.group(flags)
@@ -90,8 +94,8 @@ class TestBasicBlockGrouping(unittest.TestCase):
         flags.add(SASTToolFlag("tool1", "quicksort.c", 73, "vuln3"))  # Block 16
 
         expected = SASTToolFlags()
-        expected.add(GroupedSASTToolFlag("tool1", "quicksort.c", 65, "vuln1:67-vuln3:73", 2, 8, 1, 3))
-        expected.add(GroupedSASTToolFlag("tool2", "quicksort.c", 13, "vuln2:19", 1, 4, 1, 3))
+        expected.add(GroupedSASTToolFlag("tool1", "quicksort.c", 65, "vuln1:67-vuln3:73", 2, 8, 1, 2))
+        expected.add(GroupedSASTToolFlag("tool2", "quicksort.c", 13, "vuln2:19", 1, 4, 1, 2))
 
         # Act
         actual = self.grouping.group(flags)
