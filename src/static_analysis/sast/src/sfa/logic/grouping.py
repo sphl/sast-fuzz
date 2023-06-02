@@ -4,7 +4,7 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Any, Dict
 
-from sfa.logic import SASTToolFlag, SASTToolFlags
+from sfa.logic import SASTToolFlag, GroupedSASTToolFlag, SASTToolFlags
 from sfa.util.ext_enum import ExtendedEnum
 from sfa.util.factory import Factory
 
@@ -13,7 +13,6 @@ CONCAT_CHAR = "-"
 
 
 class GroupingMode(ExtendedEnum):
-    NONE = "none"
     BASIC_BLOCK = "basic_block"
 
 
@@ -22,11 +21,12 @@ class Grouping(ABC):
     Abstract SAST flag grouping.
     """
 
-    def __init__(self, inspec_file: Path) -> None:
+    def __init__(self, inspec_file: Path, n_tools: int) -> None:
         self._inspec_file = inspec_file
+        self._n_tools = n_tools
 
     @abstractmethod
-    def group(self, flags: SASTToolFlags) -> SASTToolFlags:
+    def group(self, flags: SASTToolFlags) -> GroupedSASTToolFlag:
         """
         Group SAST flags based on to certain heuristics.
 
@@ -36,70 +36,41 @@ class Grouping(ABC):
         pass
 
 
-class NoneGrouping(Grouping):
-    """
-    No grouping.
-    """
-
-    def group(self, flags: SASTToolFlags) -> SASTToolFlags:
-        """
-        Dummy grouping that returns the passed SAST flags unchanged.
-
-        :param flags:
-        :return:
-        """
-        return flags
-
-
 class BasicBlockGrouping(Grouping):
     """
     Group SAST flags based on basic blocks.
     """
 
-    def __init__(self, inspec_file: Path) -> None:
-        super().__init__(inspec_file)
-        self._bb_infos: Dict[int, Dict[str, Any]] = {}
+    def __init__(self, inspec_file: Path, n_tools: int) -> None:
+        super().__init__(inspec_file, n_tools)
+        self._bb_info: Dict[int, Dict[str, Any]] = {}
 
-        for func in json.loads(inspec_file.read_text())["functions"]:
+        funcs = json.loads(inspec_file.read_text())["functions"]
+        for func in funcs:
             for bb in func["basic_blocks"]:
-                self._bb_infos[bb["id"]] = {
-                    "file": func["location"]["filename"],
-                    "line_range": bb["location"]["line"],
-                }
+                self._bb_info[bb["id"]] = {"file": func["location"]["filename"], "range": bb["location"]["line"], "LoC": bb["LoC"]}
 
     def group(self, flags: SASTToolFlags) -> SASTToolFlags:
         """
-        Group SAST flags based on the source code boundaries (i.e. first and last line number) of basic blocks in the
-        target program.
-
-        :param flags:
-        :return:
+        Group SAST flags based on the code range of basic blocks in the target program.
         """
         flags_per_bb = defaultdict(set)
 
         for flag in flags:
-            for bb_id, bb_info in self._bb_infos.items():
+            for bb_id, bb_info in self._bb_info.items():
                 if flag.file == bb_info["file"]:
-                    # Check if flagged line is within basic block range
-                    if bb_info["line_range"]["start"] <= flag.line <= bb_info["line_range"]["end"]:
+                    if bb_info["range"]["start"] <= flag.line <= bb_info["range"]["end"]:
                         flags_per_bb[bb_id].add(flag)
+                        # BB found, continue with next flag
                         break
 
         grouped_flags = SASTToolFlags()
 
         for bb_id, bb_flags in flags_per_bb.items():
-            bb_tools = set([flag.tool for flag in bb_flags])
-            bb_vulns = set([f"{flag.vuln}:{flag.line}" for flag in bb_flags])
+            tools_per_bb = {flag.tool for flag in bb_flags}
+            vulns_per_bb = {f"{flag.vuln}:{flag.line}" for flag in bb_flags}
 
-            tool = CONCAT_CHAR.join(bb_tools)
-            file = self._bb_infos[bb_id]["file"]
-            line = self._bb_infos[bb_id]["line_range"]["start"]
-            vuln = CONCAT_CHAR.join(bb_vulns)
-
-            n_flags = len(bb_vulns)
-            n_tools = len(bb_tools)
-
-            grouped_flags.add(SASTToolFlag(tool, file, line, vuln, n_flags, n_tools))
+            grouped_flags.add(GroupedSASTToolFlag(CONCAT_CHAR.join(tools_per_bb), self._bb_info[bb_id]["file"], self._bb_info[bb_id]["range"]["start"], CONCAT_CHAR.join(vulns_per_bb), len({flag.line for flag in bb_flags}), self._bb_info[bb_id]["LoC"], len(tools_per_bb), self._n_tools))
 
         return grouped_flags
 
@@ -111,6 +82,5 @@ class GroupingFactory(Factory):
 
     def _create_instances(self, param: Any) -> Dict:
         return {
-            GroupingMode.NONE: NoneGrouping(param),
-            GroupingMode.BASIC_BLOCK: BasicBlockGrouping(param),
+            GroupingMode.BASIC_BLOCK: BasicBlockGrouping(*param),
         }

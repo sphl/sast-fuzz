@@ -24,7 +24,7 @@ SAST_SETUP_ENV: Dict[str, str] = {
 }
 
 
-@dataclass(frozen=True, eq=True)
+@dataclass(frozen=True)
 class SASTToolFlag:
     """
     Information of a SAST tool flag.
@@ -35,11 +35,23 @@ class SASTToolFlag:
     line: int
     vuln: str
 
-    n_flags: int = field(default=1)
-    n_tools: int = field(default=1)
+    def as_tuple(self) -> Tuple:
+        return self.tool, self.file, self.line, self.vuln
+
+
+@dataclass(frozen=True)
+class GroupedSASTToolFlag(SASTToolFlag):
+    """
+    Extended information of a SAST tool flag.
+    """
+
+    n_flg_lines: int
+    n_all_lines: int
+    n_run_tools: int
+    n_all_tools: int
 
     def as_tuple(self) -> Tuple:
-        return self.tool, self.file, self.line, self.vuln, self.n_flags, self.n_tools
+        return super().as_tuple() + (self.n_flg_lines, self.n_all_lines, self.n_run_tools, self.n_all_tools)
 
 
 class SASTToolFlags:
@@ -48,10 +60,7 @@ class SASTToolFlags:
     """
 
     def __init__(self, flags: Optional[Set[SASTToolFlag]] = None) -> None:
-        if flags is None:
-            self._flags = set()
-        else:
-            self._flags = flags
+        self._flags = set() if flags is None else flags
 
     def add(self, flag: SASTToolFlag) -> None:
         """
@@ -104,32 +113,14 @@ class SASTToolFlags:
         with file.open("r") as csv_file:
             for line in csv_file:
                 vals = line.strip().split(CSV_SEP)
-                flags.add(
-                    SASTToolFlag(
-                        vals[0],
-                        vals[1],
-                        int(vals[2]),
-                        vals[3],
-                        int(vals[4]),
-                        int(vals[5]),
-                    )
-                )
+
+                if len(vals) == 4: # Regular SAST flag
+                    flags.add(SASTToolFlag(vals[0], vals[1], int(vals[2]), vals[3]))
+
+                if len(vals) == 8: # Grouped SAST flag
+                    flags.add(GroupedSASTToolFlag(vals[0], vals[1], int(vals[2]), vals[3], int(vals[4]), int(vals[5]), int(vals[6]), int(vals[7])))
 
         return SASTToolFlags(flags)
-
-    @classmethod
-    def from_multiple_csvs(cls, files: Iterable[Path]) -> "SASTToolFlags":
-        """
-        Read SAST flags from multiple CSV files.
-
-        :param files:
-        :return:
-        """
-        flags = SASTToolFlags()
-
-        flags.update(*map(SASTToolFlags.from_csv, files))
-
-        return flags
 
     def __eq__(self, o: object) -> bool:
         if not isinstance(o, SASTToolFlags):
@@ -172,7 +163,7 @@ def convert_sarif(string: str) -> SASTToolFlags:
     for run in sarif_data["runs"]:
         tool = run["tool"]["driver"]["name"].lower()
 
-        # Create a mapping between rule ID and rule/vuln. name
+        # Create a mapping between rule ID and rule/vulnerability name
         rule_dict = {rule["id"]: rule["name"] for rule in run["tool"]["driver"]["rules"]}
 
         for flag in run["results"]:
@@ -182,7 +173,6 @@ def convert_sarif(string: str) -> SASTToolFlags:
                 file = loc["physicalLocation"]["artifactLocation"]["uri"]
                 line = loc["physicalLocation"]["region"]["startLine"]
 
-                # We're only interested in the filename
                 file = Path(file).name
 
                 flags.add(SASTToolFlag(tool, file, line, vuln))
