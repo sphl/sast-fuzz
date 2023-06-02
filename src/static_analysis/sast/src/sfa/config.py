@@ -1,352 +1,46 @@
-from sfa.util.proc import get_cpu_count
+from pathlib import Path
+
+import yaml
+
+FLAWFINDER = ""
+FLAWFINDER_CHECKS = []
+INFER = ""
+INFER_CHECKS = []
+INFER_NUM_THREADS = -1
+CODEQL = ""
+CODEQL_CHECKS = []
+CODEQL_NUM_THREADS = -1
+CLANG_SCAN = ""
+CLANG_SCAN_CHECKS = []
 
 
-# Path to the Flawfinder analyzer
-FLAWFINDER = "python2 /opt/flawfinder-2.0.19/flawfinder.py"
+def load_config(config_file: Path) -> None:
+    """
+    Load the configuration from the YAML file.
 
-# Flags of Flawfinder
-FLAWFINDER_FLAG_SET = ["--falsepositive", "--minlevel=3", "--neverignore"]
+    :param config_file:
+    :return:
+    """
+    global FLAWFINDER
+    global FLAWFINDER_CHECKS
+    global INFER
+    global INFER_CHECKS
+    global INFER_NUM_THREADS
+    global CODEQL
+    global CODEQL_CHECKS
+    global CODEQL_NUM_THREADS
+    global CLANG_SCAN
+    global CLANG_SCAN_CHECKS
 
-# Path to the Infer analyzer
-INFER = "/opt/infer-1.1.0/bin/infer"
+    config = yaml.safe_load(config_file.read_text())
 
-# Flags/checks of Infer
-INFER_RULE_SET = [
-    "--no-default-checkers",
-    "--biabduction",
-    "--bufferoverrun",
-    # "--liveness",
-    "--pulse",
-    # "--quandary",
-    # "--racerd",
-    "--siof",
-    # "--starvation",
-    "--uninit",
-]
-
-# Number of threads used by Infer
-INFER_NUM_THREADS = get_cpu_count() - 1
-
-# Path to the CodeQL analyzer
-CODEQL = "/opt/codeql-2.12.0/cli/codeql"
-
-# Path to the CodeQL library directory root
-CODEQL_LIB_ROOT = "/opt/codeql-2.12.0/lib"
-
-# Queries (checks) of CodeQL
-CODEQL_RULE_SET = [
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Critical/DeadCodeCondition.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Critical/DeadCodeFunction.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Critical/DeadCodeGoto.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Critical/DescriptorMayNotBeClosed.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Critical/DescriptorNeverClosed.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Critical/FileMayNotBeClosed.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Critical/FileNeverClosed.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Critical/GlobalUseBeforeInit.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Critical/InconsistentNullnessTesting.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Critical/InitialisationNotRun.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Critical/LargeParameter.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Critical/LateNegativeTest.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Critical/MemoryMayNotBeFreed.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Critical/MemoryNeverFreed.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Critical/MissingCheckScanf.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Critical/MissingNegativityTest.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Critical/MissingNullTest.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Critical/NewArrayDeleteMismatch.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Critical/NewDeleteArrayMismatch.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Critical/NewFreeMismatch.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Critical/NotInitialised.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Critical/OverflowCalculated.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Critical/OverflowDestination.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Critical/OverflowStatic.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Critical/ReturnStackAllocatedObject.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Critical/ReturnValueIgnored.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Critical/SizeCheck.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Critical/SizeCheck2.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Critical/Unused.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Critical/UseAfterFree.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/experimental/Likely\ Bugs/ArrayAccessProductFlow.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/experimental/Likely\ Bugs/OverrunWriteProductFlow.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/experimental/Likely\ Bugs/RedundantNullCheckParam.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/experimental/Security/CWE/CWE-020/LateCheckOfFunctionArgument.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/experimental/Security/CWE/CWE-020/NoCheckBeforeUnsafePutUser.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/experimental/Security/CWE/CWE-078/WordexpTainted.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/experimental/Security/CWE/CWE-1041/FindWrapperFunctions.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/experimental/Security/CWE/CWE-1126/DeclarationOfVariableWithUnnecessarilyWideScope.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/experimental/Security/CWE/CWE-120/MemoryUnsafeFunctionScan.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/experimental/Security/CWE/CWE-125/DangerousWorksWithMultibyteOrWideCharacters.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/experimental/Security/CWE/CWE-190/AllocMultiplicationOverflow.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/experimental/Security/CWE/CWE-190/DangerousUseOfTransformationAfterOperation.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/experimental/Security/CWE/CWE-193/ConstantSizeArrayOffByOne.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/experimental/Security/CWE/CWE-193/InvalidPointerDeref.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/experimental/Security/CWE/CWE-200/ExposureSensitiveInformationUnauthorizedActor.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/experimental/Security/CWE/CWE-243/IncorrectChangingWorkingDirectory.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/experimental/Security/CWE/CWE-266/IncorrectPrivilegeAssignment.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/experimental/Security/CWE/CWE-273/PrivilegeDroppingOutoforder.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/experimental/Security/CWE/CWE-285/PamAuthorization.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/experimental/Security/CWE/CWE-359/PrivateCleartextWrite.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/experimental/Security/CWE/CWE-362/double-fetch.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/experimental/Security/CWE/CWE-377/InsecureTemporaryFile.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/experimental/Security/CWE/CWE-401/MemoryLeakOnFailedCallToRealloc.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/experimental/Security/CWE/CWE-415/DoubleFree.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/experimental/Security/CWE/CWE-476/DangerousUseOfExceptionBlocks.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/experimental/Security/CWE/CWE-561/FindIncorrectlyUsedSwitch.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/experimental/Security/CWE/CWE-670/DangerousUseSSL_shutdown.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/experimental/Security/CWE/CWE-675/DoubleRelease.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/experimental/Security/CWE/CWE-691/InsufficientControlFlowManagementAfterRefactoringTheCode.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/experimental/Security/CWE/CWE-691/InsufficientControlFlowManagementWhenUsingBitOperations.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/experimental/Security/CWE/CWE-703/FindIncorrectlyUsedExceptions.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/experimental/Security/CWE/CWE-754/ImproperCheckReturnValueScanf.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/experimental/Security/CWE/CWE-758/UndefinedOrImplementationDefinedBehavior.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/experimental/Security/CWE/CWE-783/OperatorPrecedenceLogicErrorWhenUseBitwiseOrLogicalOperations.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/experimental/Security/CWE/CWE-783/OperatorPrecedenceLogicErrorWhenUseBoolType.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/experimental/Security/CWE/CWE-787/UnsignedToSignedPointerArith.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/experimental/Security/CWE/CWE-788/AccessOfMemoryLocationAfterEndOfBufferUsingStrlen.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/AmbiguouslySignedBitField.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Arithmetic/BadAdditionOverflowCheck.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Arithmetic/BadCheckOdd.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Arithmetic/BitwiseSignCheck.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Arithmetic/ComparisonPrecedence.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Arithmetic/ComparisonWithCancelingSubExpr.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Arithmetic/FloatComparison.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Arithmetic/IntMultToLong.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Arithmetic/PointlessComparison.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Arithmetic/PointlessSelfComparison.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Arithmetic/SignedOverflowCheck.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Arithmetic/UnsignedGEZero.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/ContinueInFalseLoop.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Conversion/ArrayArgSizeMismatch.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Conversion/CastArrayPointerArithmetic.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Conversion/ConversionChangesSign.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Conversion/ImplicitDowncastFromBitfield.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Conversion/LossyFunctionResultCast.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Conversion/LossyPointerCast.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Conversion/NonzeroValueCastToPointer.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Format/NonConstantFormat.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Format/SnprintfOverflow.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Format/TooManyFormatArguments.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Format/WrongNumberOfFormatArguments.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Format/WrongTypeFormatArguments.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/InconsistentCallOnResult.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/InconsistentCheckReturnNull.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/JapaneseEra/ConstructorOrMethodWithExactEraDate.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/JapaneseEra/StructWithExactEraDate.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Leap\ Year/Adding365DaysPerYear.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Leap\ Year/UncheckedLeapYearAfterYearModification.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Leap\ Year/UncheckedReturnValueForTimeFunctions.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Leap\ Year/UnsafeArrayForDaysOfYear.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Likely\ Typos/AssignWhereCompareMeant.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Likely\ Typos/BoolValueInBitOp.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Likely\ Typos/CompareWhereAssignMeant.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Likely\ Typos/DubiousNullCheck.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Likely\ Typos/ExprHasNoEffect.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Likely\ Typos/FutileConditional.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Likely\ Typos/inconsistentLoopDirection.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Likely\ Typos/IncorrectNotOperatorUsage.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Likely\ Typos/LogicalExprCouldBeSimplified.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Likely\ Typos/MissingEnumCaseInSwitch.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Likely\ Typos/ShortCircuitBitMask.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Likely\ Typos/UsingStrcpyAsBoolean.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Memory\ Management/AllocaInLoop.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Memory\ Management/ImproperNullTermination.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Memory\ Management/NtohlArrayNoBound.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Memory\ Management/Padding/More64BitWaste.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Memory\ Management/Padding/NonPortablePrintf.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Memory\ Management/Padding/Suboptimal64BitType.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Memory\ Management/PointerOverflow.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Memory\ Management/PotentialBufferOverflow.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Memory\ Management/ReturnCstrOfLocalStdString.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Memory\ Management/ReturnStackAllocatedMemory.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Memory\ Management/StackAddressEscapes.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Memory\ Management/StrncpyFlippedArgs.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Memory\ Management/SuspiciousCallToMemset.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Memory\ Management/SuspiciousCallToStrncat.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Memory\ Management/SuspiciousSizeof.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Memory\ Management/UninitializedLocal.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Memory\ Management/UnsafeUseOfStrcat.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Memory\ Management/UsingExpiredStackAddress.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/NestedLoopSameVar.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/OO/IncorrectConstructorDelegation.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/OO/NonVirtualDestructor.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/OO/NonVirtualDestructorInBaseClass.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/OO/SelfAssignmentCheck.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/OO/ThrowInDestructor.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/OO/UnsafeUseOfThis.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/OO/VirtualCallInStructor.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Protocols/TlsSettingsMisconfiguration.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Protocols/UseOfDeprecatedHardcodedProtocol.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/RedundantNullCheckSimple.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/ReturnConstType.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/ReturnConstTypeMember.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/ShortLoopVarName.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Underspecified\ Functions/ImplicitFunctionDeclaration.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Underspecified\ Functions/MistypedFunctionArguments.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Underspecified\ Functions/TooFewArguments.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/Underspecified\ Functions/TooManyArguments.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Likely\ Bugs/UseInOwnInitializer.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/PointsTo/TaintedFormatStrings.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-014/MemsetMayBeDeleted.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-020/CountUntrustedDataToExternalAPI.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-020/IRCountUntrustedDataToExternalAPI.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-020/IRUntrustedDataToExternalAPI.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-020/UntrustedDataToExternalAPI.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-022/TaintedPath.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-078/ExecTainted.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-079/CgiXss.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-089/SqlTainted.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-114/UncontrolledProcessOperation.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-119/OverflowBuffer.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-120/BadlyBoundedWrite.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-120/OverrunWrite.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-120/OverrunWriteFloat.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-120/UnboundedWrite.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-120/VeryLikelyOverrunWrite.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-121/UnterminatedVarargsCall.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-129/ImproperArrayIndexValidation.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-131/NoSpaceForZeroTerminator.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-134/UncontrolledFormatString.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-134/UncontrolledFormatStringThroughGlobalVar.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-170/ImproperNullTerminationTainted.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-190/ArithmeticTainted.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-190/ArithmeticUncontrolled.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-190/ArithmeticWithExtremeValues.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-190/ComparisonWithWiderType.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-190/IntegerOverflowTainted.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-190/TaintedAllocationSize.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-191/UnsignedDifferenceExpressionComparedZero.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-253/HResultBooleanConversion.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-290/AuthenticationBypass.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-295/SSLResultConflation.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-295/SSLResultNotChecked.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-311/CleartextBufferWrite.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-311/CleartextFileWrite.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-311/CleartextTransmission.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-313/CleartextSqliteDatabase.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-319/UseOfHttp.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-326/InsufficientKeySize.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-327/BrokenCryptoAlgorithm.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-327/OpenSslHeartbleed.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-367/TOCTOUFilesystemRace.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-428/UnsafeCreateProcessCall.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-457/ConditionallyUninitializedVariable.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-468/IncorrectPointerScaling.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-468/IncorrectPointerScalingChar.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-468/IncorrectPointerScalingVoid.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-468/SuspiciousAddWithSizeof.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-497/ExposedSystemData.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-497/PotentiallyExposedSystemData.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-570/IncorrectAllocationErrorHandling.ql",
-    # f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-611/XXE.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-676/DangerousFunctionOverflow.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-676/DangerousUseOfCin.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-676/PotentiallyDangerousFunction.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-704/WcharCharConversion.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-732/DoNotCreateWorldWritable.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-732/OpenCallMissingModeArgument.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-732/UnsafeDaclSecurityDescriptor.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-764/LockOrderCycle.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-764/TwiceLocked.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-764/UnreleasedLock.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-807/TaintedCondition.ql",
-    f"{CODEQL_LIB_ROOT}/cpp/ql/src/Security/CWE/CWE-835/InfiniteLoopWithUnsatisfiableExitCondition.ql",
-]
-
-# Number of threads used by CodeQL
-CODEQL_NUM_THREADS = get_cpu_count() - 1
-
-# Path to the Clang SA (scan-build) program
-CLANG_SCAN = "/opt/llvm-12.0.0/build/bin/scan-build"
-
-# Checks of Clang SA
-CLANG_SCAN_RULE_SET = [
-    "-disable-checker core.CallAndMessage",
-    "-enable-checker core.DivideZero",
-    "-enable-checker core.NonNullParamChecker",
-    "-enable-checker core.NullDereference",
-    "-enable-checker core.StackAddressEscape",
-    "-enable-checker core.UndefinedBinaryOperatorResult",
-    "-enable-checker core.uninitialized.ArraySubscript",
-    "-enable-checker core.uninitialized.Assign",
-    "-enable-checker core.uninitialized.Branch",
-    "-enable-checker core.uninitialized.CapturedBlockVariable",
-    "-enable-checker core.uninitialized.UndefReturn",
-    "-disable-checker core.VLASize",
-    "-enable-checker cplusplus.InnerPointer",
-    "-enable-checker cplusplus.Move",
-    "-enable-checker cplusplus.NewDelete",
-    "-enable-checker cplusplus.NewDeleteLeaks",
-    "-enable-checker cplusplus.PlacementNew",
-    "-disable-checker cplusplus.PureVirtualCall",
-    "-disable-checker deadcode.DeadStores",
-    "-disable-checker fuchsia.HandleChecker",
-    "-enable-checker nullability.NullableDereferenced",
-    "-enable-checker nullability.NullablePassedToNonnull",
-    "-enable-checker nullability.NullableReturnedFromNonnull",
-    "-enable-checker nullability.NullPassedToNonnull",
-    "-enable-checker nullability.NullReturnedFromNonnull",
-    "-disable-checker optin.cplusplus.UninitializedObject",
-    "-disable-checker optin.cplusplus.VirtualCall",
-    "-disable-checker optin.mpi.MPI-Checker",
-    "-disable-checker optin.osx.cocoa.localizability.EmptyLocalizationContextChecker",
-    "-disable-checker optin.osx.cocoa.localizability.NonLocalizedStringChecker",
-    "-disable-checker optin.osx.OSObjectCStyleCast",
-    "-disable-checker optin.performance.GCDAntipattern",
-    "-disable-checker optin.performance.Padding",
-    "-disable-checker optin.portability.UnixAPI",
-    "-disable-checker osx.API",
-    "-disable-checker osx.cocoa.AtSync",
-    "-disable-checker osx.cocoa.AutoreleaseWrite",
-    "-disable-checker osx.cocoa.ClassRelease",
-    "-disable-checker osx.cocoa.Dealloc",
-    "-disable-checker osx.cocoa.IncompatibleMethodTypes",
-    "-disable-checker osx.cocoa.Loops",
-    "-disable-checker osx.cocoa.MissingSuperCall",
-    "-disable-checker osx.cocoa.NilArg",
-    "-disable-checker osx.cocoa.NonNilReturnValue",
-    "-disable-checker osx.cocoa.NSAutoreleasePool",
-    "-disable-checker osx.cocoa.NSError",
-    "-disable-checker osx.cocoa.ObjCGenerics",
-    "-disable-checker osx.cocoa.RetainCount",
-    "-disable-checker osx.cocoa.RunLoopAutoreleaseLeak",
-    "-disable-checker osx.cocoa.SelfInit",
-    "-disable-checker osx.cocoa.SuperDealloc",
-    "-disable-checker osx.cocoa.UnusedIvars",
-    "-disable-checker osx.cocoa.VariadicMethodTypes",
-    "-disable-checker osx.coreFoundation.CFError",
-    "-disable-checker osx.coreFoundation.CFNumber",
-    "-disable-checker osx.coreFoundation.CFRetainRelease",
-    "-disable-checker osx.coreFoundation.containers.OutOfBounds",
-    "-disable-checker osx.coreFoundation.containers.PointerSizedValues",
-    "-disable-checker osx.MIG",
-    "-disable-checker osx.NumberObjectConversion",
-    "-disable-checker osx.ObjCProperty",
-    "-disable-checker osx.OSObjectRetainCount",
-    "-disable-checker osx.SecKeychainAPI",
-    "-enable-checker security.FloatLoopCounter",
-    "-enable-checker security.insecureAPI.bcmp",
-    "-enable-checker security.insecureAPI.bcopy",
-    "-enable-checker security.insecureAPI.bzero",
-    "-enable-checker security.insecureAPI.decodeValueOfObjCType",
-    "-enable-checker security.insecureAPI.DeprecatedOrUnsafeBufferHandling",
-    "-enable-checker security.insecureAPI.getpw",
-    "-enable-checker security.insecureAPI.gets",
-    "-enable-checker security.insecureAPI.mkstemp",
-    "-enable-checker security.insecureAPI.mktemp",
-    "-enable-checker security.insecureAPI.rand",
-    "-enable-checker security.insecureAPI.strcpy",
-    "-enable-checker security.insecureAPI.UncheckedReturn",
-    "-enable-checker security.insecureAPI.vfork",
-    "-enable-checker unix.API",
-    "-enable-checker unix.cstring.BadSizeArg",
-    "-enable-checker unix.cstring.NullArg",
-    "-enable-checker unix.Malloc",
-    "-enable-checker unix.MallocSizeof",
-    "-enable-checker unix.MismatchedDeallocator",
-    "-enable-checker unix.Vfork",
-    "-enable-checker valist.CopyToSelf",
-    "-enable-checker valist.Uninitialized",
-    "-enable-checker valist.Unterminated",
-    "-disable-checker webkit.NoUncountedMemberChecker",
-    "-disable-checker webkit.RefCntblBaseVirtualDtor",
-    "-disable-checker webkit.UncountedLambdaCapturesChecker",
-]
+    FLAWFINDER = config["tools"]["flawfinder"]["path"]
+    FLAWFINDER_CHECKS = config["tools"]["flawfinder"]["checks"]
+    INFER = config["tools"]["infer"]["path"]
+    INFER_CHECKS = config["tools"]["infer"]["checks"]
+    INFER_NUM_THREADS = config["tools"]["infer"]["num_threads"]
+    CODEQL = config["tools"]["codeql"]["path"]
+    CODEQL_CHECKS = config["tools"]["codeql"]["checks"]
+    CODEQL_NUM_THREADS = config["tools"]["codeql"]["num_threads"]
+    CLANG_SCAN = config["tools"]["clang_scan"]["path"]
+    CLANG_SCAN_CHECKS = config["tools"]["clang_scan"]["checks"]

@@ -8,15 +8,15 @@ from typing import Any, ClassVar, Dict
 
 from sfa.config import (
     CLANG_SCAN,
-    CLANG_SCAN_RULE_SET,
+    CLANG_SCAN_CHECKS,
     CODEQL,
+    CODEQL_CHECKS,
     CODEQL_NUM_THREADS,
-    CODEQL_RULE_SET,
     FLAWFINDER,
-    FLAWFINDER_FLAG_SET,
+    FLAWFINDER_CHECKS,
     INFER,
+    INFER_CHECKS,
     INFER_NUM_THREADS,
-    INFER_RULE_SET,
 )
 from sfa.logic import SAST_SETUP_ENV, SASTToolFlag, SASTToolFlags, convert_sarif
 from sfa.util.ext_enum import ExtendedEnum
@@ -114,7 +114,7 @@ class FlawfinderRunner(SASTToolRunner):
         return self._subject_dir
 
     def _analyze(self, working_dir: Path) -> str:
-        return run_shell_command(f"{FLAWFINDER} --dataonly --sarif {' '.join(FLAWFINDER_FLAG_SET)} {working_dir}")
+        return run_shell_command(f"{FLAWFINDER} --dataonly --sarif {' '.join(FLAWFINDER_CHECKS)} {working_dir}")
 
     def _format(self, string: str) -> SASTToolFlags:
         return convert_sarif(string)
@@ -138,7 +138,7 @@ class InferRunner(SASTToolRunner):
 
     def _analyze(self, working_dir: Path) -> str:
         run_shell_command(
-            f"{INFER} analyze --results-dir {working_dir} --jobs {INFER_NUM_THREADS} --keep-going {' '.join(INFER_RULE_SET)}"
+            f"{INFER} analyze --results-dir {working_dir} --jobs {INFER_NUM_THREADS} --keep-going {' '.join(INFER_CHECKS)}"
         )
 
         # By default, Infer writes the results into the 'report.json' file once the analysis is complete.
@@ -153,7 +153,7 @@ class InferRunner(SASTToolRunner):
         flags = SASTToolFlags()
 
         for flag in json.loads(string):
-            tool = SASTTool.IFR
+            tool = SASTTool.IFR.value
             file = flag["file"]
             line = flag["line"]
             vuln = flag["bug_type"]
@@ -185,7 +185,7 @@ class CodeQLRunner(SASTToolRunner):
         result_file = working_dir / "report.sarif"
 
         run_shell_command(
-            f"{CODEQL} database analyze --output={result_file} --format=sarifv2.1.0 --threads={CODEQL_NUM_THREADS} {working_dir} {' '.join(CODEQL_RULE_SET)}"
+            f"{CODEQL} database analyze --output={result_file} --format=sarifv2.1.0 --threads={CODEQL_NUM_THREADS} {working_dir} {' '.join(CODEQL_CHECKS)}"
         )
 
         if not result_file.exists():
@@ -206,7 +206,7 @@ class ClangScanRunner(SASTToolRunner):
         result_dir = temp_dir / "clang-scan_res"
 
         run_shell_command(
-            f"./{BUILD_SCRIPT_NAME} \"{CLANG_SCAN} -o {result_dir} --keep-empty -sarif {' '.join(CLANG_SCAN_RULE_SET)} make\"",
+            f"./{BUILD_SCRIPT_NAME} \"{CLANG_SCAN} -o {result_dir} --keep-empty -sarif {' '.join(CLANG_SCAN_CHECKS)} make\"",
             cwd=copy_dir(self._subject_dir, temp_dir),
             env=SAST_SETUP_ENV,
         )

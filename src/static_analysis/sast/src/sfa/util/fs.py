@@ -5,22 +5,6 @@ from pathlib import Path
 from typing import List, Optional, Set
 
 
-def get_parent(path: Path, depth: int = 1) -> Path:
-    """
-    Return the n-th parent of a path.
-
-    :param path:
-    :param depth:
-    :return:
-    """
-    if depth == 0:
-        return path
-
-    depth -= 1
-
-    return get_parent(path.parent, depth)
-
-
 def copy_dir(src_dir: Path, dst_dir: Path, extend_dst: bool = True) -> Optional[Path]:
     """
     Copy the contents of a source to a destination directory.

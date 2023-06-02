@@ -4,12 +4,14 @@ from pathlib import Path
 from typing import List, Optional
 
 import typer
-from sfa.logic import SASTToolFlags
-from sfa.logic.filter import SASTFilter, FilterFactory
-from sfa.logic.grouping import GroupingMode, GroupingFactory
-from sfa.logic.tool_runner import SASTTool, SASTToolRunner, RunnerFactory
-from sfa.util.proc import run_with_multi_processing
 from typing_extensions import Annotated
+
+from sfa.config import load_config
+from sfa.logic import SASTToolFlags
+from sfa.logic.filter import FilterFactory, SASTFilter
+from sfa.logic.grouping import GroupingFactory, GroupingMode
+from sfa.logic.tool_runner import RunnerFactory, SASTTool, SASTToolRunner
+from sfa.util.proc import run_with_multiproc
 
 logging.basicConfig(format="%(asctime)s SFA[%(levelname)s]: %(message)s", level=logging.DEBUG, stream=sys.stdout)
 
@@ -47,7 +49,7 @@ def run_tools(
 
     runner_insts = list(RunnerFactory(subject_dir).get_instances(tools))
 
-    nested_flags = run_with_multi_processing(_starter, runner_insts, n_jobs)
+    nested_flags = run_with_multiproc(_starter, runner_insts, n_jobs)
     flags.update(*map(SASTToolFlags, nested_flags))
 
     return flags
@@ -145,11 +147,25 @@ def run(
     ] = None,
     grouping: Annotated[Optional[GroupingMode], typer.Option("--grouping", help="SAST flag grouping mode.")] = None,
     parallel: Annotated[bool, typer.Option("--parallel", help="Execute SAST tools in parallel.")] = False,
-) -> int:
+    config_file: Annotated[
+        Path,
+        typer.Option(
+            "--config",
+            writable=False,
+            exists=True,
+            file_okay=True,
+            dir_okay=False,
+            resolve_path=True,
+            help="Path to the configuration YAML file.",
+        ),
+    ] = (Path.cwd() / "config.yml"),
+) -> None:
     """
     Run SAST tools and filter & group their findings.
     """
     try:
+        load_config(config_file)
+
         flags = SASTToolFlags()
         flags.update(*map(SASTToolFlags.from_csv, flags_files or []))
 
@@ -158,8 +174,6 @@ def run(
         flags = run_grouping(flags, inspec_file, grouping)
 
         flags.to_csv(output_file)
-        return 0
 
     except Exception as ex:
         logging.error(ex)
-        return 1

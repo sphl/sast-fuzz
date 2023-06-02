@@ -1,7 +1,8 @@
 import unittest
 from pathlib import Path
 from typing import Set, Tuple
-from sfa.logic import SASTToolFlag, GroupedSASTToolFlag, SASTToolFlags
+
+from sfa.logic import GroupedSASTToolFlag, SASTToolFlag, SASTToolFlags
 from sfa.logic.grouping import CONCAT_CHAR, BasicBlockGrouping
 
 
@@ -30,10 +31,10 @@ def unfold(flags: SASTToolFlags) -> Set[Tuple]:
 
 
 class TestBasicBlockGrouping(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.grouping = BasicBlockGrouping(Path("data") / "sfi" / "quicksort.json")
 
-    def test_group_same_bb(self):
+    def test_group_same_bb(self) -> None:
         # Arrange
         flags = SASTToolFlags()
         flags.add(SASTToolFlag("tool1", "quicksort.c", 67, "vuln1"))  # Block 16
@@ -51,7 +52,7 @@ class TestBasicBlockGrouping(unittest.TestCase):
         # Assert
         self.assertEqual(unfold(expected), unfold(actual))
 
-    def test_group_two_bbs(self):
+    def test_group_two_bbs(self) -> None:
         # Arrange
         flags = SASTToolFlags()
         flags.add(SASTToolFlag("tool1", "quicksort.c", 67, "vuln1"))  # Block 16
@@ -68,7 +69,7 @@ class TestBasicBlockGrouping(unittest.TestCase):
         # Assert
         self.assertEqual(unfold(expected), unfold(actual))
 
-    def test_group_three_bbs(self):
+    def test_group_three_bbs(self) -> None:
         # Arrange
         flags = SASTToolFlags()
         flags.add(SASTToolFlag("tool1", "quicksort.c", 47, "vuln1"))  # Block 9
@@ -86,7 +87,7 @@ class TestBasicBlockGrouping(unittest.TestCase):
         # Assert
         self.assertEqual(unfold(expected), unfold(actual))
 
-    def test_group_same_tool(self):
+    def test_group_same_tool(self) -> None:
         # Arrange
         flags = SASTToolFlags()
         flags.add(SASTToolFlag("tool1", "quicksort.c", 67, "vuln1"))  # Block 16
@@ -103,7 +104,7 @@ class TestBasicBlockGrouping(unittest.TestCase):
         # Assert
         self.assertEqual(unfold(expected), unfold(actual))
 
-    def test_group_same_vuln(self):
+    def test_group_same_vuln(self) -> None:
         # Arrange
         flags = SASTToolFlags()
         flags.add(SASTToolFlag("tool1", "quicksort.c", 67, "vuln1"))  # Block 16
@@ -120,7 +121,7 @@ class TestBasicBlockGrouping(unittest.TestCase):
         # Assert
         self.assertEqual(unfold(expected), unfold(actual))
 
-    def test_group_diff_vuln_same_line(self):
+    def test_group_diff_vuln_same_line(self) -> None:
         # Arrange
         flags = SASTToolFlags()
         flags.add(SASTToolFlag("tool1", "quicksort.c", 67, "vuln1"))  # Block 16
@@ -137,7 +138,7 @@ class TestBasicBlockGrouping(unittest.TestCase):
         # Assert
         self.assertEqual(unfold(expected), unfold(actual))
 
-    def test_group_scope_func(self):
+    def test_group_scope_func(self) -> None:
         # Arrange
         flags = SASTToolFlags()
         flags.add(SASTToolFlag("tool1", "quicksort.c", 54, "vuln1"))  # Outside of function(s)
@@ -154,7 +155,7 @@ class TestBasicBlockGrouping(unittest.TestCase):
         # Assert
         self.assertEqual(unfold(expected), unfold(actual))
 
-    def test_group_scope_file(self):
+    def test_group_scope_file(self) -> None:
         # Arrange
         flags = SASTToolFlags()
         flags.add(SASTToolFlag("tool1", "main.c", 67, "vuln1"))  # Wrong file

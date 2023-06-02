@@ -8,7 +8,7 @@ class TestConvertSarif(unittest.TestCase):
     def setUp(self) -> None:
         self.sarif_file = Path("data") / "test.sarif"
 
-    def test_convert_sarif(self):
+    def test_convert_sarif(self) -> None:
         # Arrange
         expected = SASTToolFlags()
         expected.add(SASTToolFlag("sast-tool", "file1", 10, "Rule-1"))

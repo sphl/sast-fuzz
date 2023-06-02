@@ -3,16 +3,16 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from sfa.logic import SASTToolFlags, SASTToolFlag, GroupedSASTToolFlag, CSV_SEP
+from sfa.logic import CSV_SEP, GroupedSASTToolFlag, SASTToolFlag, SASTToolFlags
 
 
 class TestSASTToolFlags(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.flags = SASTToolFlags()
         self.flags.add(SASTToolFlag("tool1", "file1", 10, "vuln1"))
         self.flags.add(SASTToolFlag("tool2", "file2", 20, "vuln2"))
 
-    def test_add(self):
+    def test_add(self) -> None:
         # Arrange
         flag = SASTToolFlag("tool3", "file3", 30, "vuln3")
 
@@ -22,7 +22,7 @@ class TestSASTToolFlags(unittest.TestCase):
         # Assert
         self.assertIn(flag, self.flags)
 
-    def test_update(self):
+    def test_update(self) -> None:
         # Arrange
         flag3 = SASTToolFlag("tool3", "file3", 30, "vuln3")
         flag4 = SASTToolFlag("tool4", "file4", 40, "vuln4")
@@ -36,7 +36,7 @@ class TestSASTToolFlags(unittest.TestCase):
 
         self.assertEqual(len(self.flags), 4)
 
-    def test_update_multiple(self):
+    def test_update_multiple(self) -> None:
         # Arrange
         flag1 = SASTToolFlag("tool1", "file1", 10, "vuln1")
         flag2 = SASTToolFlag("tool2", "file2", 20, "vuln2")
@@ -59,7 +59,7 @@ class TestSASTToolFlags(unittest.TestCase):
         # Assert
         self.assertEqual(expected, actual)
 
-    def test_remove(self):
+    def test_remove(self) -> None:
         # Arrange
         flag = SASTToolFlag("tool1", "file1", 10, "vuln1")
 
@@ -69,7 +69,7 @@ class TestSASTToolFlags(unittest.TestCase):
         # Assert
         self.assertNotIn(flag, self.flags)
 
-    def test_to_csv(self):
+    def test_to_csv(self) -> None:
         with TemporaryDirectory() as temp_dir:
             # Arrange
             temp_file = Path(temp_dir) / "file.csv"
@@ -85,7 +85,7 @@ class TestSASTToolFlags(unittest.TestCase):
             self.assertIn(CSV_SEP.join(["tool1", "file1", "10", "vuln1"]), lines)
             self.assertIn(CSV_SEP.join(["tool2", "file2", "20", "vuln2"]), lines)
 
-    def test_from_csv(self):
+    def test_from_csv(self) -> None:
         with TemporaryDirectory() as temp_dir:
             # Arrange
             temp_file = Path(temp_dir) / "test.csv"
@@ -111,12 +111,12 @@ class TestSASTToolFlags(unittest.TestCase):
 
 
 class TestGroupedSASTToolFlags(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.flags = SASTToolFlags()
         self.flags.add(GroupedSASTToolFlag("tool1", "file1", 10, "vuln1", 1, 3, 1, 5))
         self.flags.add(GroupedSASTToolFlag("tool2", "file2", 20, "vuln2", 1, 5, 1, 5))
 
-    def test_add(self):
+    def test_add(self) -> None:
         # Arrange
         flag = GroupedSASTToolFlag("tool3", "file3", 30, "vuln3", 1, 7, 1, 5)
 
@@ -126,7 +126,7 @@ class TestGroupedSASTToolFlags(unittest.TestCase):
         # Assert
         self.assertIn(flag, self.flags)
 
-    def test_update(self):
+    def test_update(self) -> None:
         # Arrange
         flag3 = GroupedSASTToolFlag("tool3", "file3", 30, "vuln3", 1, 7, 1, 5)
         flag4 = GroupedSASTToolFlag("tool4", "file4", 40, "vuln4", 1, 9, 1, 5)
@@ -140,7 +140,7 @@ class TestGroupedSASTToolFlags(unittest.TestCase):
 
         self.assertEqual(len(self.flags), 4)
 
-    def test_update_multiple(self):
+    def test_update_multiple(self) -> None:
         # Arrange
         flag1 = GroupedSASTToolFlag("tool1", "file1", 10, "vuln1", 1, 2, 1, 5)
         flag2 = GroupedSASTToolFlag("tool2", "file2", 20, "vuln2", 1, 4, 1, 5)
@@ -163,7 +163,7 @@ class TestGroupedSASTToolFlags(unittest.TestCase):
         # Assert
         self.assertEqual(expected, actual)
 
-    def test_remove(self):
+    def test_remove(self) -> None:
         # Arrange
         flag = GroupedSASTToolFlag("tool1", "file1", 10, "vuln1", 1, 3, 1, 5)
 
@@ -173,7 +173,7 @@ class TestGroupedSASTToolFlags(unittest.TestCase):
         # Assert
         self.assertNotIn(flag, self.flags)
 
-    def test_to_csv(self):
+    def test_to_csv(self) -> None:
         with TemporaryDirectory() as temp_dir:
             # Arrange
             temp_file = Path(temp_dir) / "file.csv"
@@ -189,7 +189,7 @@ class TestGroupedSASTToolFlags(unittest.TestCase):
             self.assertIn(CSV_SEP.join(["tool1", "file1", "10", "vuln1", "1", "3", "1", "5"]), lines)
             self.assertIn(CSV_SEP.join(["tool2", "file2", "20", "vuln2", "1", "5", "1", "5"]), lines)
 
-    def test_from_csv(self):
+    def test_from_csv(self) -> None:
         with TemporaryDirectory() as temp_dir:
             # Arrange
             temp_file = Path(temp_dir) / "test.csv"

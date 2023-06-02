@@ -21,8 +21,6 @@ def run_shell_command(
     cmd_cwd = cwd or Path.cwd()
     cmd_env = env or os.environ.copy()
 
-    assert cmd_cwd.exists()  # nosec
-
     logging.debug(f"Command: '{cmd_str}'")
 
     try:
@@ -36,16 +34,7 @@ def run_shell_command(
         raise Exception(f"Failed to run command '{cmd_str}'!")
 
 
-def get_cpu_count() -> int:
-    """
-    Get amount of CPUs available for multi-processing.
-
-    :return:
-    """
-    return mp.cpu_count()
-
-
-def run_with_multi_processing(func: Callable, items: List, n_jobs: int = get_cpu_count() - 1) -> List:
+def run_with_multiproc(func: Callable, items: List, n_jobs: int = mp.cpu_count() - 1) -> List:
     """
     Run a function for each element in an iterable with multi-processing.
 
