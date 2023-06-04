@@ -24,9 +24,14 @@ def run_shell_command(
     logging.debug(f"Command: '{cmd_str}'")
 
     try:
-        return subprocess.run(
+        proc_info = subprocess.run(
             cmd_str, shell=True, cwd=cmd_cwd, env=cmd_env, capture_output=True, text=True, encoding="utf-8"
-        ).stdout  # nosec
+        )  # nosec
+
+        if proc_info.stderr:
+            logging.error(proc_info.stderr)
+
+        return proc_info.stdout
 
     except subprocess.CalledProcessError as e:
         logging.error(e)

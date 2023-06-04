@@ -1,351 +1,351 @@
 ---
 tools:
   flawfinder:
-    path: "python2 /opt/flawfinder-2.0.19/flawfinder.py"
+    path: 'python2 /opt/flawfinder-2.0.19/flawfinder.py'
     checks:
-      - "--falsepositive"
-      - "--minlevel=3"
-      - "--neverignore"
+      - '--falsepositive'
+      - '--minlevel=3'
+      - '--neverignore'
   semgrep:
-    path: "/usr/local/bin/semgrep"
+    path: '/usr/local/bin/semgrep'
     checks:
-      - "r/c.lang.security.double-free.double-free"
-      - "r/c.lang.security.function-use-after-free.function-use-after-free"
-      - "r/c.lang.security.info-leak-on-non-formatted-string.info-leak-on-non-formated-string"
-      - "r/c.lang.security.insecure-use-gets-fn.insecure-use-gets-fn"
-      - "r/c.lang.security.insecure-use-memset.insecure-use-memset"
-      - "r/c.lang.security.insecure-use-printf-fn.insecure-use-printf-fn"
-      - "r/c.lang.security.insecure-use-scanf-fn.insecure-use-scanf-fn"
-      - "r/c.lang.security.insecure-use-strcat-fn.insecure-use-strcat-fn"
-      - "r/c.lang.security.insecure-use-string-copy-fn.insecure-use-string-copy-fn"
-      - "r/c.lang.security.insecure-use-strtok-fn.insecure-use-strtok-fn"
-      - "r/c.lang.security.random-fd-exhaustion.random-fd-exhaustion"
-      - "r/c.lang.security.use-after-free.use-after-free"
+      - 'r/c.lang.security.double-free.double-free'
+      - 'r/c.lang.security.function-use-after-free.function-use-after-free'
+      - 'r/c.lang.security.info-leak-on-non-formatted-string.info-leak-on-non-formated-string'
+      - 'r/c.lang.security.insecure-use-gets-fn.insecure-use-gets-fn'
+      - 'r/c.lang.security.insecure-use-memset.insecure-use-memset'
+      - 'r/c.lang.security.insecure-use-printf-fn.insecure-use-printf-fn'
+      - 'r/c.lang.security.insecure-use-scanf-fn.insecure-use-scanf-fn'
+      - 'r/c.lang.security.insecure-use-strcat-fn.insecure-use-strcat-fn'
+      - 'r/c.lang.security.insecure-use-string-copy-fn.insecure-use-string-copy-fn'
+      - 'r/c.lang.security.insecure-use-strtok-fn.insecure-use-strtok-fn'
+      - 'r/c.lang.security.random-fd-exhaustion.random-fd-exhaustion'
+      - 'r/c.lang.security.use-after-free.use-after-free'
     num_threads: 4
   infer:
-    path: "/opt/infer-1.1.0/bin/infer"
+    path: '/opt/infer-1.1.0/bin/infer'
     checks:
-      - "--no-default-checkers"
-      - "--biabduction"
-      - "--bufferoverrun"
-      # - "--liveness"
-      - "--pulse"
-      # - "--quandary"
-      # - "--racerd"
-      - "--siof"
-      # - "--starvation"
-      - "--uninit"
+      - '--no-default-checkers'
+      - '--biabduction'
+      - '--bufferoverrun'
+      # - '--liveness'
+      - '--pulse'
+      # - '--quandary'
+      # - '--racerd'
+      - '--siof'
+      # - '--starvation'
+      - '--uninit'
     num_threads: 4
   codeql:
-    path: "/opt/codeql-2.12.0/cli/codeql"
-    lib_path: "/opt/codeql-2.12.0/lib"
+    path: '/opt/codeql-2.12.0/cli/codeql'
+    lib_path: '/opt/codeql-2.12.0/lib'
     checks:
-      # - "%LIBRARY_PATH%/cpp/ql/src/Critical/DeadCodeCondition.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Critical/DeadCodeFunction.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Critical/DeadCodeGoto.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Critical/DescriptorMayNotBeClosed.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Critical/DescriptorNeverClosed.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Critical/FileMayNotBeClosed.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Critical/FileNeverClosed.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Critical/GlobalUseBeforeInit.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Critical/InconsistentNullnessTesting.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Critical/InitialisationNotRun.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Critical/LargeParameter.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Critical/LateNegativeTest.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Critical/MemoryMayNotBeFreed.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Critical/MemoryNeverFreed.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Critical/MissingCheckScanf.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Critical/MissingNegativityTest.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Critical/MissingNullTest.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Critical/NewArrayDeleteMismatch.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Critical/NewDeleteArrayMismatch.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Critical/NewFreeMismatch.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Critical/NotInitialised.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Critical/OverflowCalculated.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Critical/OverflowDestination.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Critical/OverflowStatic.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Critical/ReturnStackAllocatedObject.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Critical/ReturnValueIgnored.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Critical/SizeCheck.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Critical/SizeCheck2.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Critical/Unused.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Critical/UseAfterFree.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/experimental/Likely\ Bugs/ArrayAccessProductFlow.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/experimental/Likely\ Bugs/OverrunWriteProductFlow.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/experimental/Likely\ Bugs/RedundantNullCheckParam.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-020/LateCheckOfFunctionArgument.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-020/NoCheckBeforeUnsafePutUser.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-078/WordexpTainted.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-1041/FindWrapperFunctions.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-1126/DeclarationOfVariableWithUnnecessarilyWideScope.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-120/MemoryUnsafeFunctionScan.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-125/DangerousWorksWithMultibyteOrWideCharacters.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-190/AllocMultiplicationOverflow.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-190/DangerousUseOfTransformationAfterOperation.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-193/ConstantSizeArrayOffByOne.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-193/InvalidPointerDeref.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-200/ExposureSensitiveInformationUnauthorizedActor.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-243/IncorrectChangingWorkingDirectory.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-266/IncorrectPrivilegeAssignment.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-273/PrivilegeDroppingOutoforder.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-285/PamAuthorization.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-359/PrivateCleartextWrite.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-362/double-fetch.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-377/InsecureTemporaryFile.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-401/MemoryLeakOnFailedCallToRealloc.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-415/DoubleFree.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-476/DangerousUseOfExceptionBlocks.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-561/FindIncorrectlyUsedSwitch.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-670/DangerousUseSSL_shutdown.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-675/DoubleRelease.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-691/InsufficientControlFlowManagementAfterRefactoringTheCode.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-691/InsufficientControlFlowManagementWhenUsingBitOperations.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-703/FindIncorrectlyUsedExceptions.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-754/ImproperCheckReturnValueScanf.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-758/UndefinedOrImplementationDefinedBehavior.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-783/OperatorPrecedenceLogicErrorWhenUseBitwiseOrLogicalOperations.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-783/OperatorPrecedenceLogicErrorWhenUseBoolType.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-787/UnsignedToSignedPointerArith.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-788/AccessOfMemoryLocationAfterEndOfBufferUsingStrlen.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/AmbiguouslySignedBitField.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Arithmetic/BadAdditionOverflowCheck.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Arithmetic/BadCheckOdd.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Arithmetic/BitwiseSignCheck.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Arithmetic/ComparisonPrecedence.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Arithmetic/ComparisonWithCancelingSubExpr.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Arithmetic/FloatComparison.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Arithmetic/IntMultToLong.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Arithmetic/PointlessComparison.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Arithmetic/PointlessSelfComparison.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Arithmetic/SignedOverflowCheck.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Arithmetic/UnsignedGEZero.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/ContinueInFalseLoop.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Conversion/ArrayArgSizeMismatch.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Conversion/CastArrayPointerArithmetic.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Conversion/ConversionChangesSign.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Conversion/ImplicitDowncastFromBitfield.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Conversion/LossyFunctionResultCast.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Conversion/LossyPointerCast.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Conversion/NonzeroValueCastToPointer.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Format/NonConstantFormat.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Format/SnprintfOverflow.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Format/TooManyFormatArguments.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Format/WrongNumberOfFormatArguments.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Format/WrongTypeFormatArguments.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/InconsistentCallOnResult.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/InconsistentCheckReturnNull.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/JapaneseEra/ConstructorOrMethodWithExactEraDate.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/JapaneseEra/StructWithExactEraDate.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Leap\ Year/Adding365DaysPerYear.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Leap\ Year/UncheckedLeapYearAfterYearModification.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Leap\ Year/UncheckedReturnValueForTimeFunctions.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Leap\ Year/UnsafeArrayForDaysOfYear.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Likely\ Typos/AssignWhereCompareMeant.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Likely\ Typos/BoolValueInBitOp.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Likely\ Typos/CompareWhereAssignMeant.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Likely\ Typos/DubiousNullCheck.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Likely\ Typos/ExprHasNoEffect.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Likely\ Typos/FutileConditional.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Likely\ Typos/inconsistentLoopDirection.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Likely\ Typos/IncorrectNotOperatorUsage.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Likely\ Typos/LogicalExprCouldBeSimplified.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Likely\ Typos/MissingEnumCaseInSwitch.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Likely\ Typos/ShortCircuitBitMask.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Likely\ Typos/UsingStrcpyAsBoolean.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Memory\ Management/AllocaInLoop.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Memory\ Management/ImproperNullTermination.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Memory\ Management/NtohlArrayNoBound.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Memory\ Management/Padding/More64BitWaste.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Memory\ Management/Padding/NonPortablePrintf.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Memory\ Management/Padding/Suboptimal64BitType.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Memory\ Management/PointerOverflow.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Memory\ Management/PotentialBufferOverflow.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Memory\ Management/ReturnCstrOfLocalStdString.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Memory\ Management/ReturnStackAllocatedMemory.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Memory\ Management/StackAddressEscapes.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Memory\ Management/StrncpyFlippedArgs.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Memory\ Management/SuspiciousCallToMemset.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Memory\ Management/SuspiciousCallToStrncat.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Memory\ Management/SuspiciousSizeof.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Memory\ Management/UninitializedLocal.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Memory\ Management/UnsafeUseOfStrcat.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Memory\ Management/UsingExpiredStackAddress.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/NestedLoopSameVar.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/OO/IncorrectConstructorDelegation.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/OO/NonVirtualDestructor.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/OO/NonVirtualDestructorInBaseClass.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/OO/SelfAssignmentCheck.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/OO/ThrowInDestructor.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/OO/UnsafeUseOfThis.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/OO/VirtualCallInStructor.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Protocols/TlsSettingsMisconfiguration.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Protocols/UseOfDeprecatedHardcodedProtocol.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/RedundantNullCheckSimple.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/ReturnConstType.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/ReturnConstTypeMember.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/ShortLoopVarName.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Underspecified\ Functions/ImplicitFunctionDeclaration.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Underspecified\ Functions/MistypedFunctionArguments.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Underspecified\ Functions/TooFewArguments.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Underspecified\ Functions/TooManyArguments.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/UseInOwnInitializer.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/PointsTo/TaintedFormatStrings.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-014/MemsetMayBeDeleted.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-020/CountUntrustedDataToExternalAPI.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-020/IRCountUntrustedDataToExternalAPI.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-020/IRUntrustedDataToExternalAPI.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-020/UntrustedDataToExternalAPI.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-022/TaintedPath.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-078/ExecTainted.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-079/CgiXss.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-089/SqlTainted.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-114/UncontrolledProcessOperation.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-119/OverflowBuffer.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-120/BadlyBoundedWrite.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-120/OverrunWrite.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-120/OverrunWriteFloat.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-120/UnboundedWrite.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-120/VeryLikelyOverrunWrite.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-121/UnterminatedVarargsCall.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-129/ImproperArrayIndexValidation.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-131/NoSpaceForZeroTerminator.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-134/UncontrolledFormatString.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-134/UncontrolledFormatStringThroughGlobalVar.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-170/ImproperNullTerminationTainted.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-190/ArithmeticTainted.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-190/ArithmeticUncontrolled.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-190/ArithmeticWithExtremeValues.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-190/ComparisonWithWiderType.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-190/IntegerOverflowTainted.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-190/TaintedAllocationSize.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-191/UnsignedDifferenceExpressionComparedZero.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-253/HResultBooleanConversion.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-290/AuthenticationBypass.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-295/SSLResultConflation.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-295/SSLResultNotChecked.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-311/CleartextBufferWrite.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-311/CleartextFileWrite.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-311/CleartextTransmission.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-313/CleartextSqliteDatabase.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-319/UseOfHttp.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-326/InsufficientKeySize.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-327/BrokenCryptoAlgorithm.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-327/OpenSslHeartbleed.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-367/TOCTOUFilesystemRace.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-428/UnsafeCreateProcessCall.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-457/ConditionallyUninitializedVariable.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-468/IncorrectPointerScaling.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-468/IncorrectPointerScalingChar.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-468/IncorrectPointerScalingVoid.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-468/SuspiciousAddWithSizeof.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-497/ExposedSystemData.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-497/PotentiallyExposedSystemData.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-570/IncorrectAllocationErrorHandling.ql"
-      # - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-611/XXE.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-676/DangerousFunctionOverflow.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-676/DangerousUseOfCin.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-676/PotentiallyDangerousFunction.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-704/WcharCharConversion.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-732/DoNotCreateWorldWritable.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-732/OpenCallMissingModeArgument.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-732/UnsafeDaclSecurityDescriptor.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-764/LockOrderCycle.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-764/TwiceLocked.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-764/UnreleasedLock.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-807/TaintedCondition.ql"
-      - "%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-835/InfiniteLoopWithUnsatisfiableExitCondition.ql"
+      # - '%LIBRARY_PATH%/cpp/ql/src/Critical/DeadCodeCondition.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Critical/DeadCodeFunction.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Critical/DeadCodeGoto.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Critical/DescriptorMayNotBeClosed.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Critical/DescriptorNeverClosed.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Critical/FileMayNotBeClosed.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Critical/FileNeverClosed.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Critical/GlobalUseBeforeInit.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Critical/InconsistentNullnessTesting.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Critical/InitialisationNotRun.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Critical/LargeParameter.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Critical/LateNegativeTest.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Critical/MemoryMayNotBeFreed.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Critical/MemoryNeverFreed.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Critical/MissingCheckScanf.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Critical/MissingNegativityTest.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Critical/MissingNullTest.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Critical/NewArrayDeleteMismatch.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Critical/NewDeleteArrayMismatch.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Critical/NewFreeMismatch.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Critical/NotInitialised.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Critical/OverflowCalculated.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Critical/OverflowDestination.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Critical/OverflowStatic.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Critical/ReturnStackAllocatedObject.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Critical/ReturnValueIgnored.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Critical/SizeCheck.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Critical/SizeCheck2.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Critical/Unused.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Critical/UseAfterFree.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/experimental/Likely\ Bugs/ArrayAccessProductFlow.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/experimental/Likely\ Bugs/OverrunWriteProductFlow.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/experimental/Likely\ Bugs/RedundantNullCheckParam.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-020/LateCheckOfFunctionArgument.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-020/NoCheckBeforeUnsafePutUser.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-078/WordexpTainted.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-1041/FindWrapperFunctions.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-1126/DeclarationOfVariableWithUnnecessarilyWideScope.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-120/MemoryUnsafeFunctionScan.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-125/DangerousWorksWithMultibyteOrWideCharacters.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-190/AllocMultiplicationOverflow.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-190/DangerousUseOfTransformationAfterOperation.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-193/ConstantSizeArrayOffByOne.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-193/InvalidPointerDeref.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-200/ExposureSensitiveInformationUnauthorizedActor.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-243/IncorrectChangingWorkingDirectory.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-266/IncorrectPrivilegeAssignment.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-273/PrivilegeDroppingOutoforder.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-285/PamAuthorization.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-359/PrivateCleartextWrite.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-362/double-fetch.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-377/InsecureTemporaryFile.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-401/MemoryLeakOnFailedCallToRealloc.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-415/DoubleFree.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-476/DangerousUseOfExceptionBlocks.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-561/FindIncorrectlyUsedSwitch.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-670/DangerousUseSSL_shutdown.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-675/DoubleRelease.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-691/InsufficientControlFlowManagementAfterRefactoringTheCode.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-691/InsufficientControlFlowManagementWhenUsingBitOperations.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-703/FindIncorrectlyUsedExceptions.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-754/ImproperCheckReturnValueScanf.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-758/UndefinedOrImplementationDefinedBehavior.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-783/OperatorPrecedenceLogicErrorWhenUseBitwiseOrLogicalOperations.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-783/OperatorPrecedenceLogicErrorWhenUseBoolType.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-787/UnsignedToSignedPointerArith.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/experimental/Security/CWE/CWE-788/AccessOfMemoryLocationAfterEndOfBufferUsingStrlen.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/AmbiguouslySignedBitField.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Arithmetic/BadAdditionOverflowCheck.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Arithmetic/BadCheckOdd.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Arithmetic/BitwiseSignCheck.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Arithmetic/ComparisonPrecedence.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Arithmetic/ComparisonWithCancelingSubExpr.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Arithmetic/FloatComparison.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Arithmetic/IntMultToLong.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Arithmetic/PointlessComparison.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Arithmetic/PointlessSelfComparison.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Arithmetic/SignedOverflowCheck.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Arithmetic/UnsignedGEZero.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/ContinueInFalseLoop.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Conversion/ArrayArgSizeMismatch.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Conversion/CastArrayPointerArithmetic.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Conversion/ConversionChangesSign.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Conversion/ImplicitDowncastFromBitfield.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Conversion/LossyFunctionResultCast.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Conversion/LossyPointerCast.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Conversion/NonzeroValueCastToPointer.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Format/NonConstantFormat.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Format/SnprintfOverflow.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Format/TooManyFormatArguments.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Format/WrongNumberOfFormatArguments.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Format/WrongTypeFormatArguments.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/InconsistentCallOnResult.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/InconsistentCheckReturnNull.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/JapaneseEra/ConstructorOrMethodWithExactEraDate.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/JapaneseEra/StructWithExactEraDate.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Leap\ Year/Adding365DaysPerYear.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Leap\ Year/UncheckedLeapYearAfterYearModification.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Leap\ Year/UncheckedReturnValueForTimeFunctions.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Leap\ Year/UnsafeArrayForDaysOfYear.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Likely\ Typos/AssignWhereCompareMeant.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Likely\ Typos/BoolValueInBitOp.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Likely\ Typos/CompareWhereAssignMeant.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Likely\ Typos/DubiousNullCheck.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Likely\ Typos/ExprHasNoEffect.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Likely\ Typos/FutileConditional.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Likely\ Typos/inconsistentLoopDirection.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Likely\ Typos/IncorrectNotOperatorUsage.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Likely\ Typos/LogicalExprCouldBeSimplified.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Likely\ Typos/MissingEnumCaseInSwitch.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Likely\ Typos/ShortCircuitBitMask.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Likely\ Typos/UsingStrcpyAsBoolean.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Memory\ Management/AllocaInLoop.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Memory\ Management/ImproperNullTermination.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Memory\ Management/NtohlArrayNoBound.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Memory\ Management/Padding/More64BitWaste.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Memory\ Management/Padding/NonPortablePrintf.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Memory\ Management/Padding/Suboptimal64BitType.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Memory\ Management/PointerOverflow.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Memory\ Management/PotentialBufferOverflow.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Memory\ Management/ReturnCstrOfLocalStdString.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Memory\ Management/ReturnStackAllocatedMemory.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Memory\ Management/StackAddressEscapes.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Memory\ Management/StrncpyFlippedArgs.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Memory\ Management/SuspiciousCallToMemset.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Memory\ Management/SuspiciousCallToStrncat.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Memory\ Management/SuspiciousSizeof.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Memory\ Management/UninitializedLocal.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Memory\ Management/UnsafeUseOfStrcat.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Memory\ Management/UsingExpiredStackAddress.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/NestedLoopSameVar.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/OO/IncorrectConstructorDelegation.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/OO/NonVirtualDestructor.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/OO/NonVirtualDestructorInBaseClass.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/OO/SelfAssignmentCheck.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/OO/ThrowInDestructor.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/OO/UnsafeUseOfThis.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/OO/VirtualCallInStructor.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Protocols/TlsSettingsMisconfiguration.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Protocols/UseOfDeprecatedHardcodedProtocol.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/RedundantNullCheckSimple.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/ReturnConstType.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/ReturnConstTypeMember.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/ShortLoopVarName.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Underspecified\ Functions/ImplicitFunctionDeclaration.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Underspecified\ Functions/MistypedFunctionArguments.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Underspecified\ Functions/TooFewArguments.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Underspecified\ Functions/TooManyArguments.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/UseInOwnInitializer.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/PointsTo/TaintedFormatStrings.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-014/MemsetMayBeDeleted.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-020/CountUntrustedDataToExternalAPI.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-020/IRCountUntrustedDataToExternalAPI.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-020/IRUntrustedDataToExternalAPI.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-020/UntrustedDataToExternalAPI.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-022/TaintedPath.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-078/ExecTainted.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-079/CgiXss.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-089/SqlTainted.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-114/UncontrolledProcessOperation.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-119/OverflowBuffer.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-120/BadlyBoundedWrite.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-120/OverrunWrite.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-120/OverrunWriteFloat.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-120/UnboundedWrite.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-120/VeryLikelyOverrunWrite.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-121/UnterminatedVarargsCall.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-129/ImproperArrayIndexValidation.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-131/NoSpaceForZeroTerminator.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-134/UncontrolledFormatString.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-134/UncontrolledFormatStringThroughGlobalVar.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-170/ImproperNullTerminationTainted.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-190/ArithmeticTainted.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-190/ArithmeticUncontrolled.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-190/ArithmeticWithExtremeValues.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-190/ComparisonWithWiderType.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-190/IntegerOverflowTainted.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-190/TaintedAllocationSize.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-191/UnsignedDifferenceExpressionComparedZero.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-253/HResultBooleanConversion.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-290/AuthenticationBypass.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-295/SSLResultConflation.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-295/SSLResultNotChecked.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-311/CleartextBufferWrite.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-311/CleartextFileWrite.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-311/CleartextTransmission.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-313/CleartextSqliteDatabase.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-319/UseOfHttp.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-326/InsufficientKeySize.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-327/BrokenCryptoAlgorithm.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-327/OpenSslHeartbleed.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-367/TOCTOUFilesystemRace.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-428/UnsafeCreateProcessCall.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-457/ConditionallyUninitializedVariable.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-468/IncorrectPointerScaling.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-468/IncorrectPointerScalingChar.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-468/IncorrectPointerScalingVoid.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-468/SuspiciousAddWithSizeof.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-497/ExposedSystemData.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-497/PotentiallyExposedSystemData.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-570/IncorrectAllocationErrorHandling.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-611/XXE.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-676/DangerousFunctionOverflow.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-676/DangerousUseOfCin.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-676/PotentiallyDangerousFunction.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-704/WcharCharConversion.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-732/DoNotCreateWorldWritable.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-732/OpenCallMissingModeArgument.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-732/UnsafeDaclSecurityDescriptor.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-764/LockOrderCycle.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-764/TwiceLocked.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-764/UnreleasedLock.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-807/TaintedCondition.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-835/InfiniteLoopWithUnsatisfiableExitCondition.ql'
     num_threads: 4
   clang_scan:
-    path: "/opt/llvm-12.0.0/build/bin/scan-build"
+    path: '/opt/llvm-12.0.0/build/bin/scan-build'
     checks:
-      - "-disable-checker core.CallAndMessage"
-      - "-enable-checker core.DivideZero"
-      - "-enable-checker core.NonNullParamChecker"
-      - "-enable-checker core.NullDereference"
-      - "-enable-checker core.StackAddressEscape"
-      - "-enable-checker core.UndefinedBinaryOperatorResult"
-      - "-enable-checker core.uninitialized.ArraySubscript"
-      - "-enable-checker core.uninitialized.Assign"
-      - "-enable-checker core.uninitialized.Branch"
-      - "-enable-checker core.uninitialized.CapturedBlockVariable"
-      - "-enable-checker core.uninitialized.UndefReturn"
-      - "-disable-checker core.VLASize"
-      - "-enable-checker cplusplus.InnerPointer"
-      - "-enable-checker cplusplus.Move"
-      - "-enable-checker cplusplus.NewDelete"
-      - "-enable-checker cplusplus.NewDeleteLeaks"
-      - "-enable-checker cplusplus.PlacementNew"
-      - "-disable-checker cplusplus.PureVirtualCall"
-      - "-disable-checker deadcode.DeadStores"
-      - "-disable-checker fuchsia.HandleChecker"
-      - "-enable-checker nullability.NullableDereferenced"
-      - "-enable-checker nullability.NullablePassedToNonnull"
-      - "-enable-checker nullability.NullableReturnedFromNonnull"
-      - "-enable-checker nullability.NullPassedToNonnull"
-      - "-enable-checker nullability.NullReturnedFromNonnull"
-      - "-disable-checker optin.cplusplus.UninitializedObject"
-      - "-disable-checker optin.cplusplus.VirtualCall"
-      - "-disable-checker optin.mpi.MPI-Checker"
-      - "-disable-checker optin.osx.cocoa.localizability.EmptyLocalizationContextChecker"
-      - "-disable-checker optin.osx.cocoa.localizability.NonLocalizedStringChecker"
-      - "-disable-checker optin.osx.OSObjectCStyleCast"
-      - "-disable-checker optin.performance.GCDAntipattern"
-      - "-disable-checker optin.performance.Padding"
-      - "-disable-checker optin.portability.UnixAPI"
-      - "-disable-checker osx.API"
-      - "-disable-checker osx.cocoa.AtSync"
-      - "-disable-checker osx.cocoa.AutoreleaseWrite"
-      - "-disable-checker osx.cocoa.ClassRelease"
-      - "-disable-checker osx.cocoa.Dealloc"
-      - "-disable-checker osx.cocoa.IncompatibleMethodTypes"
-      - "-disable-checker osx.cocoa.Loops"
-      - "-disable-checker osx.cocoa.MissingSuperCall"
-      - "-disable-checker osx.cocoa.NilArg"
-      - "-disable-checker osx.cocoa.NonNilReturnValue"
-      - "-disable-checker osx.cocoa.NSAutoreleasePool"
-      - "-disable-checker osx.cocoa.NSError"
-      - "-disable-checker osx.cocoa.ObjCGenerics"
-      - "-disable-checker osx.cocoa.RetainCount"
-      - "-disable-checker osx.cocoa.RunLoopAutoreleaseLeak"
-      - "-disable-checker osx.cocoa.SelfInit"
-      - "-disable-checker osx.cocoa.SuperDealloc"
-      - "-disable-checker osx.cocoa.UnusedIvars"
-      - "-disable-checker osx.cocoa.VariadicMethodTypes"
-      - "-disable-checker osx.coreFoundation.CFError"
-      - "-disable-checker osx.coreFoundation.CFNumber"
-      - "-disable-checker osx.coreFoundation.CFRetainRelease"
-      - "-disable-checker osx.coreFoundation.containers.OutOfBounds"
-      - "-disable-checker osx.coreFoundation.containers.PointerSizedValues"
-      - "-disable-checker osx.MIG"
-      - "-disable-checker osx.NumberObjectConversion"
-      - "-disable-checker osx.ObjCProperty"
-      - "-disable-checker osx.OSObjectRetainCount"
-      - "-disable-checker osx.SecKeychainAPI"
-      - "-enable-checker security.FloatLoopCounter"
-      - "-enable-checker security.insecureAPI.bcmp"
-      - "-enable-checker security.insecureAPI.bcopy"
-      - "-enable-checker security.insecureAPI.bzero"
-      - "-enable-checker security.insecureAPI.decodeValueOfObjCType"
-      - "-enable-checker security.insecureAPI.DeprecatedOrUnsafeBufferHandling"
-      - "-enable-checker security.insecureAPI.getpw"
-      - "-enable-checker security.insecureAPI.gets"
-      - "-enable-checker security.insecureAPI.mkstemp"
-      - "-enable-checker security.insecureAPI.mktemp"
-      - "-enable-checker security.insecureAPI.rand"
-      - "-enable-checker security.insecureAPI.strcpy"
-      - "-enable-checker security.insecureAPI.UncheckedReturn"
-      - "-enable-checker security.insecureAPI.vfork"
-      - "-enable-checker unix.API"
-      - "-enable-checker unix.cstring.BadSizeArg"
-      - "-enable-checker unix.cstring.NullArg"
-      - "-enable-checker unix.Malloc"
-      - "-enable-checker unix.MallocSizeof"
-      - "-enable-checker unix.MismatchedDeallocator"
-      - "-enable-checker unix.Vfork"
-      - "-enable-checker valist.CopyToSelf"
-      - "-enable-checker valist.Uninitialized"
-      - "-enable-checker valist.Unterminated"
-      - "-disable-checker webkit.NoUncountedMemberChecker"
-      - "-disable-checker webkit.RefCntblBaseVirtualDtor"
-      - "-disable-checker webkit.UncountedLambdaCapturesChecker"
+      - '-disable-checker core.CallAndMessage'
+      - '-enable-checker core.DivideZero'
+      - '-enable-checker core.NonNullParamChecker'
+      - '-enable-checker core.NullDereference'
+      - '-enable-checker core.StackAddressEscape'
+      - '-enable-checker core.UndefinedBinaryOperatorResult'
+      - '-enable-checker core.uninitialized.ArraySubscript'
+      - '-enable-checker core.uninitialized.Assign'
+      - '-enable-checker core.uninitialized.Branch'
+      - '-enable-checker core.uninitialized.CapturedBlockVariable'
+      - '-enable-checker core.uninitialized.UndefReturn'
+      - '-disable-checker core.VLASize'
+      - '-enable-checker cplusplus.InnerPointer'
+      - '-enable-checker cplusplus.Move'
+      - '-enable-checker cplusplus.NewDelete'
+      - '-enable-checker cplusplus.NewDeleteLeaks'
+      - '-enable-checker cplusplus.PlacementNew'
+      - '-disable-checker cplusplus.PureVirtualCall'
+      - '-disable-checker deadcode.DeadStores'
+      - '-disable-checker fuchsia.HandleChecker'
+      - '-enable-checker nullability.NullableDereferenced'
+      - '-enable-checker nullability.NullablePassedToNonnull'
+      - '-enable-checker nullability.NullableReturnedFromNonnull'
+      - '-enable-checker nullability.NullPassedToNonnull'
+      - '-enable-checker nullability.NullReturnedFromNonnull'
+      - '-disable-checker optin.cplusplus.UninitializedObject'
+      - '-disable-checker optin.cplusplus.VirtualCall'
+      - '-disable-checker optin.mpi.MPI-Checker'
+      - '-disable-checker optin.osx.cocoa.localizability.EmptyLocalizationContextChecker'
+      - '-disable-checker optin.osx.cocoa.localizability.NonLocalizedStringChecker'
+      - '-disable-checker optin.osx.OSObjectCStyleCast'
+      - '-disable-checker optin.performance.GCDAntipattern'
+      - '-disable-checker optin.performance.Padding'
+      - '-disable-checker optin.portability.UnixAPI'
+      - '-disable-checker osx.API'
+      - '-disable-checker osx.cocoa.AtSync'
+      - '-disable-checker osx.cocoa.AutoreleaseWrite'
+      - '-disable-checker osx.cocoa.ClassRelease'
+      - '-disable-checker osx.cocoa.Dealloc'
+      - '-disable-checker osx.cocoa.IncompatibleMethodTypes'
+      - '-disable-checker osx.cocoa.Loops'
+      - '-disable-checker osx.cocoa.MissingSuperCall'
+      - '-disable-checker osx.cocoa.NilArg'
+      - '-disable-checker osx.cocoa.NonNilReturnValue'
+      - '-disable-checker osx.cocoa.NSAutoreleasePool'
+      - '-disable-checker osx.cocoa.NSError'
+      - '-disable-checker osx.cocoa.ObjCGenerics'
+      - '-disable-checker osx.cocoa.RetainCount'
+      - '-disable-checker osx.cocoa.RunLoopAutoreleaseLeak'
+      - '-disable-checker osx.cocoa.SelfInit'
+      - '-disable-checker osx.cocoa.SuperDealloc'
+      - '-disable-checker osx.cocoa.UnusedIvars'
+      - '-disable-checker osx.cocoa.VariadicMethodTypes'
+      - '-disable-checker osx.coreFoundation.CFError'
+      - '-disable-checker osx.coreFoundation.CFNumber'
+      - '-disable-checker osx.coreFoundation.CFRetainRelease'
+      - '-disable-checker osx.coreFoundation.containers.OutOfBounds'
+      - '-disable-checker osx.coreFoundation.containers.PointerSizedValues'
+      - '-disable-checker osx.MIG'
+      - '-disable-checker osx.NumberObjectConversion'
+      - '-disable-checker osx.ObjCProperty'
+      - '-disable-checker osx.OSObjectRetainCount'
+      - '-disable-checker osx.SecKeychainAPI'
+      - '-enable-checker security.FloatLoopCounter'
+      - '-enable-checker security.insecureAPI.bcmp'
+      - '-enable-checker security.insecureAPI.bcopy'
+      - '-enable-checker security.insecureAPI.bzero'
+      - '-enable-checker security.insecureAPI.decodeValueOfObjCType'
+      - '-enable-checker security.insecureAPI.DeprecatedOrUnsafeBufferHandling'
+      - '-enable-checker security.insecureAPI.getpw'
+      - '-enable-checker security.insecureAPI.gets'
+      - '-enable-checker security.insecureAPI.mkstemp'
+      - '-enable-checker security.insecureAPI.mktemp'
+      - '-enable-checker security.insecureAPI.rand'
+      - '-enable-checker security.insecureAPI.strcpy'
+      - '-enable-checker security.insecureAPI.UncheckedReturn'
+      - '-enable-checker security.insecureAPI.vfork'
+      - '-enable-checker unix.API'
+      - '-enable-checker unix.cstring.BadSizeArg'
+      - '-enable-checker unix.cstring.NullArg'
+      - '-enable-checker unix.Malloc'
+      - '-enable-checker unix.MallocSizeof'
+      - '-enable-checker unix.MismatchedDeallocator'
+      - '-enable-checker unix.Vfork'
+      - '-enable-checker valist.CopyToSelf'
+      - '-enable-checker valist.Uninitialized'
+      - '-enable-checker valist.Unterminated'
+      - '-disable-checker webkit.NoUncountedMemberChecker'
+      - '-disable-checker webkit.RefCntblBaseVirtualDtor'
+      - '-disable-checker webkit.UncountedLambdaCapturesChecker'
 ...
