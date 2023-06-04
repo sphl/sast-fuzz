@@ -6,7 +6,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Any, ClassVar, Dict
 
-from sfa.config import config
+from sfa.config import app_config
 from sfa.logic import SAST_SETUP_ENV, SASTToolFlag, SASTToolFlags, convert_sarif
 from sfa.util.ext_enum import ExtendedEnum
 from sfa.util.factory import Factory
@@ -105,7 +105,7 @@ class FlawfinderRunner(SASTToolRunner):
 
     def _analyze(self, working_dir: Path) -> str:
         return run_shell_command(
-            f"{config.FLAWFINDER} --dataonly --sarif {' '.join(config.FLAWFINDER_CHECKS)} {working_dir}"
+            f"{app_config.FLAWFINDER} --dataonly --sarif {' '.join(app_config.FLAWFINDER_CHECKS)} {working_dir}"
         )
 
     def _format(self, string: str) -> SASTToolFlags:
@@ -122,7 +122,7 @@ class SemgrepRunner(SASTToolRunner):
 
     def _analyze(self, working_dir: Path) -> str:
         return run_shell_command(
-            f"{config.SEMGREP} scan --quiet --jobs {config.SEMGREP_NUM_THREADS} {' '.join([f'--config {check}' for check in config.SEMGREP_CHECKS])} --sarif {working_dir}"
+            f"{app_config.SEMGREP} scan --quiet --jobs {app_config.SEMGREP_NUM_THREADS} {' '.join([f'--config {check}' for check in app_config.SEMGREP_CHECKS])} --sarif {working_dir}"
         )
 
     def _format(self, string: str) -> SASTToolFlags:
@@ -138,7 +138,7 @@ class InferRunner(SASTToolRunner):
         result_dir = temp_dir / "infer_res"
 
         run_shell_command(
-            f'./{BUILD_SCRIPT_NAME} "{config.INFER} capture --results-dir {result_dir} -- make"',
+            f'./{BUILD_SCRIPT_NAME} "{app_config.INFER} capture --results-dir {result_dir} -- make"',
             cwd=copy_dir(self._subject_dir, temp_dir),
             env=SAST_SETUP_ENV,
         )
@@ -147,7 +147,7 @@ class InferRunner(SASTToolRunner):
 
     def _analyze(self, working_dir: Path) -> str:
         run_shell_command(
-            f"{config.INFER} analyze --results-dir {working_dir} --jobs {config.INFER_NUM_THREADS} --keep-going {' '.join(config.INFER_CHECKS)}"
+            f"{app_config.INFER} analyze --results-dir {working_dir} --jobs {app_config.INFER_NUM_THREADS} --keep-going {' '.join(app_config.INFER_CHECKS)}"
         )
 
         # By default, Infer writes the results into the 'report.json' file once the analysis is complete.
@@ -183,7 +183,7 @@ class CodeQLRunner(SASTToolRunner):
         result_dir = temp_dir / "codeql_res"
 
         run_shell_command(
-            f'./{BUILD_SCRIPT_NAME} "{config.CODEQL} database create --language=cpp --command=make --threads={config.CODEQL_NUM_THREADS} {result_dir}"',
+            f'./{BUILD_SCRIPT_NAME} "{app_config.CODEQL} database create --language=cpp --command=make --threads={app_config.CODEQL_NUM_THREADS} {result_dir}"',
             cwd=copy_dir(self._subject_dir, temp_dir),
             env=SAST_SETUP_ENV,
         )
@@ -194,7 +194,7 @@ class CodeQLRunner(SASTToolRunner):
         result_file = working_dir / "report.sarif"
 
         run_shell_command(
-            f"{config.CODEQL} database analyze --output={result_file} --format=sarifv2.1.0 --threads={config.CODEQL_NUM_THREADS} {working_dir} {' '.join(config.CODEQL_CHECKS)}"
+            f"{app_config.CODEQL} database analyze --output={result_file} --format=sarifv2.1.0 --threads={app_config.CODEQL_NUM_THREADS} {working_dir} {' '.join(app_config.CODEQL_CHECKS)}"
         )
 
         if not result_file.exists():
@@ -215,7 +215,7 @@ class ClangScanRunner(SASTToolRunner):
         result_dir = temp_dir / "clang-scan_res"
 
         run_shell_command(
-            f"./{BUILD_SCRIPT_NAME} \"{config.CLANG_SCAN} -o {result_dir} --keep-empty -sarif {' '.join(config.CLANG_SCAN_CHECKS)} make\"",
+            f"./{BUILD_SCRIPT_NAME} \"{app_config.CLANG_SCAN} -o {result_dir} --keep-empty -sarif {' '.join(app_config.CLANG_SCAN_CHECKS)} make\"",
             cwd=copy_dir(self._subject_dir, temp_dir),
             env=SAST_SETUP_ENV,
         )

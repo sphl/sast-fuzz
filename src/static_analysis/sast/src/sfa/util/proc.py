@@ -29,7 +29,7 @@ def run_shell_command(
         )  # nosec
 
         if proc_info.stderr:
-            logging.error(proc_info.stderr)
+            logging.info(proc_info.stderr)
 
         return proc_info.stdout
 

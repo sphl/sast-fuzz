@@ -1,14 +1,28 @@
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import List
+from typing import Dict, List
 
 import yaml
 
 
-@dataclass
-class Config:
+def run_sanity_checks(config: Dict) -> None:
     """
-    SFA tool configuration.
+    Run sanity checks on the configuration.
+
+    :param config:
+    :return:
+    """
+    # TODO: Add check for Flawfinder
+    for tool in ["semgrep", "infer", "codeql", "clang_scan"]:
+        tool_path = Path(config["tools"][tool]["path"])
+        if not tool_path.exists():
+            raise Exception(f"SAST tool '{tool}' not found at '{tool_path}'!")
+
+
+@dataclass
+class AppConfig:
+    """
+    Application configuration.
     """
 
     FLAWFINDER: str = field(init=False, default="")
@@ -34,6 +48,8 @@ class Config:
         """
         config = yaml.safe_load(config_file.read_text())
 
+        run_sanity_checks(config)
+
         self.FLAWFINDER = config["tools"]["flawfinder"]["path"]
         self.FLAWFINDER_CHECKS = config["tools"]["flawfinder"]["checks"]
         self.SEMGREP = config["tools"]["semgrep"]["path"]
@@ -52,5 +68,5 @@ class Config:
         self.CLANG_SCAN_CHECKS = config["tools"]["clang_scan"]["checks"]
 
 
-# Global app configuration
-config = Config()
+# Global SFA configuration
+app_config = AppConfig()
