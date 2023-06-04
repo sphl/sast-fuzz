@@ -40,7 +40,10 @@ def load_config(config_file: Path) -> None:
     INFER_CHECKS = config["tools"]["infer"]["checks"]
     INFER_NUM_THREADS = config["tools"]["infer"]["num_threads"]
     CODEQL = config["tools"]["codeql"]["path"]
-    CODEQL_CHECKS = config["tools"]["codeql"]["checks"]
+    CODEQL_CHECKS = [
+        check.replace("%LIBRARY_PATH%", config["tools"]["codeql"]["lib_path"])
+        for check in config["tools"]["codeql"]["checks"]
+    ]
     CODEQL_NUM_THREADS = config["tools"]["codeql"]["num_threads"]
     CLANG_SCAN = config["tools"]["clang_scan"]["path"]
     CLANG_SCAN_CHECKS = config["tools"]["clang_scan"]["checks"]
