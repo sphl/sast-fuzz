@@ -4,6 +4,9 @@ import yaml
 
 FLAWFINDER = ""
 FLAWFINDER_CHECKS = []
+SEMGREP = ""
+SEMGREP_CHECKS = []
+SEMGREP_NUM_THREADS = -1
 INFER = ""
 INFER_CHECKS = []
 INFER_NUM_THREADS = -1
@@ -23,6 +26,9 @@ def load_config(config_file: Path) -> None:
     """
     global FLAWFINDER
     global FLAWFINDER_CHECKS
+    global SEMGREP
+    global SEMGREP_CHECKS
+    global SEMGREP_NUM_THREADS
     global INFER
     global INFER_CHECKS
     global INFER_NUM_THREADS
@@ -36,6 +42,9 @@ def load_config(config_file: Path) -> None:
 
     FLAWFINDER = config["tools"]["flawfinder"]["path"]
     FLAWFINDER_CHECKS = config["tools"]["flawfinder"]["checks"]
+    SEMGREP = config["tools"]["semgrep"]["path"]
+    SEMGREP_CHECKS = config["tools"]["semgrep"]["checks"]
+    SEMGREP_NUM_THREADS = config["tools"]["semgrep"]["num_threads"]
     INFER = config["tools"]["infer"]["path"]
     INFER_CHECKS = config["tools"]["infer"]["checks"]
     INFER_NUM_THREADS = config["tools"]["infer"]["num_threads"]

@@ -6,6 +6,22 @@ tools:
       - "--falsepositive"
       - "--minlevel=3"
       - "--neverignore"
+  semgrep:
+    path: "/usr/local/bin/semgrep"
+    checks:
+      - "r/c.lang.security.double-free.double-free"
+      - "r/c.lang.security.function-use-after-free.function-use-after-free"
+      - "r/c.lang.security.info-leak-on-non-formatted-string.info-leak-on-non-formated-string"
+      - "r/c.lang.security.insecure-use-gets-fn.insecure-use-gets-fn"
+      - "r/c.lang.security.insecure-use-memset.insecure-use-memset"
+      - "r/c.lang.security.insecure-use-printf-fn.insecure-use-printf-fn"
+      - "r/c.lang.security.insecure-use-scanf-fn.insecure-use-scanf-fn"
+      - "r/c.lang.security.insecure-use-strcat-fn.insecure-use-strcat-fn"
+      - "r/c.lang.security.insecure-use-string-copy-fn.insecure-use-string-copy-fn"
+      - "r/c.lang.security.insecure-use-strtok-fn.insecure-use-strtok-fn"
+      - "r/c.lang.security.random-fd-exhaustion.random-fd-exhaustion"
+      - "r/c.lang.security.use-after-free.use-after-free"
+    num_threads: 4
   infer:
     path: "/opt/infer-1.1.0/bin/infer"
     checks:

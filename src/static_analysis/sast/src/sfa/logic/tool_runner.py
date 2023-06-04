@@ -17,6 +17,9 @@ from sfa.config import (
     INFER,
     INFER_CHECKS,
     INFER_NUM_THREADS,
+    SEMGREP,
+    SEMGREP_CHECKS,
+    SEMGREP_NUM_THREADS,
 )
 from sfa.logic import SAST_SETUP_ENV, SASTToolFlag, SASTToolFlags, convert_sarif
 from sfa.util.ext_enum import ExtendedEnum
@@ -30,6 +33,7 @@ BUILD_SCRIPT_NAME = "build.sh"
 
 class SASTTool(ExtendedEnum):
     FLF = "flawfinder"
+    SGR = "semgrep"
     IFR = "infer"
     CQL = "codeql"
     CLS = "clang-scan"
@@ -45,6 +49,7 @@ class RunnerFactory(Factory):
     def _create_instances(self, param: Any) -> Dict:
         return {
             SASTTool.FLF: FlawfinderRunner(param),
+            SASTTool.SGR: SemgrepRunner(param),
             SASTTool.IFR: InferRunner(param),
             SASTTool.CQL: CodeQLRunner(param),
             SASTTool.CLS: ClangScanRunner(param),
@@ -110,11 +115,27 @@ class FlawfinderRunner(SASTToolRunner):
     """
 
     def _setup(self, temp_dir: Path) -> Path:
-        # Since Flawfinder doesn't attach to the build process, we run it directly in the subject's directory
         return self._subject_dir
 
     def _analyze(self, working_dir: Path) -> str:
         return run_shell_command(f"{FLAWFINDER} --dataonly --sarif {' '.join(FLAWFINDER_CHECKS)} {working_dir}")
+
+    def _format(self, string: str) -> SASTToolFlags:
+        return convert_sarif(string)
+
+
+class SemgrepRunner(SASTToolRunner):
+    """
+    Semgrep runner.
+    """
+
+    def _setup(self, temp_dir: Path) -> Path:
+        return self._subject_dir
+
+    def _analyze(self, working_dir: Path) -> str:
+        return run_shell_command(
+            f"{SEMGREP} scan --quiet --jobs {SEMGREP_NUM_THREADS} {' '.join([f'--config {check}' for check in SEMGREP_CHECKS])} --sarif {working_dir}"
+        )
 
     def _format(self, string: str) -> SASTToolFlags:
         return convert_sarif(string)
