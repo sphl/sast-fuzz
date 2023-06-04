@@ -6,7 +6,7 @@ from typing import List, Optional
 import typer
 from typing_extensions import Annotated
 
-from sfa.config import load_config
+from sfa.config import config
 from sfa.logic import SASTToolFlags
 from sfa.logic.filter import FilterFactory, SASTFilter
 from sfa.logic.grouping import GroupingFactory, GroupingMode
@@ -164,7 +164,7 @@ def run(
     Run SAST tools and filter & group their findings.
     """
     try:
-        load_config(config_file)
+        config.load_from_file(config_file)
 
         flags = SASTToolFlags()
         flags.update(*map(SASTToolFlags.from_csv, flags_files or []))

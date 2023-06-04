@@ -1,58 +1,56 @@
+from dataclasses import dataclass, field
 from pathlib import Path
+from typing import List
 
 import yaml
 
-FLAWFINDER = ""
-FLAWFINDER_CHECKS = []
-SEMGREP = ""
-SEMGREP_CHECKS = []
-SEMGREP_NUM_THREADS = -1
-INFER = ""
-INFER_CHECKS = []
-INFER_NUM_THREADS = -1
-CODEQL = ""
-CODEQL_CHECKS = []
-CODEQL_NUM_THREADS = -1
-CLANG_SCAN = ""
-CLANG_SCAN_CHECKS = []
 
-
-def load_config(config_file: Path) -> None:
+@dataclass
+class Config:
     """
-    Load the configuration from the YAML file.
-
-    :param config_file:
-    :return:
+    SFA tool configuration.
     """
-    global FLAWFINDER
-    global FLAWFINDER_CHECKS
-    global SEMGREP
-    global SEMGREP_CHECKS
-    global SEMGREP_NUM_THREADS
-    global INFER
-    global INFER_CHECKS
-    global INFER_NUM_THREADS
-    global CODEQL
-    global CODEQL_CHECKS
-    global CODEQL_NUM_THREADS
-    global CLANG_SCAN
-    global CLANG_SCAN_CHECKS
 
-    config = yaml.safe_load(config_file.read_text())
+    FLAWFINDER: str = field(init=False, default="")
+    FLAWFINDER_CHECKS: List[str] = field(init=False, default_factory=lambda: [])
+    SEMGREP: str = field(init=False, default="")
+    SEMGREP_CHECKS: List[str] = field(init=False, default_factory=lambda: [])
+    SEMGREP_NUM_THREADS: int = field(init=False, default=-1)
+    INFER: str = field(init=False, default="")
+    INFER_CHECKS: List[str] = field(init=False, default_factory=lambda: [])
+    INFER_NUM_THREADS: int = field(init=False, default=-1)
+    CODEQL: str = field(init=False, default="")
+    CODEQL_CHECKS: List[str] = field(init=False, default_factory=lambda: [])
+    CODEQL_NUM_THREADS: int = field(init=False, default=-1)
+    CLANG_SCAN: str = field(init=False, default="")
+    CLANG_SCAN_CHECKS: List[str] = field(init=False, default_factory=lambda: [])
 
-    FLAWFINDER = config["tools"]["flawfinder"]["path"]
-    FLAWFINDER_CHECKS = config["tools"]["flawfinder"]["checks"]
-    SEMGREP = config["tools"]["semgrep"]["path"]
-    SEMGREP_CHECKS = config["tools"]["semgrep"]["checks"]
-    SEMGREP_NUM_THREADS = config["tools"]["semgrep"]["num_threads"]
-    INFER = config["tools"]["infer"]["path"]
-    INFER_CHECKS = config["tools"]["infer"]["checks"]
-    INFER_NUM_THREADS = config["tools"]["infer"]["num_threads"]
-    CODEQL = config["tools"]["codeql"]["path"]
-    CODEQL_CHECKS = [
-        check.replace("%LIBRARY_PATH%", config["tools"]["codeql"]["lib_path"])
-        for check in config["tools"]["codeql"]["checks"]
-    ]
-    CODEQL_NUM_THREADS = config["tools"]["codeql"]["num_threads"]
-    CLANG_SCAN = config["tools"]["clang_scan"]["path"]
-    CLANG_SCAN_CHECKS = config["tools"]["clang_scan"]["checks"]
+    def load_from_file(self, config_file: Path) -> None:
+        """
+        Load configuration from a YAML file.
+
+        :param config_file:
+        :return:
+        """
+        config = yaml.safe_load(config_file.read_text())
+
+        self.FLAWFINDER = config["tools"]["flawfinder"]["path"]
+        self.FLAWFINDER_CHECKS = config["tools"]["flawfinder"]["checks"]
+        self.SEMGREP = config["tools"]["semgrep"]["path"]
+        self.SEMGREP_CHECKS = config["tools"]["semgrep"]["checks"]
+        self.SEMGREP_NUM_THREADS = config["tools"]["semgrep"]["num_threads"]
+        self.INFER = config["tools"]["infer"]["path"]
+        self.INFER_CHECKS = config["tools"]["infer"]["checks"]
+        self.INFER_NUM_THREADS = config["tools"]["infer"]["num_threads"]
+        self.CODEQL = config["tools"]["codeql"]["path"]
+        self.CODEQL_CHECKS = [
+            check.replace("%LIBRARY_PATH%", config["tools"]["codeql"]["lib_path"])
+            for check in config["tools"]["codeql"]["checks"]
+        ]
+        self.CODEQL_NUM_THREADS = config["tools"]["codeql"]["num_threads"]
+        self.CLANG_SCAN = config["tools"]["clang_scan"]["path"]
+        self.CLANG_SCAN_CHECKS = config["tools"]["clang_scan"]["checks"]
+
+
+# Global app configuration
+config = Config()
