@@ -4,7 +4,7 @@ from typing import List
 
 class ExtendedEnum(Enum):
     """
-    Enum extension with more functionality.
+    Enum extension.
     """
 
     @classmethod
