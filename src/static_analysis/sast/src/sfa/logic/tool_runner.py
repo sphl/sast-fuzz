@@ -7,14 +7,19 @@ from tempfile import TemporaryDirectory
 from typing import Any, ClassVar, Dict
 
 from sfa.config import app_config
-from sfa.logic import SAST_SETUP_ENV, SASTToolFlag, SASTToolFlags, convert_sarif
+from sfa.logic import SAST_SETUP_ENV, SASTFlag, SASTFlagSet, convert_sarif
 from sfa.util.ext_enum import ExtendedEnum
 from sfa.util.factory import Factory
 from sfa.util.fs import copy_dir, find_files
 from sfa.util.proc import run_shell_command
 
-# Name of the build script
-BUILD_SCRIPT_NAME = "build.sh"
+
+class SASTToolException(Exception):
+    """
+    SAST tool exception.
+    """
+
+    pass
 
 
 class SASTTool(ExtendedEnum):
@@ -27,7 +32,7 @@ class SASTTool(ExtendedEnum):
     MSN = "msan"
 
 
-class RunnerFactory(Factory):
+class SASTToolRunnerFactory(Factory):
     """
     SAST tool runner factory.
     """
@@ -55,7 +60,7 @@ class SASTToolRunner(ABC):
     @abstractmethod
     def _setup(self, temp_dir: Path) -> Path:
         """
-        Run pre-analysis step(s) required by the SAST tool.
+        Run certain pre-analysis step(s).
 
         :param temp_dir:
         :return:
@@ -65,7 +70,7 @@ class SASTToolRunner(ABC):
     @abstractmethod
     def _analyze(self, working_dir: Path) -> str:
         """
-        Execute SAST tool on target program.
+        Analyze target program using SAST tool.
 
         :param working_dir:
         :return:
@@ -73,26 +78,26 @@ class SASTToolRunner(ABC):
         pass
 
     @abstractmethod
-    def _format(self, string: str) -> SASTToolFlags:
+    def _format(self, string: str) -> SASTFlagSet:
         """
-        Convert SAST tool-specific output into common data format.
+        Format SAST tool output.
 
         :param flags:
         :return:
         """
         pass
 
-    def run(self) -> SASTToolFlags:
+    def run(self) -> SASTFlagSet:
         """
-        Run setup, SAST tool analysis, and output formatting in sequence.
+        Setup target program, run SAST tool, and format output.
 
         :return:
         """
         with TemporaryDirectory() as temp_dir:
             working_dir = self._setup(Path(temp_dir))
-            flags = self._format(self._analyze(working_dir))
+            flags = self._analyze(working_dir)
 
-        return flags
+        return self._format(flags)
 
 
 class FlawfinderRunner(SASTToolRunner):
@@ -108,7 +113,7 @@ class FlawfinderRunner(SASTToolRunner):
             f"{app_config.FLAWFINDER} --dataonly --sarif {' '.join(app_config.FLAWFINDER_CHECKS)} {working_dir}"
         )
 
-    def _format(self, string: str) -> SASTToolFlags:
+    def _format(self, string: str) -> SASTFlagSet:
         return convert_sarif(string)
 
 
@@ -125,7 +130,7 @@ class SemgrepRunner(SASTToolRunner):
             f"{app_config.SEMGREP} scan --quiet --jobs {app_config.SEMGREP_NUM_THREADS} {' '.join([f'--config {check}' for check in app_config.SEMGREP_CHECKS])} --sarif {working_dir}"
         )
 
-    def _format(self, string: str) -> SASTToolFlags:
+    def _format(self, string: str) -> SASTFlagSet:
         return convert_sarif(string)
 
 
@@ -138,7 +143,7 @@ class InferRunner(SASTToolRunner):
         result_dir = temp_dir / "infer_res"
 
         run_shell_command(
-            f'./{BUILD_SCRIPT_NAME} "{app_config.INFER} capture --results-dir {result_dir} -- make"',
+            f'./{app_config.BUILD_SCRIPT_NAME} "{app_config.INFER} capture --results-dir {result_dir} -- make"',
             cwd=copy_dir(self._subject_dir, temp_dir),
             env=SAST_SETUP_ENV,
         )
@@ -154,12 +159,12 @@ class InferRunner(SASTToolRunner):
         result_file = working_dir / "report.json"
 
         if not result_file.exists():
-            raise Exception(f"Infer: Failed to create the result file '{result_file}'!")
+            raise SASTToolException("Infer failed to create the analysis report.")
 
         return result_file.read_text()
 
-    def _format(self, string: str) -> SASTToolFlags:
-        flags = SASTToolFlags()
+    def _format(self, string: str) -> SASTFlagSet:
+        flags = SASTFlagSet()
 
         for flag in json.loads(string):
             tool = SASTTool.IFR.value
@@ -169,7 +174,7 @@ class InferRunner(SASTToolRunner):
 
             file = Path(file).name
 
-            flags.add(SASTToolFlag(tool, file, line, vuln))
+            flags.add(SASTFlag(tool, file, line, vuln))
 
         return flags
 
@@ -183,7 +188,7 @@ class CodeQLRunner(SASTToolRunner):
         result_dir = temp_dir / "codeql_res"
 
         run_shell_command(
-            f'./{BUILD_SCRIPT_NAME} "{app_config.CODEQL} database create --language=cpp --command=make --threads={app_config.CODEQL_NUM_THREADS} {result_dir}"',
+            f'./{app_config.BUILD_SCRIPT_NAME} "{app_config.CODEQL} database create --language=cpp --command=make --threads={app_config.CODEQL_NUM_THREADS} {result_dir}"',
             cwd=copy_dir(self._subject_dir, temp_dir),
             env=SAST_SETUP_ENV,
         )
@@ -198,11 +203,11 @@ class CodeQLRunner(SASTToolRunner):
         )
 
         if not result_file.exists():
-            raise Exception(f"CodeQL: Failed to create the result file '{result_file}'!")
+            raise SASTToolException("CodeQL failed to create the analysis report.")
 
         return result_file.read_text()
 
-    def _format(self, string: str) -> SASTToolFlags:
+    def _format(self, string: str) -> SASTFlagSet:
         return convert_sarif(string)
 
 
@@ -215,7 +220,7 @@ class ClangScanRunner(SASTToolRunner):
         result_dir = temp_dir / "clang-scan_res"
 
         run_shell_command(
-            f"./{BUILD_SCRIPT_NAME} \"{app_config.CLANG_SCAN} -o {result_dir} --keep-empty -sarif {' '.join(app_config.CLANG_SCAN_CHECKS)} make\"",
+            f"./{app_config.BUILD_SCRIPT_NAME} \"{app_config.CLANG_SCAN} -o {result_dir} --keep-empty -sarif {' '.join(app_config.CLANG_SCAN_CHECKS)} make\"",
             cwd=copy_dir(self._subject_dir, temp_dir),
             env=SAST_SETUP_ENV,
         )
@@ -226,16 +231,15 @@ class ClangScanRunner(SASTToolRunner):
         result_files = find_files(working_dir, exts=[".sarif"])
 
         if len(result_files) == 0:
-            raise Exception("Clang-Scan: Failed to create the result file(s)!")
+            raise SASTToolException("Clang-Scan failed to create any analysis reports.")
 
         # Clang analyzer writes the results of each checker into a separate SARIF file. Therefore, we append the results
         # (JSON string) of each file as one line to the return string.
         return os.linesep.join(map(lambda f: json.dumps(json.loads(f.read_text()), indent=None), result_files))
 
-    def _format(self, string: str) -> SASTToolFlags:
+    def _format(self, string: str) -> SASTFlagSet:
         flags = map(convert_sarif, string.split(os.linesep))
-
-        return SASTToolFlags(set(chain(*flags)))
+        return SASTFlagSet(set(chain(*flags)))
 
 
 class SanitizerRunner(SASTToolRunner):
@@ -253,19 +257,21 @@ class SanitizerRunner(SASTToolRunner):
         result_file = temp_dir / self._report_name
 
         run_shell_command(
-            f"./{BUILD_SCRIPT_NAME}", cwd=copy_dir(self._subject_dir, temp_dir), env=self._env_vars(result_file)
+            f"./{app_config.BUILD_SCRIPT_NAME}",
+            cwd=copy_dir(self._subject_dir, temp_dir),
+            env=self._env_vars(result_file),
         )
 
         if not result_file.exists():
-            raise Exception(f"Sanitizer: Failed to create the result file '{result_file}'!")
+            raise SASTToolException("Sanitizer failed to create the analysis report.")
 
         return temp_dir
 
     def _analyze(self, working_dir: Path) -> str:
         return (working_dir / self._report_name).read_text()
 
-    def _format(self, string: str) -> SASTToolFlags:
-        flags = SASTToolFlags()
+    def _format(self, string: str) -> SASTFlagSet:
+        flags = SASTFlagSet()
 
         for _line in string.split(os.linesep):
             if _line != "":
@@ -276,7 +282,7 @@ class SanitizerRunner(SASTToolRunner):
                 line = vals[3]
                 vuln = "-"
 
-                flags.add(SASTToolFlag(tool, file, int(line), vuln))
+                flags.add(SASTFlag(tool, file, int(line), vuln))
 
         return flags
 

@@ -2,14 +2,14 @@ import unittest
 from pathlib import Path
 from typing import Set
 
-from sfa.util.fs import find_files
+from sfa.util.fs import find_files, get_parent
 
 
 class TestFSUtils(unittest.TestCase):
     def setUp(self) -> None:
-        self.root_dir = Path("data") / "stubs"
+        self.root_dir = get_parent(Path(__file__), 2) / "data" / "files"
 
-    def test_find_files_non_rec1(self) -> None:
+    def test_find_files_no_rec_no_exts(self) -> None:
         # Arrange
         expected = {self.root_dir / "test.json"}
 
@@ -19,7 +19,7 @@ class TestFSUtils(unittest.TestCase):
         # Assert
         self.assertEqual(expected, actual)
 
-    def test_find_files_non_rec2(self) -> None:
+    def test_find_files_no_rec_one_ext(self) -> None:
         # Arrange
         expected: Set[Path] = set()
 
@@ -29,7 +29,7 @@ class TestFSUtils(unittest.TestCase):
         # Assert
         self.assertEqual(expected, actual)
 
-    def test_find_files_rec1(self) -> None:
+    def test_find_files_rec_no_exts(self) -> None:
         # Arrange
         expected = {self.root_dir / "dir" / "test.csv", self.root_dir / "test.json"}
 
@@ -39,7 +39,7 @@ class TestFSUtils(unittest.TestCase):
         # Assert
         self.assertEqual(expected, actual)
 
-    def test_find_files_rec2(self) -> None:
+    def test_find_files_rec_mult_exts(self) -> None:
         # Arrange
         expected = {self.root_dir / "test.json"}
 
@@ -49,7 +49,7 @@ class TestFSUtils(unittest.TestCase):
         # Assert
         self.assertEqual(expected, actual)
 
-    def test_find_files_rec3(self) -> None:
+    def test_find_files_rec_one_ext_csv(self) -> None:
         # Arrange
         expected = {self.root_dir / "dir" / "test.csv"}
 
@@ -59,7 +59,7 @@ class TestFSUtils(unittest.TestCase):
         # Assert
         self.assertEqual(expected, actual)
 
-    def test_find_files_rec4(self) -> None:
+    def test_find_files_rec_one_ext_pdf(self) -> None:
         # Arrange
         expected: Set[Path] = set()
 

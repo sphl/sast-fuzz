@@ -5,26 +5,13 @@ from typing import Dict, List
 import yaml
 
 
-def run_sanity_checks(config: Dict) -> None:
-    """
-    Run sanity checks on the configuration.
-
-    :param config:
-    :return:
-    """
-    # TODO: Add check for Flawfinder
-    for tool in ["semgrep", "infer", "codeql", "clang_scan"]:
-        tool_path = Path(config["tools"][tool]["path"])
-        if not tool_path.exists():
-            raise Exception(f"SAST tool '{tool}' not found at '{tool_path}'!")
-
-
 @dataclass
 class AppConfig:
     """
     Application configuration.
     """
 
+    BUILD_SCRIPT_NAME: str = field(init=False, default="")
     FLAWFINDER: str = field(init=False, default="")
     FLAWFINDER_CHECKS: List[str] = field(init=False, default_factory=lambda: [])
     SEMGREP: str = field(init=False, default="")
@@ -39,7 +26,7 @@ class AppConfig:
     CLANG_SCAN: str = field(init=False, default="")
     CLANG_SCAN_CHECKS: List[str] = field(init=False, default_factory=lambda: [])
 
-    def load_from_file(self, config_file: Path) -> None:
+    def load(self, config_file: Path) -> None:
         """
         Load configuration from a YAML file.
 
@@ -48,8 +35,7 @@ class AppConfig:
         """
         config = yaml.safe_load(config_file.read_text())
 
-        run_sanity_checks(config)
-
+        self.BUILD_SCRIPT_NAME = config["build_script"]["name"]
         self.FLAWFINDER = config["tools"]["flawfinder"]["path"]
         self.FLAWFINDER_CHECKS = config["tools"]["flawfinder"]["checks"]
         self.SEMGREP = config["tools"]["semgrep"]["path"]
@@ -60,7 +46,9 @@ class AppConfig:
         self.INFER_NUM_THREADS = config["tools"]["infer"]["num_threads"]
         self.CODEQL = config["tools"]["codeql"]["path"]
         self.CODEQL_CHECKS = [
-            check.replace("%LIBRARY_PATH%", config["tools"]["codeql"]["lib_path"])
+            check.replace(
+                config["tools"]["codeql"]["library"]["placeholder"], config["tools"]["codeql"]["library"]["path"]
+            )
             for check in config["tools"]["codeql"]["checks"]
         ]
         self.CODEQL_NUM_THREADS = config["tools"]["codeql"]["num_threads"]
@@ -68,5 +56,5 @@ class AppConfig:
         self.CLANG_SCAN_CHECKS = config["tools"]["clang_scan"]["checks"]
 
 
-# Global SFA configuration
+# Global SASTFuzz Analyzer (SFA) configuration
 app_config = AppConfig()
