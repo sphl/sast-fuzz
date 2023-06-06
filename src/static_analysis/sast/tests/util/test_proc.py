@@ -28,7 +28,7 @@ class TestProcUtils(unittest.TestCase):
     def test_run_with_multiproc(self) -> None:
         # Arrange
 
-        vals = [1, 2, 3, 4, 5]
+        vals = [(1,), (2,), (3,), (4,), (5,)]
         expected = [1, 4, 9, 16, 25]
 
         # Act

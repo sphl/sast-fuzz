@@ -21,19 +21,20 @@ def get_parent(path: Path, depth: int = 1) -> Path:
     return get_parent(path.parent, depth)
 
 
-def copy_dir(src_dir: Path, dst_dir: Path, extend_dst: bool = True) -> Optional[Path]:
+def copy_dir(src_dir: Path, dst_dir: Path, overwrite: bool = True, extend_dst: bool = True) -> Optional[Path]:
     """
     Copy the contents of a source to a destination directory.
 
     :param src_dir: Source directory
     :param dst_dir: Destination directory
+    :param overwrite: If true, overwrite existing files, otherwise, raise exception
     :param extend_dst: If true, extend dest. with source dir name, otherwise, no changes
     :return: Destination directory path if no exception occurred
     """
     if extend_dst:
         dst_dir = dst_dir / src_dir.name
 
-    shutil.copytree(src_dir, dst_dir)
+    shutil.copytree(src_dir, dst_dir, dirs_exist_ok=overwrite)
 
     return dst_dir
 

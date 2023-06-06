@@ -47,7 +47,7 @@ def run_with_multiproc(func: Callable, items: List, n_jobs: int = mp.cpu_count()
             res: List = pool.starmap(func, items)
 
         except TypeError as err:
-            logging.error(err)
+            logging.info(err)
 
             # Try again with map() instead of starmap()
             res = pool.map(func, items)
