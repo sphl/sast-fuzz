@@ -3,35 +3,49 @@ name: check-sfa
 on:
   push:
     paths:
-      - 'src/static_analysis/sast/src/**.py'
+      - "src/static_analysis/sast/src/**.py"
 
 permissions:
   contents: read
 
 jobs:
   check-sfa:
-    container:
-      image: python:3.11.3-bullseye
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [ '3.8', '3.11' ]
+        poetry-version: [ '1.5.0' ]
+        os: [ ubuntu-20.04, ubuntu-latest ]
+    
+    runs-on: ${{ matrix.os }}
+    
     defaults:
       run:
         working-directory: src/static_analysis/sast
-    env:
-      analysis_dir: src
+    
     steps:
-      - uses: actions/checkout@v3
-      - name: Install Poetry and SFA dependencies
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set Python version
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Set Poetry version
+        uses: abatilo/actions-poetry@v2
+        with:
+          poetry-version: ${{ matrix.poetry-version }}
+
+      - name: Install dependencies
         run: |-
-          curl -sSL https://install.python-poetry.org | python3 -
-          export PATH="/github/home/.local/bin:$PATH"
           poetry install
+
       - name: Check code formatting
         run: |-
-          poetry run black --check ${{env.analysis_dir}} --line-length 120 --skip-magic-trailing-comma
-          poetry run isort --check ${{env.analysis_dir}} --profile black
-      - name: Check typing
+          poetry run black --check src --line-length 120 --skip-magic-trailing-comma
+          poetry run isort --check src --profile black
+
+      - name: Run static analysis
         run: |-
-          poetry run mypy ${{env.analysis_dir}}
-      - name: Check for security issues
-        run: |-
-          poetry run bandit --recursive ${{env.analysis_dir}}
+          poetry run mypy src
+          poetry run bandit --recursive src
