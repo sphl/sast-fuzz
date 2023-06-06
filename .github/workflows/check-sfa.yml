@@ -1,4 +1,4 @@
-name: check-sfa
+name: Format check + static analysis + testing
 
 on:
   push:
@@ -49,3 +49,8 @@ jobs:
         run: |-
           poetry run mypy src
           poetry run bandit --recursive src
+      
+      - name: Run tests with coverage analysis
+        run: |-
+          poetry run coverage run
+          poetry run coverage report

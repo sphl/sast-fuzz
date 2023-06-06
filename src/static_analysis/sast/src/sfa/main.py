@@ -93,7 +93,7 @@ def group_flags(flags: SASTFlagSet, grouping_mode: SASTFlagGroupingMode, inspec_
     return flag_grouping.group(flags)
 
 
-@app.command(help="Run multiple SAST tools and filter & group their findings.")
+@app.command()
 def main(
     flag_files: Annotated[
         Optional[List[Path]],
