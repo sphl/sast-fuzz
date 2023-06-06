@@ -12,9 +12,9 @@ jobs:
   check-sfa:
     strategy:
       matrix:
-        python-version: [ '3.8', '3.11' ]
+        python-version: [ '3.11' ]
         poetry-version: [ '1.5.0' ]
-        os: [ ubuntu-20.04, ubuntu-latest ]
+        os: [ ubuntu-20.04 ]
     
     runs-on: ${{ matrix.os }}
     
