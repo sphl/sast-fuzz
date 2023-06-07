@@ -35,7 +35,7 @@ def _starter(runner: SASTToolRunner) -> SASTFlags:
 
 
 def run_tools(
-    flags: SASTFlags, tools: List[SASTTool], subject_dir: Optional[Path], app_config: AppConfig, parallel: bool
+    flags: SASTFlags, tools: List[SASTTool], subject_dir: Path, app_config: AppConfig, parallel: bool
 ) -> SASTFlags:
     """
     Run SAST tools.
@@ -43,19 +43,14 @@ def run_tools(
     :param flags:
     :param tools:
     :param subject_dir:
+    :param app_config:
     :param parallel:
     :return:
     """
-    if subject_dir is None:
-        raise typer.BadParameter("Subject directory is not specified.", param_hint="--subject")
-
-    if not (subject_dir / BUILD_SCRIPT_NAME).exists():
-        raise typer.BadParameter("Build script could not be found in the subject directory.", param_hint="--subject")
-
     logging.info(f"SAST tools: {', '.join([t.value for t in tools])}")
 
     n_jobs = 1 if not parallel else len(tools)
-    tool_runners = list(SASTToolRunnerFactory((subject_dir, app_config)).get_instances(tools))
+    tool_runners = [(runner,) for runner in SASTToolRunnerFactory((subject_dir, app_config)).get_instances(tools)]
 
     nested_flags = run_with_multiproc(_starter, tool_runners, n_jobs)
 
@@ -64,7 +59,7 @@ def run_tools(
     return flags
 
 
-def filter_flags(flags: SASTFlags, filter_modes: List[SASTFlagFilterMode], inspec_file: Optional[Path]) -> SASTFlags:
+def filter_flags(flags: SASTFlags, filter_modes: List[SASTFlagFilterMode], inspec_file: Path) -> SASTFlags:
     """
     Filter SAST flags.
 
@@ -73,16 +68,13 @@ def filter_flags(flags: SASTFlags, filter_modes: List[SASTFlagFilterMode], inspe
     :param inspec_file:
     :return:
     """
-    if inspec_file is None:
-        raise typer.BadParameter("SASTFuzz Inspector file is not specified.", param_hint="--inspection")
-
     for flag_filter in SASTFlagFilterFactory(inspec_file).get_instances(filter_modes):
         flags = flag_filter.filter(flags)
 
     return flags
 
 
-def group_flags(flags: SASTFlags, grouping_mode: SASTFlagGroupingMode, inspec_file: Optional[Path]) -> SASTFlags:
+def group_flags(flags: SASTFlags, grouping_mode: SASTFlagGroupingMode, inspec_file: Path) -> SASTFlags:
     """
     Group SAST flags.
 
@@ -91,9 +83,6 @@ def group_flags(flags: SASTFlags, grouping_mode: SASTFlagGroupingMode, inspec_fi
     :param inspec_file:
     :return:
     """
-    if inspec_file is None:
-        raise typer.BadParameter("SASTFuzz Inspector file is not specified.", param_hint="--inspection")
-
     flag_grouping = SASTFlagGroupingFactory(inspec_file).get_instance(grouping_mode)
 
     return flag_grouping.group(flags)
@@ -184,16 +173,29 @@ def main(
         ),
     ] = None,
 ) -> None:
+    if tools:
+        if subject_dir is None:
+            raise typer.BadParameter("Subject directory is not specified.", param_hint="--subject")
+
+        if not (subject_dir / BUILD_SCRIPT_NAME).exists():
+            raise typer.BadParameter(
+                "Build script couldn't be found in the subject directory.", param_hint="--subject"
+            )
+
+    if filter_modes or grouping_mode:
+        if inspec_file is None:
+            raise typer.BadParameter("SASTFuzz Inspector file is not specified.", param_hint="--inspection")
+
     app_config = AppConfig.from_yaml(config_file)
 
     flags = SASTFlags()
     flags.update(*map(SASTFlags.from_csv, flag_files or []))
 
-    if tools is not None:
-        flags = run_tools(flags, tools, subject_dir, app_config, parallel)
-    if filter_modes is not None:
-        flags = filter_flags(flags, filter_modes, inspec_file)
-    if grouping_mode is not None:
-        flags = group_flags(flags, grouping_mode, inspec_file)
+    if tools:
+        flags = run_tools(flags, tools, subject_dir, app_config, parallel)  # type: ignore
+    if filter_modes:
+        flags = filter_flags(flags, filter_modes, inspec_file)  # type: ignore
+    if grouping_mode:
+        flags = group_flags(flags, grouping_mode, inspec_file)  # type: ignore
 
     flags.to_csv(output_file)

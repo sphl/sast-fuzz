@@ -119,7 +119,9 @@ class FlawfinderRunner(SASTToolRunner):
         return self._subject_dir
 
     def _analyze(self, working_dir: Path) -> str:
-        return run_shell_command(f"{self._config.path} --dataonly --sarif {' '.join(self._config.path)} {working_dir}")
+        return run_shell_command(
+            f"{self._config.path} --dataonly --sarif {' '.join(self._config.checks)} {working_dir}"
+        )
 
     def _format(self, string: str) -> SASTFlags:
         return convert_sarif(string)
