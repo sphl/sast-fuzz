@@ -7,7 +7,7 @@ from sfa.analysis.tool_runner import convert_sarif
 
 class TestFlagSetSarif(unittest.TestCase):
     def setUp(self) -> None:
-        self.sarif_file = Path("data") / "test.sarif"
+        self.sarif_file = Path(__file__).parent / "data" / "test.sarif"
 
     def test_convert_sarif(self) -> None:
         # Arrange

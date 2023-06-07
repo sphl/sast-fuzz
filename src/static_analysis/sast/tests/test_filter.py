@@ -7,7 +7,7 @@ from sfa.analysis.filter import ReachabilityFilter
 
 class TestReachabilityFilter(unittest.TestCase):
     def setUp(self) -> None:
-        inspec_file = Path("data") / "sfi" / "quicksort.json"
+        inspec_file = Path(__file__).parent / "data" / "sfi" / "quicksort.json"
         self.filter = ReachabilityFilter(inspec_file)
 
     def test_filter_correct(self) -> None:

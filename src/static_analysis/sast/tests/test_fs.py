@@ -9,7 +9,7 @@ from tempfile import TemporaryDirectory
 
 class TestFSUtils(unittest.TestCase):
     def setUp(self) -> None:
-        self.root_dir = Path("data") / "files"
+        self.root_dir = Path(__file__).parent / "data" / "files"
 
     def test_copy_dir(self) -> None:
         with TemporaryDirectory() as temp_dir:

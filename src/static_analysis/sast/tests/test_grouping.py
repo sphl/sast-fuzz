@@ -32,7 +32,7 @@ def unfold(flags: SASTFlags) -> Set[Tuple]:
 
 class TestBasicBlockGrouping(unittest.TestCase):
     def setUp(self) -> None:
-        inspec_file = Path("data") / "sfi" / "quicksort.json"
+        inspec_file = Path(__file__).parent / "data" / "sfi" / "quicksort.json"
         self.grouping = BasicBlockGrouping(inspec_file)
 
     def test_group_same_bb(self) -> None:

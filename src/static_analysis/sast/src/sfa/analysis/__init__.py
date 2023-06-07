@@ -11,8 +11,7 @@ SASTFlag = namedtuple("SASTFlag", ["tool", "file", "line", "vuln"])
 
 # Grouped SAST flag
 GroupedSASTFlag = namedtuple(
-    "GroupedSASTFlag",
-    ["tool", "file", "line", "vuln", "n_flg_lines", "n_all_lines", "n_run_tools", "n_all_tools"],
+    "GroupedSASTFlag", ["tool", "file", "line", "vuln", "n_flg_lines", "n_all_lines", "n_run_tools", "n_all_tools"]
 )
 
 # SAST flag type
