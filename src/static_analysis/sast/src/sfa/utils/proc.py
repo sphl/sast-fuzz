@@ -3,10 +3,10 @@ import multiprocessing as mp
 import os
 import subprocess  # nosec
 from pathlib import Path
-from typing import Callable, Dict, List, Optional
+from typing import Callable, Dict, List, Optional, Union
 
 
-def run_shell_command(cmd: str | List[str], cwd: Optional[Path] = None, env: Optional[Dict[str, str]] = None) -> str:
+def run_shell_command(cmd: Union[str, List[str]], cwd: Optional[Path] = None, env: Optional[Dict[str, str]] = None) -> str:
     """
     Run command as shell sub-process.
 

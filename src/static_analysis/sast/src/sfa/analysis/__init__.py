@@ -1,7 +1,7 @@
 import os
 from collections import namedtuple
 from pathlib import Path
-from typing import Generator, Optional, Set, TypeAlias
+from typing import Generator, Optional, Set, Union
 
 # CSV separator
 CSV_SEP: str = ","
@@ -15,7 +15,7 @@ GroupedSASTFlag = namedtuple(
 )
 
 # SAST flag type
-SASTFlagType: TypeAlias = SASTFlag | GroupedSASTFlag
+SASTFlagType = Union[SASTFlag, GroupedSASTFlag]
 
 
 class SASTFlags:
