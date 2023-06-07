@@ -178,9 +178,7 @@ def main(
             raise typer.BadParameter("Subject directory is not specified.", param_hint="--subject")
 
         if not (subject_dir / BUILD_SCRIPT_NAME).exists():
-            raise typer.BadParameter(
-                "Build script couldn't be found in the subject directory.", param_hint="--subject"
-            )
+            raise typer.BadParameter("Build script couldn't be found in the subject directory.", param_hint="--subject")
 
     if filter_modes or grouping_mode:
         if inspec_file is None:
