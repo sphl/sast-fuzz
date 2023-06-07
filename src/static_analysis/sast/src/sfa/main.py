@@ -55,7 +55,7 @@ def run_tools(
     logging.info(f"SAST tools: {', '.join([t.value for t in tools])}")
 
     n_jobs = 1 if not parallel else len(tools)
-    tool_runners = list(SASTToolRunnerFactory(subject_dir).get_instances(tools))
+    tool_runners = list(SASTToolRunnerFactory((subject_dir, app_config)).get_instances(tools))
 
     nested_flags = run_with_multiproc(_starter, tool_runners, n_jobs)
 
