@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 jobs:
-  check-sfa:
+  test-sfa:
     strategy:
       matrix:
         python-version: [ '3.11' ]
