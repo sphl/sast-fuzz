@@ -3,24 +3,9 @@ from abc import ABC, abstractmethod
 from collections import defaultdict
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Dict, List
 
-from sfa.logic import SASTFlagSet
-from sfa.util.ext_enum import ExtendedEnum
-from sfa.util.factory import Factory
-
-
-class SASTFlagFilterMode(ExtendedEnum):
-    REH = "reachability"
-
-
-class SASTFlagFilterFactory(Factory):
-    """
-    SAST flag filter factory.
-    """
-
-    def _create_instances(self, param: Any) -> Dict:
-        return {SASTFlagFilterMode.REH: ReachabilityFilter(param)}
+from sfa.analysis import SASTFlags
 
 
 class SASTFlagFilter(ABC):
@@ -32,7 +17,7 @@ class SASTFlagFilter(ABC):
         self._inspec_file = inspec_file
 
     @abstractmethod
-    def filter(self, flags: SASTFlagSet) -> SASTFlagSet:
+    def filter(self, flags: SASTFlags) -> SASTFlags:
         """
         Filter out certain SAST flags.
 
@@ -73,11 +58,11 @@ class ReachabilityFilter(SASTFlagFilter):
 
         return False
 
-    def filter(self, flags: SASTFlagSet) -> SASTFlagSet:
+    def filter(self, flags: SASTFlags) -> SASTFlags:
         """
         Filter out SAST flags unreachable from the main function.
 
         :param flags:
         :return:
         """
-        return SASTFlagSet(set(filter(lambda flag: self._is_reachable(flag.file, flag.line), flags)))
+        return SASTFlags(set(filter(lambda flag: self._is_reachable(flag.file, flag.line), flags)))

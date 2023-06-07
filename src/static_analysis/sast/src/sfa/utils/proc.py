@@ -3,12 +3,10 @@ import multiprocessing as mp
 import os
 import subprocess  # nosec
 from pathlib import Path
-from typing import Callable, Dict, List, Optional, Union
+from typing import Callable, Dict, List, Optional
 
 
-def run_shell_command(
-    cmd: Union[str, List[str]], cwd: Optional[Path] = None, env: Optional[Dict[str, str]] = None
-) -> str:
+def run_shell_command(cmd: str | List[str], cwd: Optional[Path] = None, env: Optional[Dict[str, str]] = None) -> str:
     """
     Run command as shell sub-process.
 
@@ -21,7 +19,7 @@ def run_shell_command(
     cmd_cwd = cwd or Path.cwd()
     cmd_env = env or os.environ.copy()
 
-    logging.debug(f"Command: '{cmd_str}'")
+    logging.debug(f"Command: {cmd_str}")
 
     proc_info = subprocess.run(
         cmd_str, shell=True, cwd=cmd_cwd, env=cmd_env, capture_output=True, text=True, encoding="utf-8"
@@ -49,7 +47,7 @@ def run_with_multiproc(func: Callable, items: List, n_jobs: int = mp.cpu_count()
         except TypeError as err:
             logging.info(err)
 
-            # Try again with map() instead of starmap()
+            # Try again with map() ...
             res = pool.map(func, items)
 
     return res

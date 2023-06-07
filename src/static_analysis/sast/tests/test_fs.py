@@ -2,14 +2,14 @@ import unittest
 from pathlib import Path
 from typing import Set
 
-from sfa.util.fs import get_parent, copy_dir, find_files
+from sfa.utils.fs import copy_dir, find_files
 
 from tempfile import TemporaryDirectory
 
 
 class TestFSUtils(unittest.TestCase):
     def setUp(self) -> None:
-        self.root_dir = get_parent(Path(__file__), 2) / "data" / "files"
+        self.root_dir = Path("data") / "files"
 
     def test_copy_dir(self) -> None:
         with TemporaryDirectory() as temp_dir:

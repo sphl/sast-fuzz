@@ -1,28 +1,16 @@
 import json
 from abc import ABC, abstractmethod
-from collections import defaultdict
+from collections import defaultdict, namedtuple
 from pathlib import Path
-from typing import Any, Dict, Set
+from typing import Dict
 
-from sfa.logic import GroupedSASTFlag, SASTFlag, SASTFlagSet
-from sfa.util.ext_enum import ExtendedEnum
-from sfa.util.factory import Factory
+from sfa.analysis import GroupedSASTFlag, SASTFlags
 
-# Character for joining multiple values
+# Character to concatenate values
 CONCAT_CHAR = "-"
 
-
-class SASTFlagGroupingMode(ExtendedEnum):
-    BASIC_BLOCK = "basic-block"
-
-
-class SASTFlagGroupingFactory(Factory):
-    """
-    SAST flag grouping factory.
-    """
-
-    def _create_instances(self, param: Any) -> Dict:
-        return {SASTFlagGroupingMode.BASIC_BLOCK: BasicBlockGrouping(param)}
+# Container for basic block information
+BBInfo = namedtuple("BBInfo", ["file", "line_start", "line_end", "n_lines"])
 
 
 class SASTFlagGrouping(ABC):
@@ -34,7 +22,7 @@ class SASTFlagGrouping(ABC):
         self._inspec_file = inspec_file
 
     @abstractmethod
-    def group(self, flags: SASTFlagSet) -> SASTFlagSet:
+    def group(self, flags: SASTFlags) -> SASTFlags:
         """
         Group SAST flags based on a certain code granularity.
 
@@ -51,19 +39,20 @@ class BasicBlockGrouping(SASTFlagGrouping):
 
     def __init__(self, inspec_file: Path) -> None:
         super().__init__(inspec_file)
-        self._bb_infos: Dict = {}
+        self._bb_infos: Dict[int, BBInfo] = {}
 
         data = json.loads(inspec_file.read_text())
 
         for func in data["functions"]:
             for bb in func["basic_blocks"]:
-                self._bb_infos[bb["id"]] = {
-                    "file": func["location"]["filename"],
-                    "line_range": bb["location"]["line"],
-                    "LoC": bb["LoC"],
-                }
+                self._bb_infos[bb["id"]] = BBInfo(
+                    func["location"]["filename"],
+                    bb["location"]["line"]["start"],
+                    bb["location"]["line"]["end"],
+                    bb["LoC"],
+                )
 
-    def group(self, flags: SASTFlagSet) -> SASTFlagSet:
+    def group(self, flags: SASTFlags) -> SASTFlags:
         """
         Group SAST flags based on basic block granularity.
 
@@ -74,15 +63,13 @@ class BasicBlockGrouping(SASTFlagGrouping):
 
         for flag in flags:
             for bb_id, bb_info in self._bb_infos.items():
-                if flag.file == bb_info["file"]:
-                    line_range = bb_info["line_range"]
-                    if line_range["start"] <= flag.line <= line_range["end"]:
+                if flag.file == bb_info.file:
+                    if bb_info.line_start <= flag.line <= bb_info.line_end:
                         flags_per_bb[bb_id].add(flag)
                         break
 
         n_tools = len({flag.tool for flag in flags})
-
-        grouped_flags = SASTFlagSet()
+        grouped_flags = SASTFlags()
 
         for bb_id, bb_flags in flags_per_bb.items():
             bb_tools = {flag.tool for flag in bb_flags}
@@ -91,11 +78,11 @@ class BasicBlockGrouping(SASTFlagGrouping):
             grouped_flags.add(
                 GroupedSASTFlag(
                     CONCAT_CHAR.join(bb_tools),
-                    self._bb_infos[bb_id]["file"],
-                    self._bb_infos[bb_id]["line_range"]["start"],
+                    self._bb_infos[bb_id].file,
+                    self._bb_infos[bb_id].line_start,
                     CONCAT_CHAR.join(bb_vulns),
                     len({flag.line for flag in bb_flags}),
-                    self._bb_infos[bb_id]["LoC"],
+                    self._bb_infos[bb_id].n_lines,
                     len(bb_tools),
                     n_tools,
                 )
