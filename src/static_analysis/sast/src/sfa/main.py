@@ -6,12 +6,18 @@ from typing import List, Optional
 import typer
 from typing_extensions import Annotated
 
-from sfa.config import app_config
-from sfa.logic import SASTFlagSet
-from sfa.logic.filter import SASTFlagFilterFactory, SASTFlagFilterMode
-from sfa.logic.grouping import SASTFlagGroupingFactory, SASTFlagGroupingMode
-from sfa.logic.tool_runner import SASTTool, SASTToolRunner, SASTToolRunnerFactory
-from sfa.util.proc import run_with_multiproc
+from sfa import AppConfig
+from sfa.analysis import SASTFlags
+from sfa.analysis.factory import (
+    SASTFlagFilterFactory,
+    SASTFlagFilterMode,
+    SASTFlagGroupingFactory,
+    SASTFlagGroupingMode,
+    SASTTool,
+    SASTToolRunnerFactory,
+)
+from sfa.analysis.tool_runner import BUILD_SCRIPT_NAME, SASTToolRunner
+from sfa.utils.proc import run_with_multiproc
 
 logging.basicConfig(format="%(asctime)s SFA[%(levelname)s]: %(message)s", level=logging.DEBUG, stream=sys.stdout)
 
@@ -24,11 +30,13 @@ DEFAULT_OUTPUT_FILE = Path.cwd() / "output.csv"
 app = typer.Typer()
 
 
-def _starter(runner: SASTToolRunner) -> SASTFlagSet:
+def _starter(runner: SASTToolRunner) -> SASTFlags:
     return runner.run()
 
 
-def run_tools(flags: SASTFlagSet, tools: List[SASTTool], subject_dir: Optional[Path], parallel: bool) -> SASTFlagSet:
+def run_tools(
+    flags: SASTFlags, tools: List[SASTTool], subject_dir: Optional[Path], app_config: AppConfig, parallel: bool
+) -> SASTFlags:
     """
     Run SAST tools.
 
@@ -41,7 +49,7 @@ def run_tools(flags: SASTFlagSet, tools: List[SASTTool], subject_dir: Optional[P
     if subject_dir is None:
         raise typer.BadParameter("Subject directory is not specified.", param_hint="--subject")
 
-    if not (subject_dir / app_config.BUILD_SCRIPT_NAME).exists():
+    if not (subject_dir / BUILD_SCRIPT_NAME).exists():
         raise typer.BadParameter("Build script could not be found in the subject directory.", param_hint="--subject")
 
     logging.info(f"SAST tools: {', '.join([t.value for t in tools])}")
@@ -51,14 +59,12 @@ def run_tools(flags: SASTFlagSet, tools: List[SASTTool], subject_dir: Optional[P
 
     nested_flags = run_with_multiproc(_starter, tool_runners, n_jobs)
 
-    flags.update(*map(SASTFlagSet, nested_flags))
+    flags.update(*map(SASTFlags, nested_flags))
 
     return flags
 
 
-def filter_flags(
-    flags: SASTFlagSet, filter_modes: List[SASTFlagFilterMode], inspec_file: Optional[Path]
-) -> SASTFlagSet:
+def filter_flags(flags: SASTFlags, filter_modes: List[SASTFlagFilterMode], inspec_file: Optional[Path]) -> SASTFlags:
     """
     Filter SAST flags.
 
@@ -76,7 +82,7 @@ def filter_flags(
     return flags
 
 
-def group_flags(flags: SASTFlagSet, grouping_mode: SASTFlagGroupingMode, inspec_file: Optional[Path]) -> SASTFlagSet:
+def group_flags(flags: SASTFlags, grouping_mode: SASTFlagGroupingMode, inspec_file: Optional[Path]) -> SASTFlags:
     """
     Group SAST flags.
 
@@ -178,13 +184,13 @@ def main(
         ),
     ] = None,
 ) -> None:
-    app_config.load(config_file)
+    app_config = AppConfig.from_yaml(config_file)
 
-    flags = SASTFlagSet()
-    flags.update(*map(SASTFlagSet.from_csv, flag_files or []))
+    flags = SASTFlags()
+    flags.update(*map(SASTFlags.from_csv, flag_files or []))
 
     if tools is not None:
-        flags = run_tools(flags, tools, subject_dir, parallel)
+        flags = run_tools(flags, tools, subject_dir, app_config, parallel)
     if filter_modes is not None:
         flags = filter_flags(flags, filter_modes, inspec_file)
     if grouping_mode is not None:

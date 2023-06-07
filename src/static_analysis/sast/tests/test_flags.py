@@ -3,13 +3,12 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from sfa.util.fs import get_parent
-from sfa.logic import CSV_SEP, SASTFlag, GroupedSASTFlag, SASTFlagSet, convert_sarif
+from sfa.analysis import CSV_SEP, SASTFlag, GroupedSASTFlag, SASTFlags
 
 
-class TestFlagSet(unittest.TestCase):
+class TestFlags(unittest.TestCase):
     def setUp(self) -> None:
-        self.flags = SASTFlagSet()
+        self.flags = SASTFlags()
         self.flags.add(SASTFlag("tool1", "file1", 10, "vuln1"))
         self.flags.add(SASTFlag("tool2", "file2", 20, "vuln2"))
 
@@ -29,7 +28,7 @@ class TestFlagSet(unittest.TestCase):
         flag4 = SASTFlag("tool4", "file4", 40, "vuln4")
 
         # Act
-        self.flags.update(SASTFlagSet({flag3, flag4}))
+        self.flags.update(SASTFlags({flag3, flag4}))
 
         # Assert
         self.assertIn(flag3, self.flags)
@@ -46,11 +45,11 @@ class TestFlagSet(unittest.TestCase):
         flag5 = SASTFlag("tool5", "file5", 50, "vuln5")
         flag6 = SASTFlag("tool6", "file6", 60, "vuln6")
 
-        flags1 = SASTFlagSet({flag1, flag2})
-        flags2 = SASTFlagSet({flag3, flag4})
-        flags3 = SASTFlagSet({flag5, flag6})
+        flags1 = SASTFlags({flag1, flag2})
+        flags2 = SASTFlags({flag3, flag4})
+        flags3 = SASTFlags({flag5, flag6})
 
-        expected = SASTFlagSet({flag1, flag2, flag3, flag4, flag5, flag6})
+        expected = SASTFlags({flag1, flag2, flag3, flag4, flag5, flag6})
 
         # Act
         flags1.update(flags2, flags3)
@@ -100,10 +99,10 @@ class TestFlagSet(unittest.TestCase):
                 file.writelines(lines)
 
             # Act
-            actual = SASTFlagSet.from_csv(temp_file)
+            actual = SASTFlags.from_csv(temp_file)
 
             # Assert
-            expected = SASTFlagSet()
+            expected = SASTFlags()
             expected.add(SASTFlag("tool1", "file1", 10, "vuln1"))
             expected.add(SASTFlag("tool2", "file2", 20, "vuln2"))
             expected.add(SASTFlag("tool3", "file3", 30, "vuln3"))
@@ -111,9 +110,9 @@ class TestFlagSet(unittest.TestCase):
             self.assertEqual(expected, actual)
 
 
-class TestFlagSetGrouped(unittest.TestCase):
+class TestFlagsGrouped(unittest.TestCase):
     def setUp(self) -> None:
-        self.flags = SASTFlagSet()
+        self.flags = SASTFlags()
         self.flags.add(GroupedSASTFlag("tool1", "file1", 10, "vuln1", 1, 3, 1, 5))
         self.flags.add(GroupedSASTFlag("tool2", "file2", 20, "vuln2", 1, 5, 1, 5))
 
@@ -133,7 +132,7 @@ class TestFlagSetGrouped(unittest.TestCase):
         flag4 = GroupedSASTFlag("tool4", "file4", 40, "vuln4", 1, 9, 1, 5)
 
         # Act
-        self.flags.update(SASTFlagSet({flag3, flag4}))
+        self.flags.update(SASTFlags({flag3, flag4}))
 
         # Assert
         self.assertIn(flag3, self.flags)
@@ -150,11 +149,11 @@ class TestFlagSetGrouped(unittest.TestCase):
         flag5 = GroupedSASTFlag("tool5", "file5", 50, "vuln5", 1, 5, 1, 5)
         flag6 = GroupedSASTFlag("tool6", "file6", 60, "vuln6", 1, 7, 1, 5)
 
-        flags1 = SASTFlagSet({flag1, flag2})
-        flags2 = SASTFlagSet({flag3, flag4})
-        flags3 = SASTFlagSet({flag5, flag6})
+        flags1 = SASTFlags({flag1, flag2})
+        flags2 = SASTFlags({flag3, flag4})
+        flags3 = SASTFlags({flag5, flag6})
 
-        expected = SASTFlagSet({flag1, flag2, flag3, flag4, flag5, flag6})
+        expected = SASTFlags({flag1, flag2, flag3, flag4, flag5, flag6})
 
         # Act
         flags1.update(flags2, flags3)
@@ -204,32 +203,15 @@ class TestFlagSetGrouped(unittest.TestCase):
                 file.writelines(lines)
 
             # Act
-            actual = SASTFlagSet.from_csv(temp_file)
+            actual = SASTFlags.from_csv(temp_file)
 
             # Assert
-            expected = SASTFlagSet()
+            expected = SASTFlags()
             expected.add(GroupedSASTFlag("tool1", "file1", 10, "vuln1", 1, 3, 1, 5))
             expected.add(GroupedSASTFlag("tool2", "file2", 20, "vuln2", 1, 5, 1, 5))
             expected.add(GroupedSASTFlag("tool3", "file3", 30, "vuln3", 1, 7, 1, 5))
 
             self.assertEqual(expected, actual)
-
-
-class TestFlagSetSarif(unittest.TestCase):
-    def setUp(self) -> None:
-        self.sarif_file = get_parent(Path(__file__), 2) / "data" / "test.sarif"
-
-    def test_convert_sarif(self) -> None:
-        # Arrange
-        expected = SASTFlagSet()
-        expected.add(SASTFlag("sast-tool", "file1", 10, "Rule-1"))
-        expected.add(SASTFlag("sast-tool", "file2", 20, "Rule-2"))
-
-        # Act
-        actual = convert_sarif(self.sarif_file.read_text())
-
-        # Assert
-        self.assertEqual(expected, actual)
 
 
 if __name__ == "__main__":

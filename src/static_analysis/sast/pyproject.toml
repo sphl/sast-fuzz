@@ -1,8 +1,9 @@
 [tool.poetry]
-name = "sast-fuzz-analyzer"
+name = "sast-fuzz analyzer"
 version = "0.1.0"
 description = "Static analyzer for SASTFuzz"
 authors = ["Stephan Lipp <stephan.lipp@tum.de>"]
+# readme = "README.md"
 packages = [{include = "sfa", from = "src"}]
 
 [tool.poetry.dependencies]
@@ -10,9 +11,6 @@ python = "^3.11"
 typer = "^0.9.0"
 pyyaml = "^6.0"
 types-pyyaml = "^6.0.12.10"
-
-[tool.poetry.scripts]
-sfa = "sfa.main:app"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.3.0"
@@ -33,6 +31,9 @@ command_line = "-m pytest"
 [tool.coverage.report]
 show_missing = true
 fail_under = 90
+
+[tool.poetry.scripts]
+sfa = "sfa.main:app"
 
 [build-system]
 requires = ["poetry-core"]

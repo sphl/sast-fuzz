@@ -1,6 +1,6 @@
 import unittest
 
-from sfa.util.proc import run_shell_command, run_with_multiproc
+from sfa.utils.proc import run_shell_command, run_with_multiproc
 
 
 def square(x: int) -> int:

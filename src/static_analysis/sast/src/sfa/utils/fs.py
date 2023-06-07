@@ -1,4 +1,3 @@
-import logging
 import shutil
 from os import walk
 from pathlib import Path
@@ -39,17 +38,6 @@ def copy_dir(src_dir: Path, dst_dir: Path, overwrite: bool = True, extend_dst: b
     return dst_dir
 
 
-def has_extension(file: Path, exts: List[str]) -> bool:
-    """
-    Check if file has certain extension.
-
-    :param file:
-    :param exts:
-    :return:
-    """
-    return file.suffix in exts
-
-
 def find_files(root_dir: Path, exts: Optional[List[str]] = None, rec: bool = True) -> Set[Path]:
     """
     Search for files in a directory.
@@ -57,12 +45,12 @@ def find_files(root_dir: Path, exts: Optional[List[str]] = None, rec: bool = Tru
     :param root_dir: Directory to start the search from
     :param exts: Allowed file extension
     :param rec: If true, perform recursive search, otherwise, only at top-level
-    :return:
+    :return: Set of files
     """
     files: Set[Path] = set()
 
     for root, _, _files in walk(root_dir):
-        files.update([Path(root) / Path(file) for file in _files if (exts is None or has_extension(Path(file), exts))])
+        files.update([Path(root) / Path(file) for file in _files if (exts is None or Path(file).suffix in exts)])
 
         if not rec:
             break
