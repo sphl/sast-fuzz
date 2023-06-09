@@ -1,5 +1,5 @@
 /*
-    instrument the critical bb
+    Instrument critical BBs
 */
 
 #include "Graphs/SVFG.h"
@@ -37,8 +37,8 @@ ICFG *icfg;
 Module *M;
 LLVMContext *C;
 
-std::set<llvm::Instruction *> condition_calls;
-std::vector<llvm::BasicBlock *> condition_bbs;
+// std::set<llvm::Instruction *> condition_calls;
+// std::vector<llvm::BasicBlock *> condition_bbs;
 std::map<llvm::BasicBlock *, std::vector<std::string>> condition_infos;
 std::map<llvm::BasicBlock *, std::vector<llvm::Value *>> condition_vals;
 std::map<llvm::BasicBlock *, uint32_t> condition_ids;
@@ -61,7 +61,7 @@ void countCGDistance(const std::vector<NodeID> &ids) {
     FIFOWorkList<const FunEntryBlockNode *> worklist;
 
     // calculate the function distance to each target.
-    for (NodeID id : ids) {
+    for (NodeID id: ids) {
         std::set<const FunEntryBlockNode *> visited;
 
         ICFGNode *iNode = icfg->getICFGNode(id);
@@ -89,24 +89,22 @@ void countCGDistance(const std::vector<NodeID> &ids) {
         dtf.push_back(df);
     }
 
-    // calculate the harmonic distance to all targets
-    for (auto iter = svfModule->begin(), eiter = svfModule->end(); iter != eiter; ++iter) {
-        const SVFFunction *svffun = *iter;
-
+    // Calculate the (harmonic) distance to all targets
+    for (auto svffun: *svfModule) {
         double df_tmp = 0;
         bool flag = false;
 
-        for (auto df : dtf) {
+        for (auto df: dtf) {
             if (df.count(svffun) != 0) {
                 if (df[svffun] != 0)
-                    df_tmp += (double)1 / df[svffun];
+                    df_tmp += (double) 1 / df[svffun];
                 flag = true;
             }
         }
 
         if (flag) {
             if (df_tmp != 0)
-                dTf[svffun] = (double)1 / df_tmp;
+                dTf[svffun] = (double) 1 / df_tmp;
             else
                 dTf[svffun] = 0;
         }
@@ -125,9 +123,8 @@ bool isCircleEdge(llvm::LoopInfoBase<llvm::BasicBlock, llvm::Loop> *loop_info, B
 void countCFGDistance(const SVFFunction *svffun) {
     std::map<BasicBlock *, std::map<BasicBlock *, uint32_t>> dtb;
     std::set<BasicBlock *> target_bbs;
-    for (Function::iterator bit = svffun->getLLVMFun()->begin(), ebit = svffun->getLLVMFun()->end(); bit != ebit;
-         ++bit) {
-        BasicBlock *bb = &*(bit);
+    for (auto &bit: *svffun->getLLVMFun()) {
+        BasicBlock *bb = &bit;
         for (BasicBlock::iterator it = bb->begin(), eit = bb->end(); it != eit; ++it) {
             Instruction *inst = &(*it);
             if (auto *CB = dyn_cast<CallBase>(inst)) {
@@ -158,7 +155,7 @@ void countCFGDistance(const SVFFunction *svffun) {
 
     llvm::DominatorTree DT = llvm::DominatorTree();
     llvm::PostDominatorTree PDT = llvm::PostDominatorTree();
-    llvm::LoopInfoBase<llvm::BasicBlock, llvm::Loop> *LoopInfo = new llvm::LoopInfoBase<llvm::BasicBlock, llvm::Loop>();
+    auto *LoopInfo = new llvm::LoopInfoBase<llvm::BasicBlock, llvm::Loop>();
 
     if (!(svffun->getLLVMFun()->isDeclaration())) {
         DT.recalculate(*(svffun->getLLVMFun()));
@@ -167,14 +164,14 @@ void countCFGDistance(const SVFFunction *svffun) {
         LoopInfo->analyze(DT);
     }
 
-    for (BasicBlock *bb : target_bbs) {
+    for (BasicBlock *bb: target_bbs) {
         FIFOWorkList<BasicBlock *> worklist;
         std::set<BasicBlock *> visited;
         worklist.push(bb);
         while (!worklist.empty()) {
             BasicBlock *vbb = worklist.pop();
             tmp_taint_bbs.insert(vbb);
-            for (BasicBlock *srcbb : predecessors(vbb)) {
+            for (BasicBlock *srcbb: predecessors(vbb)) {
                 if (visited.find(srcbb) == visited.end() && !isCircleEdge(LoopInfo, srcbb, vbb)) {
                     worklist.push(srcbb);
                     visited.insert(srcbb);
@@ -185,7 +182,7 @@ void countCFGDistance(const SVFFunction *svffun) {
 
     taint_bbs[svffun->getLLVMFun()] = tmp_taint_bbs;
 
-    for (BasicBlock *bb : target_bbs) {
+    for (BasicBlock *bb: target_bbs) {
         std::map<BasicBlock *, uint32_t> db;
         db[bb] = 0;
         FIFOWorkList<BasicBlock *> worklist;
@@ -193,7 +190,7 @@ void countCFGDistance(const SVFFunction *svffun) {
         worklist.push(bb);
         while (!worklist.empty()) {
             BasicBlock *vbb = worklist.pop();
-            for (BasicBlock *srcbb : predecessors(vbb)) {
+            for (BasicBlock *srcbb: predecessors(vbb)) {
                 if ((db.count(srcbb) == 0) || (db[srcbb] > (db[vbb] + 1))) {
                     db[srcbb] = db[vbb] + 1;
                     worklist.push(srcbb);
@@ -203,24 +200,23 @@ void countCFGDistance(const SVFFunction *svffun) {
         dtb[bb] = db;
     }
 
-    for (Function::iterator bit = svffun->getLLVMFun()->begin(), ebit = svffun->getLLVMFun()->end(); bit != ebit;
-         ++bit) {
-        BasicBlock *bb = &*(bit);
+    for (auto &bit: *svffun->getLLVMFun()) {
+        BasicBlock *bb = &bit;
 
         if (target_bbs.find(bb) != target_bbs.end())
             continue;
 
         double db_tmp = 0;
         bool flag = false;
-        for (auto db : dtb) {
+        for (auto db: dtb) {
             if (db.second.count(bb)) {
-                db_tmp += (double)1 / (db.second[bb] + dTb[db.first]);
+                db_tmp += (double) 1 / (db.second[bb] + dTb[db.first]);
                 flag = true;
             }
         }
 
         if (flag) {
-            dTb[bb] = (double)1 / db_tmp;
+            dTb[bb] = (double) 1 / db_tmp;
         }
     }
 }
@@ -232,15 +228,14 @@ void countVanillaDistance(const std::vector<NodeID> &target_ids) {
     FIFOWorkList<const ICFGNode *> worklist;
     std::set<const ICFGNode *> visited;
 
-    for (NodeID id : target_ids) {
+    for (NodeID id: target_ids) {
         ICFGNode *iNode = icfg->getICFGNode(id);
         targets_llvm_bb.insert(iNode->getBB());
     }
 
     countCGDistance(target_ids);
 
-    for (auto iter = svfModule->begin(), eiter = svfModule->end(); iter != eiter; ++iter) {
-        const SVFFunction *svffun = *iter;
+    for (auto svffun: *svfModule) {
         countCFGDistance(svffun);
     }
 
@@ -250,8 +245,7 @@ void countVanillaDistance(const std::vector<NodeID> &target_ids) {
 }
 
 void identifyCriticalBB() {
-    for (auto iter = svfModule->begin(), eiter = svfModule->end(); iter != eiter; ++iter) {
-        const SVFFunction *svffun = *iter;
+    for (auto svffun: *svfModule) {
         for (Function::iterator bit = svffun->getLLVMFun()->begin(), ebit = svffun->getLLVMFun()->end(); bit != ebit;
              ++bit) {
             BasicBlock *bb = &*(bit);
@@ -259,7 +253,7 @@ void identifyCriticalBB() {
             std::set<BasicBlock *> tmp_solved_bbs;
             if (!bb->getSingleSuccessor() && taint_bbs.count(svffun->getLLVMFun()) &&
                 taint_bbs[svffun->getLLVMFun()].count(bb)) {
-                for (BasicBlock *dstbb : successors(bb)) {
+                for (BasicBlock *dstbb: successors(bb)) {
                     if (taint_bbs[svffun->getLLVMFun()].count(dstbb) == 0) {
                         tmp_critical_bbs.insert(dstbb);
                     } else {
@@ -277,7 +271,7 @@ void identifyCriticalBB() {
     int temp_count = 0;
     int temp_count2 = 0;
     int temp_count3 = 0;
-    for (auto item : critical_bbs) {
+    for (const auto &item: critical_bbs) {
         llvm::BasicBlock *bb = item.first;
         llvm::Instruction &inst = bb->back();
         if (auto *br = dyn_cast<BranchInst>(&inst)) {
@@ -306,19 +300,19 @@ void instrument() {
     IntegerType *Int32Ty = IntegerType::getInt32Ty(*C);
     IntegerType *Int64Ty = IntegerType::getInt64Ty(*C);
 
-    GlobalVariable *AFLMapPtr = (GlobalVariable *)M->getOrInsertGlobal(
+    GlobalVariable *AFLMapPtr = (GlobalVariable *) M->getOrInsertGlobal(
             "__afl_area_ptr", PointerType::get(IntegerType::getInt8Ty(*C), 0), []() -> GlobalVariable * {
                 return new GlobalVariable(*M, PointerType::get(IntegerType::getInt8Ty(M->getContext()), 0), false,
                                           GlobalValue::ExternalLinkage, 0, "__afl_area_ptr");
             });
 
-    GlobalVariable *CBMapPtr = (GlobalVariable *)M->getOrInsertGlobal(
+    GlobalVariable *CBMapPtr = (GlobalVariable *) M->getOrInsertGlobal(
             "__critical_bb_ptr", PointerType::get(IntegerType::getInt8Ty(*C), 0), []() -> GlobalVariable * {
                 return new GlobalVariable(*M, PointerType::get(IntegerType::getInt8Ty(M->getContext()), 0), false,
                                           GlobalValue::ExternalLinkage, 0, "__critical_bb_ptr");
             });
 
-    GlobalVariable *DBMapPtr = (GlobalVariable *)M->getOrInsertGlobal(
+    GlobalVariable *DBMapPtr = (GlobalVariable *) M->getOrInsertGlobal(
             "__distance_bb_ptr", PointerType::get(IntegerType::getInt8Ty(*C), 0), []() -> GlobalVariable * {
                 return new GlobalVariable(*M, PointerType::get(IntegerType::getInt8Ty(M->getContext()), 0), false,
                                           GlobalValue::ExternalLinkage, 0, "__distance_bb_ptr");
@@ -330,16 +324,14 @@ void instrument() {
     ConstantInt *MapDistLoc = ConstantInt::get(LargestType, MAP_SIZE);
     ConstantInt *One = ConstantInt::get(LargestType, 1);
 
-    for (auto iter = svfModule->begin(), eiter = svfModule->end(); iter != eiter; ++iter) {
-        const SVFFunction *svffun = *iter;
+    for (auto svffun: *svfModule) {
         bool flag = false;
-        for (Function::iterator bit = svffun->getLLVMFun()->begin(), ebit = svffun->getLLVMFun()->end(); bit != ebit;
-             ++bit) {
-            BasicBlock *bb = &*(bit);
+        for (auto &bit: *svffun->getLLVMFun()) {
+            BasicBlock *bb = &bit;
             if (dTb.count(bb)) {
-                auto distance = (uint32_t)(100 * dTb[bb]);
+                auto distance = (uint32_t) (100 * dTb[bb]);
 
-                ConstantInt *Distance = ConstantInt::get(LargestType, (unsigned)distance);
+                ConstantInt *Distance = ConstantInt::get(LargestType, (unsigned) distance);
 
                 BasicBlock::iterator IP = bb->getFirstInsertionPt();
                 llvm::IRBuilder<> IRB(&(*IP));
@@ -378,7 +370,7 @@ void instrument() {
                 }
 
                 if (critical_bbs.count(bb)) {
-                    for (auto cbb : critical_bbs[bb]) {
+                    for (auto cbb: critical_bbs[bb]) {
                         BasicBlock::iterator IP2 = cbb->getFirstInsertionPt();
                         llvm::IRBuilder<> IRB2(&(*IP2));
 
@@ -396,7 +388,7 @@ void instrument() {
                 }
 
                 if (solved_bbs.count(bb)) {
-                    for (auto sbb : solved_bbs[bb]) {
+                    for (auto sbb: solved_bbs[bb]) {
                         BasicBlock::iterator IP2 = sbb->getFirstInsertionPt();
                         llvm::IRBuilder<> IRB2(&(*IP2));
 
@@ -436,11 +428,9 @@ void instrument() {
 void analyzeCondition() {
     u32_t condition_id = 1;
 
-    for (auto iter = svfModule->begin(), eiter = svfModule->end(); iter != eiter; ++iter) {
-        const SVFFunction *svffun = *iter;
-        for (Function::iterator bit = svffun->getLLVMFun()->begin(), ebit = svffun->getLLVMFun()->end(); bit != ebit;
-             ++bit) {
-            BasicBlock *bb = &*(bit);
+    for (auto svffun: *svfModule) {
+        for (auto &bit: *svffun->getLLVMFun()) {
+            BasicBlock *bb = &bit;
             if (bb->getSingleSuccessor())
                 continue;
             llvm::Instruction &inst = bb->back();
@@ -537,7 +527,7 @@ void analyzeCondition() {
         exit(1);
     }
 
-    for (auto info : condition_infos) {
+    for (auto info: condition_infos) {
         if (critical_bbs.count(info.first))
             outfile << condition_ids[info.first] << " " << critical_ids[info.first] << " " << info.second[0] << " "
                     << info.second[1] << " " << info.second[2] << " " << info.second[3] << " " << std::endl;
@@ -604,7 +594,7 @@ void instrumentCondition() {
             new GlobalVariable(*(LLVMModuleSet::getLLVMModuleSet()->getMainLLVMModule()), PointerType::get(Int8Ty, 0),
                                false, GlobalValue::ExternalLinkage, 0, "__cond_map_ptr");
 
-    for (auto info : condition_infos) {
+    for (auto info: condition_infos) {
         // if ((info.second[0] == "int32" || info.second[0] == "int64") && (info.second[2] == "var")) {
         if ((info.second[0].find("int") != std::string::npos) && (info.second[2] == "var")) {
             // instrument here
@@ -629,51 +619,56 @@ std::vector<NodeID> loadTargets(const std::string &filename) {
         std::cerr << "can't open target file!" << std::endl;
         exit(1);
     }
+
     std::cout << "loading targets..." << std::endl;
+
     std::vector<NodeID> result;
     std::vector<std::pair<std::string, u32_t>> targets;
+
     std::string line;
     while (getline(inFile, line)) {
         std::string func;
         uint32_t num;
-        std::string comma_string;
+        // std::string comma_string;
         std::istringstream text_stream(line);
         getline(text_stream, func, ':');
         text_stream >> num;
         targets.emplace_back(func, num);
     }
 
-    // itreate all basic block and located target NodeID
-    for (auto iter = svfModule->begin(), eiter = svfModule->end(); iter != eiter; ++iter) {
-        const SVFFunction *fun = *iter;
+    // Iterate over all basic blocks and located the target NodeIDs
+    for (auto fun: *svfModule) {
         Function *F = fun->getLLVMFun();
-        std::string file_name = "";
+        std::string file_name;
+
         if (llvm::DISubprogram *SP = F->getSubprogram()) {
             if (SP->describes(F))
                 file_name = (SP->getFilename()).str();
         }
+
         bool flag = false;
-        for (const auto &target : targets) {
+        for (const auto &target: targets) {
             auto idx = file_name.find(target.first);
             if (idx != string::npos) {
                 flag = true;
                 break;
             }
         }
+
         if (!flag)
             continue;
 
-        for (Function::iterator bit = fun->getLLVMFun()->begin(), ebit = fun->getLLVMFun()->end(); bit != ebit; ++bit) {
-            BasicBlock *bb = &(*bit);
+        for (auto &bit: *fun->getLLVMFun()) {
+            BasicBlock *bb = &bit;
             std::string tmp_string = getDebugInfo(bb);
-            for (BasicBlock::iterator it = bb->begin(), eit = bb->end(); it != eit; ++it) {
+            for (auto &it: *bb) {
                 uint32_t line_num = 0;
-                Instruction *inst = &(*it);
+                Instruction *inst = &it;
                 std::string str = SVFUtil::getSourceLoc(inst);
                 // if (str != "{  }" && str.find("ln: 0  cl: 0") == str.npos) {
 
                 if (SVFUtil::isa<AllocaInst>(inst)) {
-                    for (llvm::DbgInfoIntrinsic *DII : FindDbgAddrUses(const_cast<Instruction *>(inst))) {
+                    for (llvm::DbgInfoIntrinsic *DII: FindDbgAddrUses(const_cast<Instruction *>(inst))) {
                         if (auto *DDI = SVFUtil::dyn_cast<llvm::DbgDeclareInst>(DII)) {
                             auto *DIVar = SVFUtil::cast<llvm::DIVariable>(DDI->getVariable());
                             line_num = DIVar->getLine();
@@ -684,8 +679,8 @@ std::vector<NodeID> loadTargets(const std::string &filename) {
                     line_num = Loc->getLine();
                 }
 
-                // if the line number match the one in targets
-                for (const auto &target : targets) {
+                // If the line number matches that in targets then add to the result set
+                for (const auto &target: targets) {
                     auto idx = file_name.find(target.first);
                     if (idx != string::npos && (idx == 0 || file_name[idx - 1] == '/')) {
                         if (target.second == line_num) {

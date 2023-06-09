@@ -105,7 +105,7 @@ EXP_ST u64 mem_limit  = MEM_LIMIT;    /* Memory cap for child (MB)        */
 
 static u32 stats_update_freq = 1;     /* Stats update frequency (execs)   */
 
-static u8 cooling_schedule = 0;      /* Cooling schedule for directed fuzzing */
+static u8 cooling_schedule = 0;       /* Cooling schedule for directed fuzzing */
 enum {
   /* 00 */ SAN_EXP,                   /* Exponential schedule             */
   /* 01 */ SAN_LOG,                   /* Logarithmical schedule           */
@@ -310,7 +310,7 @@ struct extra_data {
 };
 
 static struct queue_entry*
-  top_conformance[MAP_SIZE];                /* Top entries for bitmap bytes     */
+  top_conformance[MAP_SIZE];          /* Top entries for bitmap bytes     */
 
 static struct extra_data* extras;     /* Extra tokens to fuzz with        */
 static u32 extras_cnt;                /* Total number of tokens read      */
@@ -318,9 +318,9 @@ static u32 extras_cnt;                /* Total number of tokens read      */
 static struct extra_data* a_extras;   /* Automatically selected extras    */
 static u32 a_extras_cnt;              /* Total number of tokens available */
 
-static double cur_distance = -1.0;     /* Distance of executed input       */
-static double max_distance = -1.0;     /* Maximal distance for any input   */
-static double min_distance = -1.0;     /* Minimal distance for any input   */
+static double cur_distance = -1.0;    /* Distance of executed input       */
+static double max_distance = -1.0;    /* Maximal distance for any input   */
+static double min_distance = -1.0;    /* Minimal distance for any input   */
 static u32 t_x = 10;                  /* Time to exploitation (Default: 10 min) */
 
 
@@ -351,8 +351,8 @@ static u32 distance_val[MAP_SIZE];
 EXP_ST u8* distance_bits;
 
 static u64* condition_bits; // record the value of condition variables
-static u8*  cond_bits; // record the status of conditions
-static u32 cond_num = 1; // the number of monitored conditions
+static u8* cond_bits;       // record the status of conditions
+static u32 cond_num = 1;    // the number of monitored conditions
 static u8 solved_cond[MAP_SIZE];
 static u8 condition_info[MAP_SIZE];
 static u32 critical_condition[MAP_SIZE];
@@ -6033,6 +6033,7 @@ EXP_ST u8 common_fuzz_stuff(char** argv, u8* out_buf, u32 len) {
   is_rare_target = 0;
   targets_all = 1;
   u8* tmp_targets = ck_alloc(targets_num);
+
   for (i=0; i<targets_num; i++) {
     u8 flag = *(trace_bits + MAP_SIZE + 16 + i);
     if (flag) {
