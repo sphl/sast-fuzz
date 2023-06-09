@@ -616,7 +616,7 @@ void instrumentCondition() {
     }
 }
 
-std::vector<NodeID> loadTargets(const std::string &filename) {
+std::vector<NodeID> loadTargets(const std::string &filename, char delimiter = ',') {
     ifstream inFile(filename);
     if (!inFile) {
         std::cerr << "can't open target file!" << std::endl;
@@ -630,12 +630,17 @@ std::vector<NodeID> loadTargets(const std::string &filename) {
 
     std::string line;
     while (getline(inFile, line)) {
-        std::string func;
+        std::string token, func;
         uint32_t num;
-        // std::string comma_string;
-        std::istringstream text_stream(line);
-        getline(text_stream, func, ':');
-        text_stream >> num;
+
+        std::istringstream iss(line);
+        getline(iss, token, delimiter);
+        // Skip first value (tool)
+        getline(iss, token, delimiter);
+        func = token;
+        getline(iss, token, delimiter);
+        num = stoi(token);
+
         targets.emplace_back(func, num);
     }
 
