@@ -60,7 +60,7 @@ std::string getDebugInfo(BasicBlock *bb) {
 void countCGDistance(const std::vector<NodeID> &ids) {
     FIFOWorkList<const FunEntryBlockNode *> worklist;
 
-    // calculate the function distance to each target.
+    // Calculate the function distance to each target.
     for (NodeID id: ids) {
         std::set<const FunEntryBlockNode *> visited;
 
@@ -123,6 +123,7 @@ bool isCircleEdge(llvm::LoopInfoBase<llvm::BasicBlock, llvm::Loop> *loop_info, B
 void countCFGDistance(const SVFFunction *svffun) {
     std::map<BasicBlock *, std::map<BasicBlock *, uint32_t>> dtb;
     std::set<BasicBlock *> target_bbs;
+
     for (auto &bit: *svffun->getLLVMFun()) {
         BasicBlock *bb = &bit;
         for (BasicBlock::iterator it = bb->begin(), eit = bb->end(); it != eit; ++it) {
@@ -130,7 +131,9 @@ void countCFGDistance(const SVFFunction *svffun) {
             if (auto *CB = dyn_cast<CallBase>(inst)) {
                 if (!CB->getCalledFunction())
                     continue;
+
                 const SVFFunction *svffunc_tmp = svfModule->getSVFFunction(CB->getCalledFunction());
+
                 if (dTf.count(svffunc_tmp) != 0) {
                     if (target_bbs.find(bb) != target_bbs.end()) {
                         if (dTb[bb] > 10 * dTf[svffunc_tmp])
@@ -303,19 +306,19 @@ void instrument() {
     GlobalVariable *AFLMapPtr = (GlobalVariable *) M->getOrInsertGlobal(
             "__afl_area_ptr", PointerType::get(IntegerType::getInt8Ty(*C), 0), []() -> GlobalVariable * {
                 return new GlobalVariable(*M, PointerType::get(IntegerType::getInt8Ty(M->getContext()), 0), false,
-                                          GlobalValue::ExternalLinkage, 0, "__afl_area_ptr");
+                                          GlobalValue::ExternalLinkage, nullptr, "__afl_area_ptr");
             });
 
     GlobalVariable *CBMapPtr = (GlobalVariable *) M->getOrInsertGlobal(
             "__critical_bb_ptr", PointerType::get(IntegerType::getInt8Ty(*C), 0), []() -> GlobalVariable * {
                 return new GlobalVariable(*M, PointerType::get(IntegerType::getInt8Ty(M->getContext()), 0), false,
-                                          GlobalValue::ExternalLinkage, 0, "__critical_bb_ptr");
+                                          GlobalValue::ExternalLinkage, nullptr, "__critical_bb_ptr");
             });
 
     GlobalVariable *DBMapPtr = (GlobalVariable *) M->getOrInsertGlobal(
             "__distance_bb_ptr", PointerType::get(IntegerType::getInt8Ty(*C), 0), []() -> GlobalVariable * {
                 return new GlobalVariable(*M, PointerType::get(IntegerType::getInt8Ty(M->getContext()), 0), false,
-                                          GlobalValue::ExternalLinkage, 0, "__distance_bb_ptr");
+                                          GlobalValue::ExternalLinkage, nullptr, "__distance_bb_ptr");
             });
 
     IntegerType *LargestType = Int64Ty;
@@ -414,6 +417,7 @@ void instrument() {
                 v_instrument_num++;
             }
         }
+
         if (flag) {
             outfile2 << func_id << " " << SVFUtil::getSourceLocOfFunction(svffun->getLLVMFun()) << std::endl;
             func_id++;
