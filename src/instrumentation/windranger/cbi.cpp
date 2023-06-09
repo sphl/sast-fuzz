@@ -628,20 +628,20 @@ std::vector<NodeID> loadTargets(const std::string &filename, char delimiter = ',
     std::vector<NodeID> result;
     std::vector<std::pair<std::string, u32_t>> targets;
 
-    std::string line;
-    while (getline(inFile, line)) {
+    std::string csvLine;
+    while (getline(inFile, csvLine)) {
         std::string token, func;
-        uint32_t num;
+        uint32_t line;
 
-        std::istringstream iss(line);
+        std::istringstream iss(csvLine);
         getline(iss, token, delimiter);
         // Skip first value (tool)
         getline(iss, token, delimiter);
         func = token;
         getline(iss, token, delimiter);
-        num = stoi(token);
+        line = stoi(token);
 
-        targets.emplace_back(func, num);
+        targets.emplace_back(func, line);
     }
 
     // Iterate over all basic blocks and located the target NodeIDs
