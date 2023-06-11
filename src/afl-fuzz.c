@@ -890,7 +890,7 @@ double calculate_cb_distance() {
 
     for (i = 0; i < MAP_SIZE; i++) {
         if (critical_bits[i] == 1) {
-            distance += distance_val[i] * DEFAULT_DIFFICULTY;
+            distance += (distance_val[i] * DEFAULT_DIFFICULTY);
             count++;
         } else if (critical_bits[i] == 2) {
             solved_cbbs[i] = 1;
@@ -3641,7 +3641,7 @@ static u8 calibrate_case(char **argv, struct queue_entry *q, u8 *use_mem, u32 ha
 
     stop_us = get_cur_time_us();
 
-    total_cal_us += stop_us - start_us;
+    total_cal_us += (stop_us - start_us);
     total_cal_cycles += stage_max;
 
     /* OK, let's collect some stats about the performance of this test case.
@@ -4177,7 +4177,7 @@ static u32 num_equal_bits(u64 l, u64 r) {
     u32 count = 0;
     u64 res = ~(l ^ r);
     while (res != 0) {
-        count += res & 1;
+        count += (res & 1);
         res >>= 1;
     }
     return count;
@@ -6254,6 +6254,8 @@ static u32 calculate_score(struct queue_entry *q) {
 
     perf_score *= factor;
 
+    // NOTE: At this point, we need to adjust the performance score so that particularly problematic BBs get more fuzzing time.
+
     /* Make sure that we don't go over limit. */
 
     if (perf_score > HAVOC_MAX_MULT * 100) {
@@ -6569,7 +6571,7 @@ void update_distance(struct queue_entry *q) {
         } else {
             u32 quo = (q->critical_difficulty[i] / DIFFICULTY_STEP) + 1;
             if (quo < DEFAULT_DIFFICULTY) {
-                distance += distance_val[q->critical_bbs[i + 1]] * quo;
+                distance += (distance_val[q->critical_bbs[i + 1]] * quo);
             } else {
                 distance += (distance_val[q->critical_bbs[i + 1]] * DEFAULT_DIFFICULTY);
             }
@@ -7221,7 +7223,7 @@ static u8 fuzz_one(char **argv) {
 
     new_hit_cnt = queued_paths + unique_crashes;
 
-    stage_finds[STAGE_FLIP1] += new_hit_cnt - orig_hit_cnt;
+    stage_finds[STAGE_FLIP1] += (new_hit_cnt - orig_hit_cnt);
     stage_cycles[STAGE_FLIP1] += stage_max;
 
     /* Two walking bits. */
@@ -7257,7 +7259,7 @@ static u8 fuzz_one(char **argv) {
 
     new_hit_cnt = queued_paths + unique_crashes;
 
-    stage_finds[STAGE_FLIP2] += new_hit_cnt - orig_hit_cnt;
+    stage_finds[STAGE_FLIP2] += (new_hit_cnt - orig_hit_cnt);
     stage_cycles[STAGE_FLIP2] += stage_max;
 
     /* Four walking bits. */
@@ -7298,7 +7300,7 @@ static u8 fuzz_one(char **argv) {
 
     new_hit_cnt = queued_paths + unique_crashes;
 
-    stage_finds[STAGE_FLIP4] += new_hit_cnt - orig_hit_cnt;
+    stage_finds[STAGE_FLIP4] += (new_hit_cnt - orig_hit_cnt);
     stage_cycles[STAGE_FLIP4] += stage_max;
 
     /* Effector map setup. These macros calculate:
@@ -7385,7 +7387,7 @@ static u8 fuzz_one(char **argv) {
 
     new_hit_cnt = queued_paths + unique_crashes;
 
-    stage_finds[STAGE_FLIP8] += new_hit_cnt - orig_hit_cnt;
+    stage_finds[STAGE_FLIP8] += (new_hit_cnt - orig_hit_cnt);
     stage_cycles[STAGE_FLIP8] += stage_max;
 
     /* Two walking bytes. */
@@ -7429,7 +7431,7 @@ static u8 fuzz_one(char **argv) {
 
     new_hit_cnt = queued_paths + unique_crashes;
 
-    stage_finds[STAGE_FLIP16] += new_hit_cnt - orig_hit_cnt;
+    stage_finds[STAGE_FLIP16] += (new_hit_cnt - orig_hit_cnt);
     stage_cycles[STAGE_FLIP16] += stage_max;
 
     if (len < 4) {
@@ -7473,7 +7475,7 @@ static u8 fuzz_one(char **argv) {
 
     new_hit_cnt = queued_paths + unique_crashes;
 
-    stage_finds[STAGE_FLIP32] += new_hit_cnt - orig_hit_cnt;
+    stage_finds[STAGE_FLIP32] += (new_hit_cnt - orig_hit_cnt);
     stage_cycles[STAGE_FLIP32] += stage_max;
 
 skip_bitflip:
@@ -7555,7 +7557,7 @@ skip_bitflip:
 
     new_hit_cnt = queued_paths + unique_crashes;
 
-    stage_finds[STAGE_ARITH8] += new_hit_cnt - orig_hit_cnt;
+    stage_finds[STAGE_ARITH8] += (new_hit_cnt - orig_hit_cnt);
     stage_cycles[STAGE_ARITH8] += stage_max;
 
     /* 16-bit arithmetics, both endians. */
@@ -7662,7 +7664,7 @@ skip_bitflip:
 
     new_hit_cnt = queued_paths + unique_crashes;
 
-    stage_finds[STAGE_ARITH16] += new_hit_cnt - orig_hit_cnt;
+    stage_finds[STAGE_ARITH16] += (new_hit_cnt - orig_hit_cnt);
     stage_cycles[STAGE_ARITH16] += stage_max;
 
     /* 32-bit arithmetics, both endians. */
@@ -7768,7 +7770,7 @@ skip_bitflip:
 
     new_hit_cnt = queued_paths + unique_crashes;
 
-    stage_finds[STAGE_ARITH32] += new_hit_cnt - orig_hit_cnt;
+    stage_finds[STAGE_ARITH32] += (new_hit_cnt - orig_hit_cnt);
     stage_cycles[STAGE_ARITH32] += stage_max;
 
 skip_arith:
@@ -7828,7 +7830,7 @@ skip_arith:
 
     new_hit_cnt = queued_paths + unique_crashes;
 
-    stage_finds[STAGE_INTEREST8] += new_hit_cnt - orig_hit_cnt;
+    stage_finds[STAGE_INTEREST8] += (new_hit_cnt - orig_hit_cnt);
     stage_cycles[STAGE_INTEREST8] += stage_max;
 
     /* Setting 16-bit integers, both endians. */
@@ -7905,7 +7907,7 @@ skip_arith:
 
     new_hit_cnt = queued_paths + unique_crashes;
 
-    stage_finds[STAGE_INTEREST16] += new_hit_cnt - orig_hit_cnt;
+    stage_finds[STAGE_INTEREST16] += (new_hit_cnt - orig_hit_cnt);
     stage_cycles[STAGE_INTEREST16] += stage_max;
 
     if (len < 4) {
@@ -7983,7 +7985,7 @@ skip_arith:
 
     new_hit_cnt = queued_paths + unique_crashes;
 
-    stage_finds[STAGE_INTEREST32] += new_hit_cnt - orig_hit_cnt;
+    stage_finds[STAGE_INTEREST32] += (new_hit_cnt - orig_hit_cnt);
     stage_cycles[STAGE_INTEREST32] += stage_max;
 
 skip_interest:
@@ -8059,7 +8061,7 @@ skip_interest:
 
     new_hit_cnt = queued_paths + unique_crashes;
 
-    stage_finds[STAGE_EXTRAS_UO] += new_hit_cnt - orig_hit_cnt;
+    stage_finds[STAGE_EXTRAS_UO] += (new_hit_cnt - orig_hit_cnt);
     stage_cycles[STAGE_EXTRAS_UO] += stage_max;
 
     /* Insertion of user-supplied extras. */
@@ -8110,7 +8112,7 @@ skip_interest:
 
     new_hit_cnt = queued_paths + unique_crashes;
 
-    stage_finds[STAGE_EXTRAS_UI] += new_hit_cnt - orig_hit_cnt;
+    stage_finds[STAGE_EXTRAS_UI] += (new_hit_cnt - orig_hit_cnt);
     stage_cycles[STAGE_EXTRAS_UI] += stage_max;
 
 skip_user_extras:
@@ -8171,7 +8173,7 @@ skip_user_extras:
 
     new_hit_cnt = queued_paths + unique_crashes;
 
-    stage_finds[STAGE_EXTRAS_AO] += new_hit_cnt - orig_hit_cnt;
+    stage_finds[STAGE_EXTRAS_AO] += (new_hit_cnt - orig_hit_cnt);
     stage_cycles[STAGE_EXTRAS_AO] += stage_max;
 
 skip_extras:
@@ -8309,7 +8311,7 @@ havoc_stage:
                 if ((posn = get_random_modifiable_posn(8, 1, temp_len, cb_mask, position_map)) == 0xffffffff) {
                     posn = UR(temp_len);
                 }
-                out_buf[posn] += 1 + UR(ARITH_MAX);
+                out_buf[posn] += (1 + UR(ARITH_MAX));
                 break;
 
             case 6:
@@ -8352,7 +8354,7 @@ havoc_stage:
                 if (UR(2)) {
                     // u32 pos = UR(temp_len - 1);
 
-                    *(u16 *)(out_buf + posn) += 1 + UR(ARITH_MAX);
+                    *(u16 *)(out_buf + posn) += (1 + UR(ARITH_MAX));
 
                 } else {
                     // u32 pos = UR(temp_len - 1);
@@ -8404,7 +8406,7 @@ havoc_stage:
                 if (UR(2)) {
                     // u32 pos = UR(temp_len - 3);
 
-                    *(u32 *)(out_buf + posn) += 1 + UR(ARITH_MAX);
+                    *(u32 *)(out_buf + posn) += (1 + UR(ARITH_MAX));
 
                 } else {
                     // u32 pos = UR(temp_len - 3);
@@ -8700,10 +8702,10 @@ havoc_stage:
     new_hit_cnt = queued_paths + unique_crashes;
 
     if (!splice_cycle) {
-        stage_finds[STAGE_HAVOC] += new_hit_cnt - orig_hit_cnt;
+        stage_finds[STAGE_HAVOC] += (new_hit_cnt - orig_hit_cnt);
         stage_cycles[STAGE_HAVOC] += stage_max;
     } else {
-        stage_finds[STAGE_SPLICE] += new_hit_cnt - orig_hit_cnt;
+        stage_finds[STAGE_SPLICE] += (new_hit_cnt - orig_hit_cnt);
         stage_cycles[STAGE_SPLICE] += stage_max;
     }
 
@@ -10107,7 +10109,7 @@ static void save_cmdline(u32 argc, char **argv) {
     u8 *buf;
 
     for (i = 0; i < argc; i++) {
-        len += strlen(argv[i]) + 1;
+        len += (strlen(argv[i]) + 1);
     }
 
     buf = orig_cmdline = ck_alloc(len);
@@ -10166,6 +10168,7 @@ void readDistanceAndTargets() {
         }
     }
 
+    // NOTE: First index contains the number of critical BBs identified
     critical_ids[0] = count;
 
     // critical_count = ck_alloc(sizeof(u32)*count);
