@@ -31,3 +31,4 @@ SortUsingDeclarations: true
 SpacesBeforeTrailingComments: 2
 Standard: Auto
 UseTab: Never
+InsertBraces: true

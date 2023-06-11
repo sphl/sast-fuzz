@@ -50,8 +50,9 @@ std::string getDebugInfo(BasicBlock *bb) {
     for (BasicBlock::iterator it = bb->begin(), eit = bb->end(); it != eit; ++it) {
         Instruction *inst = &(*it);
         std::string str = SVFUtil::getSourceLoc(inst);
-        if (str != "{  }" && str.find("ln: 0  cl: 0") == str.npos)
+        if (str != "{  }" && str.find("ln: 0  cl: 0") == str.npos) {
             return str;
+        }
     }
     return "{ }";
 }
@@ -95,17 +96,19 @@ void countCGDistance(const std::vector<NodeID> &ids) {
 
         for (auto df : dtf) {
             if (df.count(svffun) != 0) {
-                if (df[svffun] != 0)
+                if (df[svffun] != 0) {
                     df_tmp += (double)1 / df[svffun];
+                }
                 flag = true;
             }
         }
 
         if (flag) {
-            if (df_tmp != 0)
+            if (df_tmp != 0) {
                 dTf[svffun] = (double)1 / df_tmp;
-            else
+            } else {
                 dTf[svffun] = 0;
+            }
         }
     }
 }
@@ -128,15 +131,17 @@ void countCFGDistance(const SVFFunction *svffun) {
         for (BasicBlock::iterator it = bb->begin(), eit = bb->end(); it != eit; ++it) {
             Instruction *inst = &(*it);
             if (auto *CB = dyn_cast<CallBase>(inst)) {
-                if (!CB->getCalledFunction())
+                if (!CB->getCalledFunction()) {
                     continue;
+                }
 
                 const SVFFunction *svffunc_tmp = svfModule->getSVFFunction(CB->getCalledFunction());
 
                 if (dTf.count(svffunc_tmp) != 0) {
                     if (target_bbs.find(bb) != target_bbs.end()) {
-                        if (dTb[bb] > 10 * dTf[svffunc_tmp])
+                        if (dTb[bb] > 10 * dTf[svffunc_tmp]) {
                             dTb[bb] = 10 * dTf[svffunc_tmp];
+                        }
                     } else {
                         target_bbs.insert(bb);
                         dTb[bb] = 10 * dTf[svffunc_tmp];
@@ -205,8 +210,9 @@ void countCFGDistance(const SVFFunction *svffun) {
     for (auto &bit : *svffun->getLLVMFun()) {
         BasicBlock *bb = &bit;
 
-        if (target_bbs.find(bb) != target_bbs.end())
+        if (target_bbs.find(bb) != target_bbs.end()) {
             continue;
+        }
 
         double db_tmp = 0;
         bool flag = false;
@@ -314,6 +320,7 @@ void instrument() {
                                           GlobalValue::ExternalLinkage, nullptr, "__critical_bb_ptr");
             });
 
+    // TODO: Check if this variable is needed?
     GlobalVariable *DBMapPtr = (GlobalVariable *)M->getOrInsertGlobal(
             "__distance_bb_ptr", PointerType::get(IntegerType::getInt8Ty(*C), 0), []() -> GlobalVariable * {
                 return new GlobalVariable(*M, PointerType::get(IntegerType::getInt8Ty(M->getContext()), 0), false,
@@ -379,6 +386,8 @@ void instrument() {
                         LoadInst *CBPtr = IRB2.CreateLoad(CBMapPtr);
                         CBPtr->setMetadata(M->getMDKindID("nosanitize"), MDNode::get(*C, None));
 
+                        // If a critical BB was executed, the (coverage) flag is set to 1 (even if the BB was exercised
+                        // multiple times), otherwise the flag is 0.
                         ConstantInt *CBIdx = ConstantInt::get(Int32Ty, bb_id);
                         ConstantInt *CBOne = ConstantInt::get(Int8Ty, 1);
                         Value *CBIdxPtr = IRB2.CreateGEP(CBPtr, CBIdx);
@@ -406,12 +415,15 @@ void instrument() {
                 }
 
                 outfile << bb_id << " " << distance << " ";
-                if (critical_bbs.count(bb))
+                if (critical_bbs.count(bb)) {
                     outfile << 1 << " ";
-                else
+                } else {
                     outfile << 0 << " ";
+                }
                 outfile << getDebugInfo(bb) << std::endl;
+
                 bb_id++;
+
                 flag = true;
                 v_instrument_num++;
             }
@@ -434,8 +446,9 @@ void analyzeCondition() {
     for (auto svffun : *svfModule) {
         for (auto &bit : *svffun->getLLVMFun()) {
             BasicBlock *bb = &bit;
-            if (bb->getSingleSuccessor())
+            if (bb->getSingleSuccessor()) {
                 continue;
+            }
             llvm::Instruction &inst = bb->back();
             if (auto *br = dyn_cast<BranchInst>(&inst)) {
                 Value *br_v = br->getOperand(0);
@@ -455,8 +468,9 @@ void analyzeCondition() {
                         op1_ty = "";
                         op1_ty += "int";
                         op1_ty += std::to_string(int_ty->getBitWidth());
-                        if (int_ty->getBitWidth() >= 32)
+                        if (int_ty->getBitWidth() >= 32) {
                             need_record = true;
+                        }
                     }
 
                     if (op2->getType()->isIntegerTy()) {
@@ -497,8 +511,9 @@ void analyzeCondition() {
                                                 op2_val = str_val->getAsString().str();
                                                 op1 = arg1;
                                                 op2 = arg2;
-                                                if (op2_val.length() <= 8)
+                                                if (op2_val.length() <= 8) {
                                                     need_record = true;
+                                                }
                                             }
                                         }
                                     }
@@ -531,12 +546,13 @@ void analyzeCondition() {
     }
 
     for (auto info : condition_infos) {
-        if (critical_bbs.count(info.first))
+        if (critical_bbs.count(info.first)) {
             outfile << condition_ids[info.first] << " " << critical_ids[info.first] << " " << info.second[0] << " "
                     << info.second[1] << " " << info.second[2] << " " << info.second[3] << " " << std::endl;
-        else
+        } else {
             outfile << condition_ids[info.first] << " none " << info.second[0] << " " << info.second[1] << " "
                     << info.second[2] << " " << info.second[3] << " " << std::endl;
+        }
     }
 
     outfile.close();
@@ -545,8 +561,9 @@ void analyzeCondition() {
 void instrumentBB(llvm::BasicBlock *bb, llvm::Value *var, uint8_t idx) {
     // llvm::Instruction* I = &(bb->back());
     auto *term_inst = dyn_cast<Instruction>(bb->getTerminator());
-    if (term_inst == nullptr)
+    if (term_inst == nullptr) {
         return;
+    }
     llvm::IRBuilder<> IRB(term_inst);
     auto *branch = dyn_cast<BranchInst>(term_inst);
     Value *branch_val = IRB.CreateZExt(branch->getCondition(), IRB.getInt8Ty());
@@ -566,8 +583,9 @@ void instrumentBB(llvm::BasicBlock *bb, llvm::Value *var, uint8_t idx) {
 void instrumentString(llvm::BasicBlock *bb, llvm::Value *var) {
     // llvm::Instruction* I = &(bb->back());
     auto *term_inst = dyn_cast<Instruction>(bb->getTerminator());
-    if (term_inst == nullptr)
+    if (term_inst == nullptr) {
         return;
+    }
     llvm::IRBuilder<> IRB(term_inst);
     auto *branch = dyn_cast<BranchInst>(term_inst);
     Value *branch_val = IRB.CreateZExt(branch->getCondition(), IRB.getInt8Ty());
@@ -650,8 +668,9 @@ std::vector<NodeID> loadTargets(const std::string &filename, char delimiter = ',
         std::string file_name;
 
         if (llvm::DISubprogram *SP = F->getSubprogram()) {
-            if (SP->describes(F))
+            if (SP->describes(F)) {
                 file_name = (SP->getFilename()).str();
+            }
         }
 
         bool flag = false;
@@ -663,8 +682,9 @@ std::vector<NodeID> loadTargets(const std::string &filename, char delimiter = ',
             }
         }
 
-        if (!flag)
+        if (!flag) {
             continue;
+        }
 
         for (auto &bit : *fun->getLLVMFun()) {
             BasicBlock *bb = &bit;
