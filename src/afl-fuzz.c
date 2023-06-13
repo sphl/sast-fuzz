@@ -104,7 +104,7 @@ static u32 stats_update_freq = 1;         /* Stats update frequency (execs)   */
 static u8 cooling_schedule = 0;           /* Cooling schedule for directed fuzzing */
 enum {
     /* 00 */ SAN_EXP,                     /* Exponential schedule             */
-    /* 01 */ SAN_LOG,                     /* Logarithmical schedule           */
+    /* 01 */ SAN_LOG,                     /* Logarithmic schedule             */
     /* 02 */ SAN_LIN,                     /* Linear schedule                  */
     /* 03 */ SAN_QUAD                     /* Quadratic schedule               */
 };
@@ -778,7 +778,7 @@ static u8 *DTD(u64 cur_ms, u64 event_ms) {
 
     delta = cur_ms - event_ms;
 
-    t_d = delta / 1000 / 60 / 60 / 24;
+    t_d = (delta / 1000 / 60 / 60 / 24);
     t_h = (delta / 1000 / 60 / 60) % 24;
     t_m = (delta / 1000 / 60) % 60;
     t_s = (delta / 1000) % 60;
@@ -853,7 +853,6 @@ static void mark_as_redundant(struct queue_entry *q, u8 state) {
             PFATAL("Unable to create '%s'", fn);
         }
         close(fd);
-
     } else {
         if (unlink(fn)) {
             PFATAL("Unable to remove '%s'", fn);
@@ -1042,7 +1041,6 @@ static void add_to_queue(u8 *fname, u32 len, u8 passed_det) {
     if (queue_top) {
         queue_top->next = q;
         queue_top = q;
-
     } else {
         q_prev100 = queue = queue_top = q;
     }
@@ -5960,7 +5958,6 @@ EXP_ST u8 common_fuzz_stuff(char **argv, u8 *out_buf, u32 len) {
             cur_skipped_paths++;
             return 1;
         }
-
     } else {
         subseq_tmouts = 0;
     }
@@ -6231,7 +6228,6 @@ static u32 calculate_score(struct queue_entry *q) {
                 if (normalized_d >= 0) {
                     double p = (1.0 - normalized_d) * (1.0 - T) + 0.5 * T;
                     power_factor = pow(2.0, 2.0 * (double)log2(MAX_FACTOR) * (p - 0.5));
-
                 }  // else WARNF ("Normalized distance negative: %f", normalized_d);
             }
         }
@@ -6254,7 +6250,8 @@ static u32 calculate_score(struct queue_entry *q) {
 
     perf_score *= factor;
 
-    // NOTE: At this point, we need to adjust the performance score so that particularly problematic BBs get more fuzzing time.
+    // NOTE: At this point, we need to adjust the performance score so that particularly problematic BBs get more
+    // fuzzing time.
 
     /* Make sure that we don't go over limit. */
 
@@ -6504,17 +6501,17 @@ u8 hit_critical(struct queue_entry *q) {
     return flag;
 }
 
-static bool has_byte(u64 value, u8 byte) {
-    u8 *tmp = (u8 *)(&value);
-    u32 i;
-    for (i = 0; i < 6; i++) {
-        if (*tmp == byte) {
-            return true;
-        }
-        tmp = tmp + 1;
-    }
-    return false;
-}
+// static bool has_byte(u64 value, u8 byte) {
+//     u8 *tmp = (u8 *)(&value);
+//     u32 i;
+//     for (i = 0; i < 6; i++) {
+//         if (*tmp == byte) {
+//             return true;
+//         }
+//         tmp = tmp + 1;
+//     }
+//     return false;
+// }
 
 static inline u8 *alloc_cb_mask(u32 size) {
     u8 *mem;
@@ -6570,6 +6567,7 @@ void update_distance(struct queue_entry *q) {
             distance += (distance_val[q->critical_bbs[i + 1]] * DEFAULT_DIFFICULTY);
         } else {
             u32 quo = (q->critical_difficulty[i] / DIFFICULTY_STEP) + 1;
+
             if (quo < DEFAULT_DIFFICULTY) {
                 distance += (distance_val[q->critical_bbs[i + 1]] * quo);
             } else {
@@ -6587,6 +6585,7 @@ bool sniff_mask(char **argv, struct queue_entry *q, u8 *in_buf, u8 **cb_mask_ptr
     u8 *cb_mask;
     u8 *conformance_mask;
     u8 hit_flag = 0;
+
     if (!need_sniff(q)) {
         if (!explore_status) {
             cb_mask = alloc_cb_mask(len + 1);
@@ -6600,6 +6599,7 @@ bool sniff_mask(char **argv, struct queue_entry *q, u8 *in_buf, u8 **cb_mask_ptr
         DEBUG("Skip sniff\n");
         return false;
     }
+
     DEBUG("Do sniff\n");
     DEBUG("Sniff length: %d\n", len);
 
@@ -6954,7 +6954,6 @@ static u8 fuzz_one(char **argv) {
             if (UR(100) < SKIP_NFAV_NEW_PROB) {
                 return 1;
             }
-
         } else {
             if (UR(100) < SKIP_NFAV_OLD_PROB) {
                 return 1;
@@ -7622,8 +7621,8 @@ skip_bitflip:
                 if (common_fuzz_stuff(argv, out_buf, len)) {
                     goto abandon_entry;
                 }
-                stage_cur++;
 
+                stage_cur++;
             } else {
                 stage_max--;
             }
@@ -10750,6 +10749,7 @@ int main(int argc, char **argv) {
         }
     }
 
+    // Main fuzzing routine ...
     while (1) {
         u8 skipped_fuzz;
 
@@ -10806,7 +10806,6 @@ int main(int argc, char **argv) {
                 } else {
                     use_splicing = 1;
                 }
-
             } else {
                 cycles_wo_finds = 0;
             }
@@ -10858,6 +10857,7 @@ int main(int argc, char **argv) {
             kill(forksrv_pid2, SIGKILL);
         }
     }
+
     /* Now that we've killed the forkserver, we wait for it to be able to get rusage stats. */
     if (waitpid(forksrv_pid, NULL, 0) <= 0 || waitpid(forksrv_pid2, NULL, 0) <= 0) {
         WARNF("error waitpid\n");
