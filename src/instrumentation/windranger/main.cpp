@@ -1,6 +1,6 @@
-/*
-    Instrument critical BBs
-*/
+/**
+ * Instrument critical BBs
+ */
 
 #include "SVF-FE/LLVMUtil.h"
 #include "SVF-FE/PAGBuilder.h"
@@ -197,10 +197,13 @@ void countCFGDistance(const SVFFunction *svffun) {
     for (BasicBlock *bb : target_bbs) {
         FIFOWorkList<BasicBlock *> worklist;
         std::set<BasicBlock *> visited;
+
         worklist.push(bb);
+
         while (!worklist.empty()) {
             BasicBlock *vbb = worklist.pop();
             tmp_taint_bbs.insert(vbb);
+
             for (BasicBlock *srcbb : predecessors(vbb)) {
                 if (visited.find(srcbb) == visited.end() && !isCircleEdge(LoopInfo, srcbb, vbb)) {
                     worklist.push(srcbb);
@@ -215,9 +218,12 @@ void countCFGDistance(const SVFFunction *svffun) {
     for (BasicBlock *bb : target_bbs) {
         std::map<BasicBlock *, uint32_t> db;
         db[bb] = 0;
+
         FIFOWorkList<BasicBlock *> worklist;
         std::set<BasicBlock *> visited;
+
         worklist.push(bb);
+
         while (!worklist.empty()) {
             BasicBlock *vbb = worklist.pop();
             for (BasicBlock *srcbb : predecessors(vbb)) {
@@ -227,6 +233,7 @@ void countCFGDistance(const SVFFunction *svffun) {
                 }
             }
         }
+
         dtb[bb] = db;
     }
 
@@ -793,6 +800,7 @@ int main(int argc, char **argv) {
     C = &(LLVMModuleSet::getLLVMModuleSet()->getContext());
 
     std::vector<NodeID> target_ids = loadTargets(TargetsFile);
+
     std::cout << "caculate vanilla distance..." << std::endl;
     countVanillaDistance(target_ids);
     std::cout << "identiy critical bb..." << std::endl;
