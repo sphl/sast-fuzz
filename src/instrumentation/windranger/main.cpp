@@ -46,6 +46,12 @@ GlobalVariable *cvar_map_ptr;
 GlobalVariable *cond_map_ptr;
 uint32_t cond_instrument_num = 0;
 
+/**
+ * Retrieves the debug information (source location) associated with a given basic block.
+ *
+ * @param bb The basic block to retrieve the debug information from.
+ * @return The debug information (source location) as a string.
+ */
 std::string getDebugInfo(BasicBlock *bb) {
     for (BasicBlock::iterator it = bb->begin(), eit = bb->end(); it != eit; ++it) {
         Instruction *inst = &(*it);
@@ -57,6 +63,11 @@ std::string getDebugInfo(BasicBlock *bb) {
     return "{ }";
 }
 
+/**
+ * Counts the control-flow graph distance between the specified target nodes and their respective functions.
+ *
+ * @param ids A vector of target node IDs.
+ */
 void countCGDistance(const std::vector<NodeID> &ids) {
     FIFOWorkList<const FunEntryBlockNode *> worklist;
 
@@ -113,6 +124,14 @@ void countCGDistance(const std::vector<NodeID> &ids) {
     }
 }
 
+/**
+ * Checks if there is a control-flow edge forming a loop between two basic blocks.
+ *
+ * @param loop_info Pointer to the LoopInfoBase object.
+ * @param src The source basic block.
+ * @param dst The destination basic block.
+ * @return True if there is a loop edge, false otherwise.
+ */
 bool isCircleEdge(llvm::LoopInfoBase<llvm::BasicBlock, llvm::Loop> *loop_info, BasicBlock *src, BasicBlock *dst) {
     if (loop_info->getLoopFor(src) == loop_info->getLoopFor(dst)) {
         if (!(loop_info->isLoopHeader(src)) && loop_info->isLoopHeader(dst)) {
@@ -122,6 +141,11 @@ bool isCircleEdge(llvm::LoopInfoBase<llvm::BasicBlock, llvm::Loop> *loop_info, B
     return false;
 }
 
+/**
+ * Counts the control-flow graph distance between basic blocks within a function.
+ *
+ * @param svffun A SVFFunction pointer representing the function.
+ */
 void countCFGDistance(const SVFFunction *svffun) {
     std::map<BasicBlock *, std::map<BasicBlock *, uint32_t>> dtb;
     std::set<BasicBlock *> target_bbs;
@@ -229,8 +253,10 @@ void countCFGDistance(const SVFFunction *svffun) {
     }
 }
 
-/*!
- * An example to query/collect all successor nodes from a ICFGNode (iNode) along control-flow graph (ICFG)
+/**
+ * Counts the vanilla distance (control-flow graph and call graph distance) between target nodes.
+ *
+ * @param target_ids A vector of target node IDs.
  */
 void countVanillaDistance(const std::vector<NodeID> &target_ids) {
     FIFOWorkList<const ICFGNode *> worklist;
@@ -252,6 +278,9 @@ void countVanillaDistance(const std::vector<NodeID> &target_ids) {
     // }
 }
 
+/**
+ * Identifies the critical basic blocks in the program based on control-flow and taint analysis.
+ */
 void identifyCriticalBB() {
     for (auto svffun : *svfModule) {
         for (Function::iterator bit = svffun->getLLVMFun()->begin(), ebit = svffun->getLLVMFun()->end(); bit != ebit;
@@ -294,6 +323,9 @@ void identifyCriticalBB() {
     }
 }
 
+/**
+ * Instruments the program by adding the necessary code to collect distance information.
+ */
 void instrument() {
     ofstream outfile("distance.txt", std::ios::out);
     ofstream outfile2("functions.txt", std::ios::out);
@@ -440,6 +472,9 @@ void instrument() {
     outfile3.close();
 }
 
+/**
+ * Analyzes the if-conditions in the given SVF module.
+ */
 void analyzeCondition() {
     u32_t condition_id = 1;
 
@@ -558,6 +593,13 @@ void analyzeCondition() {
     outfile.close();
 }
 
+/**
+ * Instruments the basic block with the given variable and index.
+ *
+ * @param bb The basic block to instrument.
+ * @param var The variable to instrument.
+ * @param idx The index of the instrumented condition.
+ */
 void instrumentBB(llvm::BasicBlock *bb, llvm::Value *var, uint8_t idx) {
     // llvm::Instruction* I = &(bb->back());
     auto *term_inst = dyn_cast<Instruction>(bb->getTerminator());
@@ -580,6 +622,12 @@ void instrumentBB(llvm::BasicBlock *bb, llvm::Value *var, uint8_t idx) {
     cond_instrument_num++;
 }
 
+/**
+ * Instruments the basic block with the given string variable.
+ *
+ * @param bb The basic block to instrument.
+ * @param var The string variable to instrument.
+ */
 void instrumentString(llvm::BasicBlock *bb, llvm::Value *var) {
     // llvm::Instruction* I = &(bb->back());
     auto *term_inst = dyn_cast<Instruction>(bb->getTerminator());
@@ -605,6 +653,9 @@ void instrumentString(llvm::BasicBlock *bb, llvm::Value *var) {
     cond_instrument_num++;
 }
 
+/**
+ * Instruments the conditions based on the analyzed information.
+ */
 void instrumentCondition() {
     IntegerType *Int64Ty = IntegerType::getInt64Ty(*C);
     IntegerType *Int8Ty = IntegerType::getInt8Ty(*C);
@@ -634,6 +685,13 @@ void instrumentCondition() {
     }
 }
 
+/**
+ * Loads the target NodeIDs from the given file.
+ *
+ * @param filename The name of the file containing the targets.
+ * @param delimiter The delimiter used in the file (default: ',').
+ * @return A vector of loaded target NodeIDs.
+ */
 std::vector<NodeID> loadTargets(const std::string &filename, char delimiter = ',') {
     ifstream inFile(filename);
     if (!inFile) {
