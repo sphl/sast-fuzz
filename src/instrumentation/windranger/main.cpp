@@ -49,9 +49,10 @@ class TargetInfo {
     unsigned int line_num;
     double score;
 
-    TargetInfo(string filename, unsigned int line_num, double score) : filename(filename), line_num(line_num), score(score) {}
+    TargetInfo(string filename, unsigned int line_num, double score)
+        : filename(filename), line_num(line_num), score(score) {}
 
-    static TargetInfo fromLine(const string& line, char delimiter = ',') {
+    static TargetInfo fromLine(const string &line, char delimiter = ',') {
         istringstream iss(line);
 
         string token;
@@ -78,7 +79,7 @@ class TargetInfo {
  * @return The debug information (source location) as a string.
  */
 std::string getDebugInfo(BasicBlock *bb) {
-    for (auto & it : *bb) {
+    for (auto &it : *bb) {
         std::string str = SVFUtil::getSourceLoc(&it);
         if (str != "{  }" && str.find("ln: 0  cl: 0") == std::string::npos) {
             return str;
@@ -109,15 +110,16 @@ bool isCircleEdge(llvm::LoopInfoBase<llvm::BasicBlock, llvm::Loop> *loop_info, B
  *
  * @param ids A vector of target node IDs.
  */
-void countCGDistance(const std::vector<NodeID> &ids) {
+void countCGDistance(const std::vector<std::pair<NodeID, TargetInfo>> &targets) {
     FIFOWorkList<const FunEntryBlockNode *> worklist;
     std::vector<std::map<const SVFFunction *, uint32_t>> dtf;
 
     // Calculate the function distance to each target.
-    for (NodeID id : ids) {
+    for (const auto &target : targets) {
+        NodeID targetId = target.first;
         std::set<const FunEntryBlockNode *> visited;
 
-        ICFGNode *iNode = icfg->getICFGNode(id);
+        ICFGNode *iNode = icfg->getICFGNode(targetId);
         FunEntryBlockNode *fNode = icfg->getFunEntryBlockNode(iNode->getFun());
         worklist.push(fNode);
 
@@ -290,16 +292,16 @@ void countCFGDistance(const SVFFunction *svffun) {
  *
  * @param target_ids A vector of target node IDs.
  */
-void countVanillaDistance(const std::vector<NodeID> &target_ids) {
+void countVanillaDistance(const std::vector<std::pair<NodeID, TargetInfo>> &targets) {
     FIFOWorkList<const ICFGNode *> worklist;
     std::set<const ICFGNode *> visited;
 
-    for (NodeID id : target_ids) {
-        ICFGNode *iNode = icfg->getICFGNode(id);
+    for (const auto &target : targets) {
+        ICFGNode *iNode = icfg->getICFGNode(target.first);
         targets_llvm_bb.insert(iNode->getBB());
     }
 
-    countCGDistance(target_ids);
+    countCGDistance(targets);
 
     for (auto svffun : *svfModule) {
         countCFGDistance(svffun);
@@ -717,10 +719,9 @@ void instrumentCondition() {
  * Loads the target NodeIDs from the given file.
  *
  * @param filename The name of the file containing the targets.
- * @param delimiter The delimiter used in the file (default: ',').
  * @return A vector of loaded target NodeIDs.
  */
-std::vector<NodeID> loadTargets(const std::string &filename, char delimiter = ',') {
+std::vector<std::pair<NodeID, TargetInfo>> loadTargets(const std::string &filename) {
     ifstream inFile(filename);
     if (!inFile) {
         std::cerr << "can't open target file!" << std::endl;
@@ -729,7 +730,7 @@ std::vector<NodeID> loadTargets(const std::string &filename, char delimiter = ',
 
     std::cout << "loading targets..." << std::endl;
 
-    std::vector<NodeID> result;
+    std::vector<std::pair<NodeID, TargetInfo>> result;
     std::vector<TargetInfo> targets;
 
     std::string csvLine;
@@ -787,7 +788,7 @@ std::vector<NodeID> loadTargets(const std::string &filename, char delimiter = ',
                     auto idx = file_name.find(target.filename);
                     if (idx != string::npos && (idx == 0 || file_name[idx - 1] == '/')) {
                         if (target.line_num == line_num) {
-                            result.push_back(icfg->getBlockICFGNode(inst)->getId());
+                            result.emplace_back(icfg->getBlockICFGNode(inst)->getId(), target);
                         }
                     }
                 }
@@ -795,6 +796,7 @@ std::vector<NodeID> loadTargets(const std::string &filename, char delimiter = ',
         }
     }
     inFile.close();
+
     return result;
 }
 
@@ -814,10 +816,10 @@ int main(int argc, char **argv) {
     M = LLVMModuleSet::getLLVMModuleSet()->getMainLLVMModule();
     C = &(LLVMModuleSet::getLLVMModuleSet()->getContext());
 
-    std::vector<NodeID> target_ids = loadTargets(TargetsFile);
+    auto targets = loadTargets(TargetsFile);
 
     std::cout << "caculate vanilla distance..." << std::endl;
-    countVanillaDistance(target_ids);
+    countVanillaDistance(targets);
     std::cout << "identiy critical bb..." << std::endl;
     identifyCriticalBB();
     std::cout << "instrument distance..." << std::endl;
