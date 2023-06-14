@@ -23,28 +23,32 @@ static llvm::cl::opt<std::string> InputFilename(cl::Positional, llvm::cl::desc("
 
 static llvm::cl::opt<std::string> TargetsFile("targets", llvm::cl::desc("specify targes file"), llvm::cl::Required);
 
-std::map<const SVFFunction *, double> dTf;
-std::vector<std::map<const SVFFunction *, uint32_t>> dtf;
-std::map<BasicBlock *, double> dTb;
-std::set<const BasicBlock *> targets_llvm_bb;
-std::map<BasicBlock *, std::set<BasicBlock *>> critical_bbs;
-std::map<BasicBlock *, std::set<BasicBlock *>> solved_bbs;
-std::map<Function *, std::set<BasicBlock *>> taint_bbs;
-std::map<Function *, std::set<BasicBlock *>> func_targets;
-SVFModule *svfModule;
-ICFG *icfg;
-Module *M;
-LLVMContext *C;
+// clang-format off
+SVFModule *svfModule; /**< An instance of the current SVF module.   */
+ICFG *icfg;           /**< An instance of the current inter-procedural control-flow graph (iCFG). */
+Module *M;            /**< An instance of the current LLVM module.  */
+LLVMContext *C;       /**< An instance of the current LLVM context. */
+
+std::map<const SVFFunction *, double> dTf;    /**< A map storing the function distance to each target.        */
+std::vector<std::map<const SVFFunction *, uint32_t>> dtf; /**< A vector of maps storing the function distance to each target for each node. */
+std::map<BasicBlock *, double> dTb;           /**< A map storing the basic block distance to each target.     */
+std::set<const BasicBlock *> targets_llvm_bb; /**< A set of LLVM basic blocks representing the target blocks. */
+std::map<BasicBlock *, std::set<BasicBlock *>> critical_bbs; /**< A map storing the critical blocks for each basic block. */
+std::map<BasicBlock *, std::set<BasicBlock *>> solved_bbs;   /**< A map storing the solved blocks for each basic block.   */
+std::map<Function *, std::set<BasicBlock *>> taint_bbs;      /**< A map storing the tainted blocks for each function.     */
+std::map<Function *, std::set<BasicBlock *>> func_targets;   /**< A map storing the target blocks for each function.      */
 
 // std::set<llvm::Instruction *> condition_calls;
 // std::vector<llvm::BasicBlock *> condition_bbs;
-std::map<llvm::BasicBlock *, std::vector<std::string>> condition_infos;
-std::map<llvm::BasicBlock *, std::vector<llvm::Value *>> condition_vals;
-std::map<llvm::BasicBlock *, uint32_t> condition_ids;
-std::map<llvm::BasicBlock *, uint32_t> critical_ids;
+std::map<llvm::BasicBlock *, std::vector<std::string>> condition_infos;  /**< A map storing the condition information for each basic block. */
+std::map<llvm::BasicBlock *, std::vector<llvm::Value *>> condition_vals; /**< A map storing the condition values for each basic block.      */
+std::map<llvm::BasicBlock *, uint32_t> condition_ids; /**< A map storing the condition IDs for each basic block. */
+std::map<llvm::BasicBlock *, uint32_t> critical_ids;  /**< A map storing the critical IDs for each basic block.  */
+uint32_t cond_instrument_num = 0; /**< The number of if-condition instrumentations. */
+// clang-format on
+
 GlobalVariable *cvar_map_ptr;
 GlobalVariable *cond_map_ptr;
-uint32_t cond_instrument_num = 0;
 
 /**
  * Retrieves the debug information (source location) associated with a given basic block.
@@ -804,7 +808,6 @@ int main(int argc, char **argv) {
     identifyCriticalBB();
     std::cout << "instrument distance..." << std::endl;
     instrument();
-    // LLVMModuleSet::getLLVMModuleSet()->dumpModulesToFile(".cbi.bc");
     std::cout << "analyze condition..." << std::endl;
     analyzeCondition();
     std::cout << "instrument condition..." << std::endl;
