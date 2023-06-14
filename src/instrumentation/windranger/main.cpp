@@ -2,8 +2,6 @@
     Instrument critical BBs
 */
 
-#include "Graphs/SVFG.h"
-#include "SABER/LeakChecker.h"
 #include "SVF-FE/LLVMUtil.h"
 #include "SVF-FE/PAGBuilder.h"
 #include "WPA/Andersen.h"
@@ -29,17 +27,14 @@ ICFG *icfg;           /**< An instance of the current inter-procedural control-f
 Module *M;            /**< An instance of the current LLVM module.  */
 LLVMContext *C;       /**< An instance of the current LLVM context. */
 
-std::map<const SVFFunction *, double> dTf;    /**< A map storing the function distance to each target.        */
-std::vector<std::map<const SVFFunction *, uint32_t>> dtf; /**< A vector of maps storing the function distance to each target for each node. */
-std::map<BasicBlock *, double> dTb;           /**< A map storing the basic block distance to each target.     */
-std::set<const BasicBlock *> targets_llvm_bb; /**< A set of LLVM basic blocks representing the target blocks. */
+std::map<const SVFFunction *, double> dTf;    /**< A map storing the function distance (harmonic mean) to each target.    */
+std::map<BasicBlock *, double> dTb;           /**< A map storing the basic block distance (harmonic mean) to each target. */
+std::set<const BasicBlock *> targets_llvm_bb; /**< A set of LLVM basic blocks representing the target blocks.             */
 std::map<BasicBlock *, std::set<BasicBlock *>> critical_bbs; /**< A map storing the critical blocks for each basic block. */
 std::map<BasicBlock *, std::set<BasicBlock *>> solved_bbs;   /**< A map storing the solved blocks for each basic block.   */
 std::map<Function *, std::set<BasicBlock *>> taint_bbs;      /**< A map storing the tainted blocks for each function.     */
 std::map<Function *, std::set<BasicBlock *>> func_targets;   /**< A map storing the target blocks for each function.      */
 
-// std::set<llvm::Instruction *> condition_calls;
-// std::vector<llvm::BasicBlock *> condition_bbs;
 std::map<llvm::BasicBlock *, std::vector<std::string>> condition_infos;  /**< A map storing the condition information for each basic block. */
 std::map<llvm::BasicBlock *, std::vector<llvm::Value *>> condition_vals; /**< A map storing the condition values for each basic block.      */
 std::map<llvm::BasicBlock *, uint32_t> condition_ids; /**< A map storing the condition IDs for each basic block. */
@@ -57,14 +52,30 @@ GlobalVariable *cond_map_ptr;
  * @return The debug information (source location) as a string.
  */
 std::string getDebugInfo(BasicBlock *bb) {
-    for (BasicBlock::iterator it = bb->begin(), eit = bb->end(); it != eit; ++it) {
-        Instruction *inst = &(*it);
-        std::string str = SVFUtil::getSourceLoc(inst);
-        if (str != "{  }" && str.find("ln: 0  cl: 0") == str.npos) {
+    for (auto & it : *bb) {
+        std::string str = SVFUtil::getSourceLoc(&it);
+        if (str != "{  }" && str.find("ln: 0  cl: 0") == std::string::npos) {
             return str;
         }
     }
     return "{ }";
+}
+
+/**
+ * Checks if there is a control-flow edge forming a loop between two basic blocks.
+ *
+ * @param loop_info Pointer to the LoopInfoBase object.
+ * @param src The source basic block.
+ * @param dst The destination basic block.
+ * @return True if there is a loop edge, false otherwise.
+ */
+bool isCircleEdge(llvm::LoopInfoBase<llvm::BasicBlock, llvm::Loop> *loop_info, BasicBlock *src, BasicBlock *dst) {
+    if (loop_info->getLoopFor(src) == loop_info->getLoopFor(dst)) {
+        if (!(loop_info->isLoopHeader(src)) && loop_info->isLoopHeader(dst)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 /**
@@ -74,6 +85,7 @@ std::string getDebugInfo(BasicBlock *bb) {
  */
 void countCGDistance(const std::vector<NodeID> &ids) {
     FIFOWorkList<const FunEntryBlockNode *> worklist;
+    std::vector<std::map<const SVFFunction *, uint32_t>> dtf;
 
     // Calculate the function distance to each target.
     for (NodeID id : ids) {
@@ -126,23 +138,6 @@ void countCGDistance(const std::vector<NodeID> &ids) {
             }
         }
     }
-}
-
-/**
- * Checks if there is a control-flow edge forming a loop between two basic blocks.
- *
- * @param loop_info Pointer to the LoopInfoBase object.
- * @param src The source basic block.
- * @param dst The destination basic block.
- * @return True if there is a loop edge, false otherwise.
- */
-bool isCircleEdge(llvm::LoopInfoBase<llvm::BasicBlock, llvm::Loop> *loop_info, BasicBlock *src, BasicBlock *dst) {
-    if (loop_info->getLoopFor(src) == loop_info->getLoopFor(dst)) {
-        if (!(loop_info->isLoopHeader(src)) && loop_info->isLoopHeader(dst)) {
-            return true;
-        }
-    }
-    return false;
 }
 
 /**
@@ -276,10 +271,6 @@ void countVanillaDistance(const std::vector<NodeID> &target_ids) {
     for (auto svffun : *svfModule) {
         countCFGDistance(svffun);
     }
-
-    // for (auto item : dTb) {
-    //     std::cout << getDebugInfo(item.first) << " : " << item.second << std::endl;
-    // }
 }
 
 /**
@@ -812,6 +803,7 @@ int main(int argc, char **argv) {
     analyzeCondition();
     std::cout << "instrument condition..." << std::endl;
     instrumentCondition();
+
     LLVMModuleSet::getLLVMModuleSet()->dumpModulesToFile(".ci.bc");
 
     delete icfg;
