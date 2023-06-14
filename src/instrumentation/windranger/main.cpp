@@ -17,32 +17,6 @@ using namespace std;
 #define MAP_SIZE_POW2 16
 #define MAP_SIZE (1 << MAP_SIZE_POW2)
 
-static llvm::cl::opt<std::string> InputFilename(cl::Positional, llvm::cl::desc("<input bitcode>"), llvm::cl::init("-"));
-
-static llvm::cl::opt<std::string> TargetsFile("targets", llvm::cl::desc("specify targes file"), llvm::cl::Required);
-
-SVFModule *svfModule;
-ICFG *icfg;
-Module *M;
-LLVMContext *C;
-
-std::map<const SVFFunction *, double> dTf;
-std::map<BasicBlock *, double> dTb;
-std::set<const BasicBlock *> targets_llvm_bb;
-std::map<BasicBlock *, std::set<BasicBlock *>> critical_bbs;
-std::map<BasicBlock *, std::set<BasicBlock *>> solved_bbs;
-std::map<Function *, std::set<BasicBlock *>> taint_bbs;
-std::map<Function *, std::set<BasicBlock *>> func_targets;
-
-std::map<llvm::BasicBlock *, std::vector<std::string>> condition_infos;
-std::map<llvm::BasicBlock *, std::vector<llvm::Value *>> condition_vals;
-std::map<llvm::BasicBlock *, uint32_t> condition_ids;
-std::map<llvm::BasicBlock *, uint32_t> critical_ids;
-uint32_t cond_instrument_num = 0;
-
-GlobalVariable *cvar_map_ptr;
-GlobalVariable *cond_map_ptr;
-
 class TargetInfo {
   public:
     string filename;
@@ -71,6 +45,33 @@ class TargetInfo {
         return {filename, line_num, score};
     }
 };
+
+static llvm::cl::opt<std::string> InputFilename(cl::Positional, llvm::cl::desc("<input bitcode>"), llvm::cl::init("-"));
+
+static llvm::cl::opt<std::string> TargetsFile("targets", llvm::cl::desc("specify targes file"), llvm::cl::Required);
+
+SVFModule *svfModule;
+ICFG *icfg;
+Module *M;
+LLVMContext *C;
+
+std::map<const SVFFunction *, double> dTf;
+std::map<BasicBlock *, double> dTb;
+std::set<const BasicBlock *> targets_llvm_bb;
+std::map<const BasicBlock *, TargetInfo> targetInfos;
+std::map<BasicBlock *, std::set<BasicBlock *>> critical_bbs;
+std::map<BasicBlock *, std::set<BasicBlock *>> solved_bbs;
+std::map<Function *, std::set<BasicBlock *>> taint_bbs;
+std::map<Function *, std::set<BasicBlock *>> func_targets;
+
+std::map<llvm::BasicBlock *, std::vector<std::string>> condition_infos;
+std::map<llvm::BasicBlock *, std::vector<llvm::Value *>> condition_vals;
+std::map<llvm::BasicBlock *, uint32_t> condition_ids;
+std::map<llvm::BasicBlock *, uint32_t> critical_ids;
+uint32_t cond_instrument_num = 0;
+
+GlobalVariable *cvar_map_ptr;
+GlobalVariable *cond_map_ptr;
 
 /**
  * Retrieves the debug information (source location) associated with a given basic block.
@@ -298,7 +299,10 @@ void countVanillaDistance(const std::vector<std::pair<NodeID, TargetInfo>> &targ
 
     for (const auto &target : targets) {
         ICFGNode *iNode = icfg->getICFGNode(target.first);
+        auto bb = iNode->getBB();
+
         targets_llvm_bb.insert(iNode->getBB());
+        targetInfos.insert({bb, target.second});
     }
 
     countCGDistance(targets);
@@ -431,12 +435,26 @@ void instrument() {
                 IRB.CreateStore(IncrCnt, MapCntPtr)->setMetadata(M->getMDKindID("nosanitize"), MDNode::get(*C, None));
 
                 if (distance == 0) {
+                    // Target BBs ...
                     ConstantInt *TFlagLoc = ConstantInt::get(LargestType, MAP_SIZE + 16 + target_id);
                     Value *TFlagPtr = IRB.CreateGEP(MapPtr, TFlagLoc);
                     ConstantInt *FlagOne = ConstantInt::get(Int8Ty, 1);
+
                     IRB.CreateStore(FlagOne, TFlagPtr)
                             ->setMetadata(M->getMDKindID("nosanitize"), MDNode::get(*C, None));
-                    outfile3 << target_id << " " << getDebugInfo(bb) << std::endl;
+
+                    double bbScore;
+
+                    auto mapPos = targetInfos.find(bb);
+                    if (mapPos == targetInfos.end()) {
+                        // Hm something went wrong! Normally, all target BBs should be contained in 'targetInfos'.
+                        bbScore = 0.0;
+                    } else {
+                        bbScore = mapPos->second.score;
+                    }
+
+                    outfile3 << target_id << " " << bbScore << " " << getDebugInfo(bb) << std::endl;
+
                     target_id++;
                 }
 
