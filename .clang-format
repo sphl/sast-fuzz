@@ -23,7 +23,7 @@ IncludeCategories:
     Priority: 5
   - Regex:    '^<(gtest|rapidjson)/.+>$'
     Priority: 6
-  - Regex:    '^<(sfi)/.+>$'
+  - Regex:    '^<(sfi|cbi)/.+>$'
     Priority: 7
   - Regex:    '^<.+\.h>$'
     Priority: 2

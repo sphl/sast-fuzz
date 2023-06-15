@@ -1,11 +1,9 @@
-/**
- * Instrument critical BBs
- */
+#include <SVF-FE/LLVMUtil.h>
+#include <SVF-FE/PAGBuilder.h>
+#include <WPA/Andersen.h>
+#include <llvm/IR/CFG.h>
 
-#include "SVF-FE/LLVMUtil.h"
-#include "SVF-FE/PAGBuilder.h"
-#include "WPA/Andersen.h"
-#include "llvm/IR/CFG.h"
+#include <cbi/target.h>
 
 #include <fstream>
 #include <sstream>
@@ -16,35 +14,6 @@ using namespace std;
 
 #define MAP_SIZE_POW2 16
 #define MAP_SIZE (1 << MAP_SIZE_POW2)
-
-class TargetInfo {
-  public:
-    string filename;
-    unsigned int line_num;
-    double score;
-
-    TargetInfo(string filename, unsigned int line_num, double score)
-        : filename(filename), line_num(line_num), score(score) {}
-
-    static TargetInfo fromLine(const string &line, char delimiter = ',') {
-        istringstream iss(line);
-
-        string token;
-        getline(iss, token, delimiter);
-        // Skip tool name;
-
-        getline(iss, token, delimiter);
-        string filename = token;
-
-        getline(iss, token, delimiter);
-        unsigned int line_num = stoi(token);
-
-        // TODO: Read score from line/file!
-        double score = 0.5;
-
-        return {filename, line_num, score};
-    }
-};
 
 static llvm::cl::opt<std::string> InputFilename(cl::Positional, llvm::cl::desc("<input bitcode>"), llvm::cl::init("-"));
 
@@ -58,7 +27,7 @@ LLVMContext *C;
 std::map<const SVFFunction *, double> dTf;
 std::map<BasicBlock *, double> dTb;
 std::set<const BasicBlock *> targets_llvm_bb;
-std::map<const BasicBlock *, TargetInfo> targetInfos;
+std::map<const BasicBlock *, cbi::Target> targetInfos;
 std::map<BasicBlock *, std::set<BasicBlock *>> critical_bbs;
 std::map<BasicBlock *, std::set<BasicBlock *>> solved_bbs;
 std::map<Function *, std::set<BasicBlock *>> taint_bbs;
@@ -111,7 +80,7 @@ bool isCircleEdge(llvm::LoopInfoBase<llvm::BasicBlock, llvm::Loop> *loop_info, B
  *
  * @param ids A vector of target node IDs.
  */
-void countCGDistance(const std::vector<std::pair<NodeID, TargetInfo>> &targets) {
+void countCGDistance(const std::vector<std::pair<NodeID, cbi::Target>> &targets) {
     FIFOWorkList<const FunEntryBlockNode *> worklist;
     std::vector<std::map<const SVFFunction *, uint32_t>> dtf;
 
@@ -293,7 +262,7 @@ void countCFGDistance(const SVFFunction *svffun) {
  *
  * @param target_ids A vector of target node IDs.
  */
-void countVanillaDistance(const std::vector<std::pair<NodeID, TargetInfo>> &targets) {
+void countVanillaDistance(const std::vector<std::pair<NodeID, cbi::Target>> &targets) {
     FIFOWorkList<const ICFGNode *> worklist;
     std::set<const ICFGNode *> visited;
 
@@ -450,7 +419,7 @@ void instrument() {
                         // Hm something went wrong! Normally, all target BBs should be contained in 'targetInfos'.
                         bbScore = 0.0;
                     } else {
-                        bbScore = mapPos->second.score;
+                        bbScore = mapPos->second.getScore();
                     }
 
                     outfile3 << target_id << " " << bbScore << " " << getDebugInfo(bb) << std::endl;
@@ -739,7 +708,7 @@ void instrumentCondition() {
  * @param filename The name of the file containing the targets.
  * @return A vector of loaded target NodeIDs.
  */
-std::vector<std::pair<NodeID, TargetInfo>> loadTargets(const std::string &filename) {
+std::vector<std::pair<NodeID, cbi::Target>> loadTargets(const std::string &filename) {
     ifstream inFile(filename);
     if (!inFile) {
         std::cerr << "can't open target file!" << std::endl;
@@ -748,12 +717,12 @@ std::vector<std::pair<NodeID, TargetInfo>> loadTargets(const std::string &filena
 
     std::cout << "loading targets..." << std::endl;
 
-    std::vector<std::pair<NodeID, TargetInfo>> result;
-    std::vector<TargetInfo> targets;
+    std::vector<std::pair<NodeID, cbi::Target>> result;
+    std::vector<cbi::Target> targets;
 
     std::string csvLine;
     while (getline(inFile, csvLine)) {
-        targets.emplace_back(TargetInfo::fromLine(csvLine));
+        targets.emplace_back(cbi::Target::fromLine(csvLine));
     }
 
     // Iterate over all basic blocks and located the target NodeIDs
@@ -769,7 +738,7 @@ std::vector<std::pair<NodeID, TargetInfo>> loadTargets(const std::string &filena
 
         bool flag = false;
         for (const auto &target : targets) {
-            auto idx = file_name.find(target.filename);
+            auto idx = file_name.find(target.getFilename());
             if (idx != string::npos) {
                 flag = true;
                 break;
@@ -803,9 +772,9 @@ std::vector<std::pair<NodeID, TargetInfo>> loadTargets(const std::string &filena
 
                 // If the line number matches that in targets then add to the result set
                 for (const auto &target : targets) {
-                    auto idx = file_name.find(target.filename);
+                    auto idx = file_name.find(target.getFilename());
                     if (idx != string::npos && (idx == 0 || file_name[idx - 1] == '/')) {
-                        if (target.line_num == line_num) {
+                        if (target.getLineNumber() == line_num) {
                             result.emplace_back(icfg->getBlockICFGNode(inst)->getId(), target);
                         }
                     }

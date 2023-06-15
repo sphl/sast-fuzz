@@ -1,12 +1,3 @@
-klee_get_llvm_libs(
-    LLVM_LIBS
-    analysis
-    bitwriter
-    instrumentation
-    irreader
-)
+set(CBI_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-add_executable(cbi main.cpp)
-target_compile_options(cbi PRIVATE -fno-rtti -fPIC)
-target_include_directories(cbi PRIVATE "${SVF_INCLUDE_DIR}")
-target_link_libraries(cbi PRIVATE ${SVF_LIB} ${SVF_CUDD_LIB} ${LLVM_LIBS})
+add_subdirectory(src)
