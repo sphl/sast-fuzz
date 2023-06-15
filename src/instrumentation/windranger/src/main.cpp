@@ -1,12 +1,13 @@
+#include <fstream>
+#include <sstream>
+
+#include <llvm/IR/CFG.h>
+
 #include <SVF-FE/LLVMUtil.h>
 #include <SVF-FE/PAGBuilder.h>
 #include <WPA/Andersen.h>
-#include <llvm/IR/CFG.h>
 
 #include <cbi/target.h>
-
-#include <fstream>
-#include <sstream>
 
 using namespace SVF;
 using namespace llvm;
@@ -14,6 +15,8 @@ using namespace std;
 
 #define MAP_SIZE_POW2 16
 #define MAP_SIZE (1 << MAP_SIZE_POW2)
+
+using TargetInfos = std::map<const BasicBlock *, std::pair<NodeID, cbi::Target>>;
 
 static llvm::cl::opt<std::string> InputFilename(cl::Positional, llvm::cl::desc("<input bitcode>"), llvm::cl::init("-"));
 
@@ -26,12 +29,10 @@ LLVMContext *C;
 
 std::map<const SVFFunction *, double> dTf;
 std::map<BasicBlock *, double> dTb;
-std::set<const BasicBlock *> targets_llvm_bb;
-std::map<const BasicBlock *, cbi::Target> targetInfos;
 std::map<BasicBlock *, std::set<BasicBlock *>> critical_bbs;
 std::map<BasicBlock *, std::set<BasicBlock *>> solved_bbs;
 std::map<Function *, std::set<BasicBlock *>> taint_bbs;
-std::map<Function *, std::set<BasicBlock *>> func_targets;
+// std::map<Function *, std::set<BasicBlock *>> func_targets;
 
 std::map<llvm::BasicBlock *, std::vector<std::string>> condition_infos;
 std::map<llvm::BasicBlock *, std::vector<llvm::Value *>> condition_vals;
@@ -78,15 +79,15 @@ bool isCircleEdge(llvm::LoopInfoBase<llvm::BasicBlock, llvm::Loop> *loop_info, B
 /**
  * Counts the control-flow graph distance between the specified target nodes and their respective functions.
  *
- * @param ids A vector of target node IDs.
+ * @param targetInfos
  */
-void countCGDistance(const std::vector<std::pair<NodeID, cbi::Target>> &targets) {
+void countCGDistance(const TargetInfos &targetInfos) {
     FIFOWorkList<const FunEntryBlockNode *> worklist;
     std::vector<std::map<const SVFFunction *, uint32_t>> dtf;
 
     // Calculate the function distance to each target.
-    for (const auto &target : targets) {
-        NodeID targetId = target.first;
+    for (const auto &[bb, targetPair] : targetInfos) {
+        NodeID targetId = targetPair.first;
         std::set<const FunEntryBlockNode *> visited;
 
         ICFGNode *iNode = icfg->getICFGNode(targetId);
@@ -143,7 +144,7 @@ void countCGDistance(const std::vector<std::pair<NodeID, cbi::Target>> &targets)
  *
  * @param svffun A SVFFunction pointer representing the function.
  */
-void countCFGDistance(const SVFFunction *svffun) {
+void countCFGDistance(const SVFFunction *svffun, const TargetInfos &targetInfos) {
     std::map<BasicBlock *, std::map<BasicBlock *, uint32_t>> dtb;
     std::set<BasicBlock *> target_bbs;
 
@@ -171,13 +172,14 @@ void countCFGDistance(const SVFFunction *svffun) {
             }
         }
 
-        if (targets_llvm_bb.find(bb) != targets_llvm_bb.end()) {
+        // if (targets_llvm_bb.find(bb) != targets_llvm_bb.end()) {
+        if (targetInfos.count(bb)) {
             dTb[bb] = 0;
             target_bbs.insert(bb);
         }
     }
 
-    func_targets[svffun->getLLVMFun()] = target_bbs;
+    // func_targets[svffun->getLLVMFun()] = target_bbs;
 
     std::set<BasicBlock *> tmp_taint_bbs;
 
@@ -258,26 +260,15 @@ void countCFGDistance(const SVFFunction *svffun) {
 }
 
 /**
- * Counts the vanilla distance (control-flow graph and call graph distance) between target nodes.
+ * Counts the vanilla distance (control-flow graph and call graph distance) between targets.
  *
- * @param target_ids A vector of target node IDs.
+ * @param targetInfos
  */
-void countVanillaDistance(const std::vector<std::pair<NodeID, cbi::Target>> &targets) {
-    FIFOWorkList<const ICFGNode *> worklist;
-    std::set<const ICFGNode *> visited;
-
-    for (const auto &target : targets) {
-        ICFGNode *iNode = icfg->getICFGNode(target.first);
-        auto bb = iNode->getBB();
-
-        targets_llvm_bb.insert(iNode->getBB());
-        targetInfos.insert({bb, target.second});
-    }
-
-    countCGDistance(targets);
+void countVanillaDistance(const TargetInfos &targetInfos) {
+    countCGDistance(targetInfos);
 
     for (auto svffun : *svfModule) {
-        countCFGDistance(svffun);
+        countCFGDistance(svffun, targetInfos);
     }
 }
 
@@ -328,8 +319,10 @@ void identifyCriticalBB() {
 
 /**
  * Instruments the program by adding the necessary code to collect distance information.
+ *
+ * @param targetInfos
  */
-void instrument() {
+void instrument(const TargetInfos &targetInfos) {
     ofstream outfile("distance.txt", std::ios::out);
     ofstream outfile2("functions.txt", std::ios::out);
     ofstream outfile3("targets.txt", std::ios::out);
@@ -419,7 +412,8 @@ void instrument() {
                         // Hm something went wrong! Normally, all target BBs should be contained in 'targetInfos'.
                         bbScore = 0.0;
                     } else {
-                        bbScore = mapPos->second.getScore();
+                        cbi::Target target = mapPos->second.second;
+                        bbScore = target.getScore();
                     }
 
                     outfile3 << target_id << " " << bbScore << " " << getDebugInfo(bb) << std::endl;
@@ -703,12 +697,12 @@ void instrumentCondition() {
 }
 
 /**
- * Loads the target NodeIDs from the given file.
+ * Loads target information from the given CSV file.
  *
- * @param filename The name of the file containing the targets.
- * @return A vector of loaded target NodeIDs.
+ * @param filename
+ * @return
  */
-std::vector<std::pair<NodeID, cbi::Target>> loadTargets(const std::string &filename) {
+TargetInfos loadTargets(const std::string &filename) {
     ifstream inFile(filename);
     if (!inFile) {
         std::cerr << "can't open target file!" << std::endl;
@@ -717,7 +711,7 @@ std::vector<std::pair<NodeID, cbi::Target>> loadTargets(const std::string &filen
 
     std::cout << "loading targets..." << std::endl;
 
-    std::vector<std::pair<NodeID, cbi::Target>> result;
+    TargetInfos targetInfos;
     std::vector<cbi::Target> targets;
 
     std::string csvLine;
@@ -775,7 +769,8 @@ std::vector<std::pair<NodeID, cbi::Target>> loadTargets(const std::string &filen
                     auto idx = file_name.find(target.getFilename());
                     if (idx != string::npos && (idx == 0 || file_name[idx - 1] == '/')) {
                         if (target.getLineNumber() == line_num) {
-                            result.emplace_back(icfg->getBlockICFGNode(inst)->getId(), target);
+                            NodeID nodeId = icfg->getBlockICFGNode(inst)->getId();
+                            targetInfos.insert({bb, {nodeId, target}});
                         }
                     }
                 }
@@ -784,7 +779,7 @@ std::vector<std::pair<NodeID, cbi::Target>> loadTargets(const std::string &filen
     }
     inFile.close();
 
-    return result;
+    return targetInfos;
 }
 
 int main(int argc, char **argv) {
@@ -792,7 +787,7 @@ int main(int argc, char **argv) {
     char **arg_value = new char *[argc];
     std::vector<std::string> moduleNameVec;
     SVFUtil::processArguments(argc, argv, arg_num, arg_value, moduleNameVec);
-    cl::ParseCommandLineOptions(arg_num, arg_value, "analyze the vinilla distance of bb\n");
+    cl::ParseCommandLineOptions(arg_num, arg_value, "Analyze the target BB distances\n");
 
     svfModule = LLVMModuleSet::getLLVMModuleSet()->buildSVFModule(moduleNameVec);
 
@@ -803,14 +798,14 @@ int main(int argc, char **argv) {
     M = LLVMModuleSet::getLLVMModuleSet()->getMainLLVMModule();
     C = &(LLVMModuleSet::getLLVMModuleSet()->getContext());
 
-    auto targets = loadTargets(TargetsFile);
+    auto targetInfos = loadTargets(TargetsFile);
 
     std::cout << "caculate vanilla distance..." << std::endl;
-    countVanillaDistance(targets);
+    countVanillaDistance(targetInfos);
     std::cout << "identiy critical bb..." << std::endl;
     identifyCriticalBB();
     std::cout << "instrument distance..." << std::endl;
-    instrument();
+    instrument(targetInfos);
     std::cout << "analyze condition..." << std::endl;
     analyzeCondition();
     std::cout << "instrument condition..." << std::endl;
