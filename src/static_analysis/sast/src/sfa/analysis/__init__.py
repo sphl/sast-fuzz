@@ -11,7 +11,8 @@ SASTFlag = namedtuple("SASTFlag", ["tool", "file", "line", "vuln"])
 
 # Grouped SAST flag
 GroupedSASTFlag = namedtuple(
-    "GroupedSASTFlag", ["tool", "file", "line", "vuln", "n_flg_lines", "n_all_lines", "n_run_tools", "n_all_tools"]
+    "GroupedSASTFlag",
+    ["tool", "file", "line", "vuln", "n_flg_lines", "n_all_lines", "n_run_tools", "n_all_tools", "score"],
 )
 
 # SAST flag type
@@ -81,7 +82,7 @@ class SASTFlags:
                 if len(vals) == 4:  # Regular SAST flag
                     flags.add(SASTFlag(vals[0], vals[1], int(vals[2]), vals[3]))
 
-                if len(vals) == 8:  # Grouped SAST flag
+                if len(vals) == 9:  # Grouped SAST flag
                     flags.add(
                         GroupedSASTFlag(
                             vals[0],
@@ -92,6 +93,7 @@ class SASTFlags:
                             int(vals[5]),
                             int(vals[6]),
                             int(vals[7]),
+                            float(vals[8]),
                         )
                     )
 

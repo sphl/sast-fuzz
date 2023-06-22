@@ -4,6 +4,8 @@ from pathlib import Path
 
 import yaml
 
+ScoreWeights = namedtuple("ScoreWeights", ["flags", "tools"], defaults=[0.5, 0.5])
+
 # SAST tool configuration
 SASTToolConfig = namedtuple("SASTToolConfig", ["path", "checks", "num_threads"], defaults=["", "", -1])
 
@@ -13,6 +15,8 @@ class AppConfig:
     """
     Application configuration.
     """
+
+    score_weights: ScoreWeights
 
     flawfinder: SASTToolConfig
     semgrep: SASTToolConfig
@@ -36,6 +40,7 @@ class AppConfig:
         ]
 
         return cls(
+            ScoreWeights(config["scoring"]["weights"]["flags"], config["scoring"]["weights"]["tools"]),
             flawfinder=SASTToolConfig(
                 config["tools"]["flawfinder"]["path"], config["tools"]["flawfinder"]["checks"], -1
             ),

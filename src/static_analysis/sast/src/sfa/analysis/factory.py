@@ -89,4 +89,5 @@ class SASTFlagGroupingFactory(Factory):
     """
 
     def _create_instances(self, param: Any) -> Dict:
-        return {SASTFlagGroupingMode.BASIC_BLOCK: BasicBlockGrouping(param)}
+        inspec_file, app_config = param
+        return {SASTFlagGroupingMode.BASIC_BLOCK: BasicBlockGrouping(inspec_file, app_config.score_weights)}

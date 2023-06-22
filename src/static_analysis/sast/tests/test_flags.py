@@ -113,12 +113,12 @@ class TestFlags(unittest.TestCase):
 class TestFlagsGrouped(unittest.TestCase):
     def setUp(self) -> None:
         self.flags = SASTFlags()
-        self.flags.add(GroupedSASTFlag("tool1", "file1", 10, "vuln1", 1, 3, 1, 5))
-        self.flags.add(GroupedSASTFlag("tool2", "file2", 20, "vuln2", 1, 5, 1, 5))
+        self.flags.add(GroupedSASTFlag("tool1", "file1", 10, "vuln1", 1, 3, 1, 5, 0.267))
+        self.flags.add(GroupedSASTFlag("tool2", "file2", 20, "vuln2", 1, 5, 1, 5, 0.200))
 
     def test_add(self) -> None:
         # Arrange
-        flag = GroupedSASTFlag("tool3", "file3", 30, "vuln3", 1, 7, 1, 5)
+        flag = GroupedSASTFlag("tool3", "file3", 30, "vuln3", 1, 7, 1, 5, 0.171)
 
         # Act
         self.flags.add(flag)
@@ -128,8 +128,8 @@ class TestFlagsGrouped(unittest.TestCase):
 
     def test_update(self) -> None:
         # Arrange
-        flag3 = GroupedSASTFlag("tool3", "file3", 30, "vuln3", 1, 7, 1, 5)
-        flag4 = GroupedSASTFlag("tool4", "file4", 40, "vuln4", 1, 9, 1, 5)
+        flag3 = GroupedSASTFlag("tool3", "file3", 30, "vuln3", 1, 7, 1, 5, 0.171)
+        flag4 = GroupedSASTFlag("tool4", "file4", 40, "vuln4", 1, 9, 1, 5, 0.156)
 
         # Act
         self.flags.update(SASTFlags({flag3, flag4}))
@@ -142,12 +142,12 @@ class TestFlagsGrouped(unittest.TestCase):
 
     def test_update_multiple(self) -> None:
         # Arrange
-        flag1 = GroupedSASTFlag("tool1", "file1", 10, "vuln1", 1, 2, 1, 5)
-        flag2 = GroupedSASTFlag("tool2", "file2", 20, "vuln2", 1, 4, 1, 5)
-        flag3 = GroupedSASTFlag("tool3", "file3", 30, "vuln3", 1, 6, 1, 5)
-        flag4 = GroupedSASTFlag("tool4", "file4", 40, "vuln4", 1, 3, 1, 5)
-        flag5 = GroupedSASTFlag("tool5", "file5", 50, "vuln5", 1, 5, 1, 5)
-        flag6 = GroupedSASTFlag("tool6", "file6", 60, "vuln6", 1, 7, 1, 5)
+        flag1 = GroupedSASTFlag("tool1", "file1", 10, "vuln1", 1, 2, 1, 5, 0.350)
+        flag2 = GroupedSASTFlag("tool2", "file2", 20, "vuln2", 1, 4, 1, 5, 0.225)
+        flag3 = GroupedSASTFlag("tool3", "file3", 30, "vuln3", 1, 6, 1, 5, 0.183)
+        flag4 = GroupedSASTFlag("tool4", "file4", 40, "vuln4", 1, 3, 1, 5, 0.267)
+        flag5 = GroupedSASTFlag("tool5", "file5", 50, "vuln5", 1, 5, 1, 5, 0.200)
+        flag6 = GroupedSASTFlag("tool6", "file6", 60, "vuln6", 1, 7, 1, 5, 0.171)
 
         flags1 = SASTFlags({flag1, flag2})
         flags2 = SASTFlags({flag3, flag4})
@@ -165,7 +165,7 @@ class TestFlagsGrouped(unittest.TestCase):
 
     def test_remove(self) -> None:
         # Arrange
-        flag = GroupedSASTFlag("tool1", "file1", 10, "vuln1", 1, 3, 1, 5)
+        flag = GroupedSASTFlag("tool1", "file1", 10, "vuln1", 1, 3, 1, 5, 0.267)
 
         # Act
         self.flags.remove(flag)
@@ -186,17 +186,17 @@ class TestFlagsGrouped(unittest.TestCase):
 
             # Assert
             self.assertEqual(len(self.flags), len(lines))
-            self.assertIn(CSV_SEP.join(["tool1", "file1", "10", "vuln1", "1", "3", "1", "5"]), lines)
-            self.assertIn(CSV_SEP.join(["tool2", "file2", "20", "vuln2", "1", "5", "1", "5"]), lines)
+            self.assertIn(CSV_SEP.join(["tool1", "file1", "10", "vuln1", "1", "3", "1", "5", "0.267"]), lines)
+            self.assertIn(CSV_SEP.join(["tool2", "file2", "20", "vuln2", "1", "5", "1", "5", "0.2"]), lines)
 
     def test_from_csv(self) -> None:
         with TemporaryDirectory() as temp_dir:
             # Arrange
             temp_file = Path(temp_dir) / "test.csv"
             lines = [
-                CSV_SEP.join(["tool1", "file1", "10", "vuln1", "1", "3", "1", "5"]) + os.linesep,
-                CSV_SEP.join(["tool2", "file2", "20", "vuln2", "1", "5", "1", "5"]) + os.linesep,
-                CSV_SEP.join(["tool3", "file3", "30", "vuln3", "1", "7", "1", "5"]) + os.linesep,
+                CSV_SEP.join(["tool1", "file1", "10", "vuln1", "1", "3", "1", "5", "0.267"]) + os.linesep,
+                CSV_SEP.join(["tool2", "file2", "20", "vuln2", "1", "5", "1", "5", "0.200"]) + os.linesep,
+                CSV_SEP.join(["tool3", "file3", "30", "vuln3", "1", "7", "1", "5", "0.171"]) + os.linesep,
             ]
 
             with temp_file.open("w") as file:
@@ -207,9 +207,9 @@ class TestFlagsGrouped(unittest.TestCase):
 
             # Assert
             expected = SASTFlags()
-            expected.add(GroupedSASTFlag("tool1", "file1", 10, "vuln1", 1, 3, 1, 5))
-            expected.add(GroupedSASTFlag("tool2", "file2", 20, "vuln2", 1, 5, 1, 5))
-            expected.add(GroupedSASTFlag("tool3", "file3", 30, "vuln3", 1, 7, 1, 5))
+            expected.add(GroupedSASTFlag("tool1", "file1", 10, "vuln1", 1, 3, 1, 5, 0.267))
+            expected.add(GroupedSASTFlag("tool2", "file2", 20, "vuln2", 1, 5, 1, 5, 0.200))
+            expected.add(GroupedSASTFlag("tool3", "file3", 30, "vuln3", 1, 7, 1, 5, 0.171))
 
             self.assertEqual(expected, actual)
 

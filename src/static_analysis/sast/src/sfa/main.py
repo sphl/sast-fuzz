@@ -74,7 +74,9 @@ def filter_flags(flags: SASTFlags, filter_modes: List[SASTFlagFilterMode], inspe
     return flags
 
 
-def group_flags(flags: SASTFlags, grouping_mode: SASTFlagGroupingMode, inspec_file: Path) -> SASTFlags:
+def group_flags(
+    flags: SASTFlags, grouping_mode: SASTFlagGroupingMode, inspec_file: Path, app_config: AppConfig
+) -> SASTFlags:
     """
     Group SAST flags.
 
@@ -83,7 +85,7 @@ def group_flags(flags: SASTFlags, grouping_mode: SASTFlagGroupingMode, inspec_fi
     :param inspec_file:
     :return:
     """
-    flag_grouping = SASTFlagGroupingFactory(inspec_file).get_instance(grouping_mode)
+    flag_grouping = SASTFlagGroupingFactory((inspec_file, app_config)).get_instance(grouping_mode)
 
     return flag_grouping.group(flags)
 
@@ -194,6 +196,6 @@ def main(
     if filter_modes:
         flags = filter_flags(flags, filter_modes, inspec_file)  # type: ignore
     if grouping_mode:
-        flags = group_flags(flags, grouping_mode, inspec_file)  # type: ignore
+        flags = group_flags(flags, grouping_mode, inspec_file, app_config)  # type: ignore
 
     flags.to_csv(output_file)

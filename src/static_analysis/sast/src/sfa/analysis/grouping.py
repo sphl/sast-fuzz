@@ -4,7 +4,11 @@ from collections import defaultdict, namedtuple
 from pathlib import Path
 from typing import Dict
 
+from sfa import ScoreWeights
 from sfa.analysis import GroupedSASTFlag, SASTFlags
+
+# Decimal precision of the vulnerability scores
+SCORE_PRECISION = 3
 
 # Character to concatenate values
 CONCAT_CHAR = "-"
@@ -18,8 +22,9 @@ class SASTFlagGrouping(ABC):
     Abstract SAST flag grouping.
     """
 
-    def __init__(self, inspec_file: Path) -> None:
+    def __init__(self, inspec_file: Path, weights: ScoreWeights) -> None:
         self._inspec_file = inspec_file
+        self._weights = weights
 
     @abstractmethod
     def group(self, flags: SASTFlags) -> SASTFlags:
@@ -37,8 +42,8 @@ class BasicBlockGrouping(SASTFlagGrouping):
     SAST flag basic block grouping.
     """
 
-    def __init__(self, inspec_file: Path) -> None:
-        super().__init__(inspec_file)
+    def __init__(self, inspec_file: Path, weights: ScoreWeights) -> None:
+        super().__init__(inspec_file, weights)
         self._bb_infos: Dict[int, BBInfo] = {}
 
         data = json.loads(inspec_file.read_text())
@@ -75,16 +80,28 @@ class BasicBlockGrouping(SASTFlagGrouping):
             bb_tools = {flag.tool for flag in bb_flags}
             bb_vulns = {f"{flag.vuln}:{flag.line}" for flag in bb_flags}
 
+            n_flg_lines = len({flag.line for flag in bb_flags})
+            n_all_lines = self._bb_infos[bb_id].n_lines
+            n_run_tools = len(bb_tools)
+            n_all_tools = n_tools
+
+            r_flg_lines = n_flg_lines / n_all_lines
+            r_run_tools = n_run_tools / n_all_tools
+
+            # Calculate the vulnerability score
+            score = round((self._weights.flags * r_flg_lines) + (self._weights.tools * r_run_tools), SCORE_PRECISION)
+
             grouped_flags.add(
                 GroupedSASTFlag(
                     CONCAT_CHAR.join(bb_tools),
                     self._bb_infos[bb_id].file,
                     self._bb_infos[bb_id].line_start,
                     CONCAT_CHAR.join(bb_vulns),
-                    len({flag.line for flag in bb_flags}),
-                    self._bb_infos[bb_id].n_lines,
-                    len(bb_tools),
-                    n_tools,
+                    n_flg_lines,
+                    n_all_lines,
+                    n_run_tools,
+                    n_all_tools,
+                    score,
                 )
             )
 
