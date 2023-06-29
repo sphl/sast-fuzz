@@ -53,6 +53,39 @@ std::map<BasicBlock *, uint32_t> targetBBIndices;
 std::map<BasicBlock *, uint32_t> criticalBBIndices;
 
 std::map<const SVFFunction *, std::map<BasicBlock *, uint32_t>> targetCGDistances;
+
+void writeMatrix(const std::string &filepath,
+                 uint32_t **matrix,
+                 uint32_t nRows,
+                 uint32_t nColumns,
+                 char delimiter = ',',
+                 bool writeDims = true) {
+    std::ofstream outputFile(filepath);
+
+    if (!outputFile.is_open()) {
+        std::cout << "Failed to open the output file." << std::endl;
+        return;
+    }
+
+    if (writeDims) {
+        // Write the matrix dimensions to the file
+        outputFile << nRows << ":" << nColumns << std::endl;
+    }
+
+    // Write the matrix values to the file
+    for (int i = 0; i < nRows; i++) {
+        for (int j = 0; j < nColumns; j++) {
+            outputFile << matrix[i][j];
+
+            if (j < (numTargetBBs - 1)) {
+                outputFile << delimiter;
+            }
+        }
+        outputFile << "\n";
+    }
+
+    outputFile.close();
+}
 // ---------------------------------------------------------------------------------------------------------------------
 
 /**
