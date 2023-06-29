@@ -81,7 +81,7 @@ void writeMatrix(const std::string &filepath,
                 outputFile << delimiter;
             }
         }
-        outputFile << "\n";
+        outputFile << std::endl;
     }
 
     outputFile.close();
