@@ -728,8 +728,6 @@ TargetInfos loadTargets(const std::string &filename) {
         exit(1);
     }
 
-    std::cout << "loading targets..." << std::endl;
-
     TargetInfos targetInfos;
     std::vector<cbi::Target> targets;
 
