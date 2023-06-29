@@ -16,7 +16,7 @@ using namespace std;
 #define MAP_SIZE_POW2 16
 #define MAP_SIZE (1 << MAP_SIZE_POW2)
 
-using TargetInfos = std::map<const BasicBlock *, std::pair<NodeID, cbi::Target>>;
+using TargetInfos = std::map<BasicBlock *, std::pair<NodeID, cbi::Target>>;
 
 static llvm::cl::opt<std::string> InputFilename(cl::Positional, llvm::cl::desc("<input bitcode>"), llvm::cl::init("-"));
 
@@ -51,6 +51,8 @@ uint32_t numCriticalBBs = 0;
 std::map<BasicBlock *, uint32_t> allBBIndices;
 std::map<BasicBlock *, uint32_t> targetBBIndices;
 std::map<BasicBlock *, uint32_t> criticalBBIndices;
+
+std::map<const SVFFunction *, std::map<BasicBlock *, uint32_t>> targetCGDistances;
 // ---------------------------------------------------------------------------------------------------------------------
 
 /**
@@ -93,7 +95,7 @@ bool isCircleEdge(llvm::LoopInfoBase<llvm::BasicBlock, llvm::Loop> *loop_info, B
  */
 void countCGDistance(const TargetInfos &targetInfos) {
     FIFOWorkList<const FunEntryBlockNode *> worklist;
-    std::vector<std::map<const SVFFunction *, uint32_t>> dtf;
+    std::map<BasicBlock *, std::map<const SVFFunction *, uint32_t>> dtf;
 
     // Calculate the function distance to each target.
     for (const auto &[bb, targetPair] : targetInfos) {
@@ -106,6 +108,8 @@ void countCGDistance(const TargetInfos &targetInfos) {
 
         std::map<const SVFFunction *, uint32_t> df;
         df[iNode->getFun()] = 1;
+
+        targetCGDistances[iNode->getFun()][bb] = 1;
 
         while (!worklist.empty()) {
             const FunEntryBlockNode *vNode = worklist.pop();
@@ -122,7 +126,7 @@ void countCGDistance(const TargetInfos &targetInfos) {
                 }
             }
         }
-        dtf.push_back(df);
+        dtf[bb] = df;
     }
 
     // Calculate the (harmonic) distance to all targets
@@ -130,10 +134,12 @@ void countCGDistance(const TargetInfos &targetInfos) {
         double df_tmp = 0;
         bool flag = false;
 
-        for (auto df : dtf) {
+        for (auto &[bb, df] : dtf) {
             if (df.count(svffun) != 0) {
                 if (df[svffun] != 0) {
                     df_tmp += (double)1 / df[svffun];
+
+                    targetCGDistances[svffun][bb] = 10 * df[svffun];
                 }
                 flag = true;
             }
