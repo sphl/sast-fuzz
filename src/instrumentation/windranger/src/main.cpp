@@ -29,7 +29,7 @@ LLVMContext *C;
 
 std::map<const SVFFunction *, double> dTf;
 std::map<BasicBlock *, double> dTb;
-std::map<BasicBlock *, std::set<BasicBlock *>> critical_bbs;
+std::map<BasicBlock *, std::set<BasicBlock *>> criticalBBs;
 std::map<BasicBlock *, std::set<BasicBlock *>> solved_bbs;
 std::map<Function *, std::set<BasicBlock *>> taint_bbs;
 // std::map<Function *, std::set<BasicBlock *>> func_targets;
@@ -42,6 +42,16 @@ uint32_t cond_instrument_num = 0;
 
 GlobalVariable *cvar_map_ptr;
 GlobalVariable *cond_map_ptr;
+
+// ---------------------------------------------------------------------------------------------------------------------
+uint32_t numAllBBs = 0;
+uint32_t numTargetBBs = 0;
+uint32_t numCriticalBBs = 0;
+
+std::map<BasicBlock *, uint32_t> allBBIndices;
+std::map<BasicBlock *, uint32_t> targetBBIndices;
+std::map<BasicBlock *, uint32_t> criticalBBIndices;
+// ---------------------------------------------------------------------------------------------------------------------
 
 /**
  * Retrieves the debug information (source location) associated with a given basic block.
@@ -293,7 +303,7 @@ void identifyCriticalBB() {
                 }
             }
             if (!tmp_critical_bbs.empty()) {
-                critical_bbs[bb] = tmp_critical_bbs;
+                criticalBBs[bb] = tmp_critical_bbs;
                 solved_bbs[bb] = tmp_solved_bbs;
             }
         }
@@ -302,7 +312,7 @@ void identifyCriticalBB() {
     int temp_count = 0;
     int temp_count2 = 0;
     int temp_count3 = 0;
-    for (const auto &item : critical_bbs) {
+    for (const auto &item : criticalBBs) {
         llvm::BasicBlock *bb = item.first;
         llvm::Instruction &inst = bb->back();
         if (auto *br = dyn_cast<BranchInst>(&inst)) {
@@ -323,12 +333,12 @@ void identifyCriticalBB() {
  * @param targetInfos
  */
 void instrument(const TargetInfos &targetInfos) {
-    ofstream outfile("distance.txt", std::ios::out);
+    ofstream distanceFile("distance.txt", std::ios::out);
     ofstream outfile2("functions.txt", std::ios::out);
-    ofstream outfile3("targets.txt", std::ios::out);
-    uint32_t bb_id = 0;
+    ofstream targetBBFile("targets.txt", std::ios::out);
+    // uint32_t bb_id = 0;
     uint32_t func_id = 0;
-    uint32_t target_id = 0;
+    // uint32_t target_id = 0;
     uint32_t v_instrument_num = 0;
     uint32_t c_instrument_num = 0;
 
@@ -361,11 +371,16 @@ void instrument(const TargetInfos &targetInfos) {
     ConstantInt *MapDistLoc = ConstantInt::get(LargestType, MAP_SIZE);
     ConstantInt *One = ConstantInt::get(LargestType, 1);
 
+    distanceFile << numCriticalBBs << std::endl;
+    targetBBFile << numTargetBBs << std::endl;
+
     for (auto svffun : *svfModule) {
         bool flag = false;
         for (auto &bit : *svffun->getLLVMFun()) {
             BasicBlock *bb = &bit;
             if (dTb.count(bb)) {
+                uint32_t bbId = allBBIndices.at(bb);
+
                 auto distance = (uint32_t)(100 * dTb[bb]);
 
                 ConstantInt *Distance = ConstantInt::get(LargestType, (unsigned)distance);
@@ -398,7 +413,9 @@ void instrument(const TargetInfos &targetInfos) {
 
                 if (distance == 0) {
                     // Target BBs ...
-                    ConstantInt *TFlagLoc = ConstantInt::get(LargestType, MAP_SIZE + 16 + target_id);
+                    uint32_t targetBBId = targetBBIndices.at(bb);
+
+                    ConstantInt *TFlagLoc = ConstantInt::get(LargestType, MAP_SIZE + 16 + targetBBId);
                     Value *TFlagPtr = IRB.CreateGEP(MapPtr, TFlagLoc);
                     ConstantInt *FlagOne = ConstantInt::get(Int8Ty, 1);
 
@@ -416,13 +433,11 @@ void instrument(const TargetInfos &targetInfos) {
                         bbScore = target.getScore();
                     }
 
-                    outfile3 << target_id << " " << bbScore << " " << getDebugInfo(bb) << std::endl;
-
-                    target_id++;
+                    targetBBFile << targetBBId << " " << bbScore << " " << getDebugInfo(bb) << std::endl;
                 }
 
-                if (critical_bbs.count(bb)) {
-                    for (auto cbb : critical_bbs[bb]) {
+                if (criticalBBs.count(bb)) {
+                    for (auto cbb : criticalBBs[bb]) {
                         BasicBlock::iterator IP2 = cbb->getFirstInsertionPt();
                         llvm::IRBuilder<> IRB2(&(*IP2));
 
@@ -431,14 +446,14 @@ void instrument(const TargetInfos &targetInfos) {
 
                         // If a critical BB was executed, the (coverage) flag is set to 1 (even if the BB was exercised
                         // multiple times), otherwise the flag is 0.
-                        ConstantInt *CBIdx = ConstantInt::get(Int32Ty, bb_id);
+                        ConstantInt *CBIdx = ConstantInt::get(Int32Ty, bbId);
                         ConstantInt *CBOne = ConstantInt::get(Int8Ty, 1);
                         Value *CBIdxPtr = IRB2.CreateGEP(CBPtr, CBIdx);
                         IRB2.CreateStore(CBOne, CBIdxPtr)
                                 ->setMetadata(M->getMDKindID("nosanitize"), MDNode::get(*C, None));
                         c_instrument_num++;
                     }
-                    critical_ids[bb] = bb_id;
+                    critical_ids[bb] = bbId;
                 }
 
                 if (solved_bbs.count(bb)) {
@@ -449,7 +464,7 @@ void instrument(const TargetInfos &targetInfos) {
                         LoadInst *CBPtr = IRB2.CreateLoad(CBMapPtr);
                         CBPtr->setMetadata(M->getMDKindID("nosanitize"), MDNode::get(*C, None));
 
-                        ConstantInt *CBIdx = ConstantInt::get(Int32Ty, bb_id);
+                        ConstantInt *CBIdx = ConstantInt::get(Int32Ty, bbId);
                         ConstantInt *CBOne = ConstantInt::get(Int8Ty, 2);
                         Value *CBIdxPtr = IRB2.CreateGEP(CBPtr, CBIdx);
                         IRB2.CreateStore(CBOne, CBIdxPtr)
@@ -457,15 +472,13 @@ void instrument(const TargetInfos &targetInfos) {
                     }
                 }
 
-                outfile << bb_id << " " << distance << " ";
-                if (critical_bbs.count(bb)) {
-                    outfile << 1 << " ";
+                distanceFile << bbId << " ";
+                if (criticalBBs.count(bb)) {
+                    distanceFile << criticalBBIndices.at(bb) << " ";
                 } else {
-                    outfile << 0 << " ";
+                    distanceFile << "-1 ";
                 }
-                outfile << getDebugInfo(bb) << std::endl;
-
-                bb_id++;
+                distanceFile << distance << " " << getDebugInfo(bb) << std::endl;
 
                 flag = true;
                 v_instrument_num++;
@@ -478,9 +491,9 @@ void instrument(const TargetInfos &targetInfos) {
         }
     }
 
-    outfile.close();
+    distanceFile.close();
     outfile2.close();
-    outfile3.close();
+    targetBBFile.close();
 }
 
 /**
@@ -592,7 +605,7 @@ void analyzeCondition() {
     }
 
     for (auto info : condition_infos) {
-        if (critical_bbs.count(info.first)) {
+        if (criticalBBs.count(info.first)) {
             outfile << condition_ids[info.first] << " " << critical_ids[info.first] << " " << info.second[0] << " "
                     << info.second[1] << " " << info.second[2] << " " << info.second[3] << " " << std::endl;
         } else {
@@ -800,15 +813,25 @@ int main(int argc, char **argv) {
 
     auto targetInfos = loadTargets(TargetsFile);
 
-    std::cout << "caculate vanilla distance..." << std::endl;
     countVanillaDistance(targetInfos);
-    std::cout << "identiy critical bb..." << std::endl;
     identifyCriticalBB();
-    std::cout << "instrument distance..." << std::endl;
+
+    // -----------------------------------------------------------------------------------------------------------------
+    for (auto &[bb, dist] : dTb) {
+        allBBIndices[bb] = numAllBBs++;
+
+        if (targetInfos.count(bb)) {
+            targetBBIndices[bb] = numTargetBBs++;
+        }
+
+        if (criticalBBs.count(bb)) {
+            criticalBBIndices[bb] = numCriticalBBs++;
+        }
+    }
+    // -----------------------------------------------------------------------------------------------------------------
+
     instrument(targetInfos);
-    std::cout << "analyze condition..." << std::endl;
     analyzeCondition();
-    std::cout << "instrument condition..." << std::endl;
     instrumentCondition();
 
     LLVMModuleSet::getLLVMModuleSet()->dumpModulesToFile(".ci.bc");
