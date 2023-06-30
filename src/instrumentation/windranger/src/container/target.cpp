@@ -24,7 +24,7 @@ Target Target::fromLine(std::string &line, char delimiter) {
     std::string filename = token;
 
     getline(iss, token, delimiter);
-    LineNumber lineNumber = stoi(token);
+    LineNumber lineNumber = std::stoi(token);
 
     // Skip values in between ...
     getline(iss, token, delimiter);
