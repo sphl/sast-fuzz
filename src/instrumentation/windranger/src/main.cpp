@@ -67,11 +67,11 @@ void addDistance(BasicBlock *from, BasicBlock *to, uint32_t distance) {
 }
 
 void writeMatrix(const std::string &filepath,
-                 uint32_t **matrix,
+                 const std::vector<std::vector<uint32_t>> &matrix,
                  uint32_t nRows,
                  uint32_t nColumns,
-                 char delimiter = ',',
-                 bool writeDims = true) {
+                 bool writeDims = true,
+                 char delimiter = ',') {
     std::ofstream outputFile(filepath);
 
     if (!outputFile.is_open()) {
@@ -907,6 +907,22 @@ int main(int argc, char **argv) {
     instrument(targetInfos);
     analyzeCondition();
     instrumentCondition();
+
+    // -----------------------------------------------------------------------------------------------------------------
+    std::vector<std::vector<uint32_t>> matrixArray(numCriticalBBs, std::vector<uint32_t>(numTargetBBs));
+
+    for (auto &[criticalBB, criticalBBId] : criticalBBIndices) {
+        for (auto &[targetBB, targetBBId] : targetBBIndices) {
+            if (distanceMatrix.at(criticalBB).count(targetBB) == 0) {
+                matrixArray[criticalBBId][targetBBId] = 0;
+            } else {
+                matrixArray[criticalBBId][targetBBId] = distanceMatrix[criticalBB][targetBB];
+            }
+        }
+    }
+
+    writeMatrix("./dm.csv", matrixArray, numCriticalBBs, numTargetBBs, true, ',');
+    // -----------------------------------------------------------------------------------------------------------------
 
     LLVMModuleSet::getLLVMModuleSet()->dumpModulesToFile(".ci.bc");
 
