@@ -382,8 +382,11 @@ static s16 interesting_16[] = {INTERESTING_8, INTERESTING_16};
 static s32 interesting_32[] = {INTERESTING_8, INTERESTING_16, INTERESTING_32};
 
 // ---------------------------------------------------------------------------------------------------------------------
+static u8 *target_bb_bitvec;
+
 static float *target_bb_scores;
 
+static u32 num_critical_bbs;
 static u32 *critical_bb_id_map;
 
 static u32 **distance_matrix;
@@ -10191,7 +10194,7 @@ void readDistanceAndTargets() {
 
     // First line contains the number of critical BBs
     fgets(buf, sizeof(buf), distance_file);
-    u32 num_critical_bbs = atoi(buf);
+    num_critical_bbs = atoi(buf);
 
     critical_ids = ck_alloc(sizeof(u32) * (num_critical_bbs + 1));
     critical_bb_id_map = ck_alloc(sizeof(u32) * (num_critical_bbs + 1));
@@ -10742,8 +10745,14 @@ int main(int argc, char **argv) {
     readDistanceAndTargets();
     readCondition();
 
+    target_bb_bitvec = ck_alloc(num_target_bbs);
+    memset(target_bb_bitvec, 1, num_target_bbs);
+
     u32 dm_n_rows, dm_n_cols;
     dm_init("./dm.csv", &distance_matrix, &dm_n_rows, &dm_n_cols);
+
+    assert(dm_n_rows == num_critical_bbs);
+    assert(dm_n_cols == num_target_bbs);
 
     setup_post();
     setup_shm();
@@ -10962,6 +10971,8 @@ stop_fuzzing:
     ck_free(sync_id);
 
     ck_free(target_bb_scores);
+    ck_free(target_bb_bitvec);
+
     ck_free(critical_bb_id_map);
 
     dm_free(distance_matrix, dm_n_rows);
