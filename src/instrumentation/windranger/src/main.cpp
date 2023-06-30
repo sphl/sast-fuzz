@@ -32,7 +32,6 @@ std::map<BasicBlock *, double> dTb;
 std::map<BasicBlock *, std::set<BasicBlock *>> criticalBBs;
 std::map<BasicBlock *, std::set<BasicBlock *>> solved_bbs;
 std::map<Function *, std::set<BasicBlock *>> taint_bbs;
-// std::map<Function *, std::set<BasicBlock *>> func_targets;
 
 std::map<llvm::BasicBlock *, std::vector<std::string>> condition_infos;
 std::map<llvm::BasicBlock *, std::vector<llvm::Value *>> condition_vals;
@@ -43,7 +42,6 @@ uint32_t cond_instrument_num = 0;
 GlobalVariable *cvar_map_ptr;
 GlobalVariable *cond_map_ptr;
 
-// ---------------------------------------------------------------------------------------------------------------------
 uint32_t numAllBBs = 0;
 uint32_t numTargetBBs = 0;
 uint32_t numCriticalBBs = 0;
@@ -56,6 +54,13 @@ std::map<const SVFFunction *, std::map<BasicBlock *, uint32_t>> targetCGDistance
 
 std::map<BasicBlock *, std::map<BasicBlock *, uint32_t>> distanceMatrix;
 
+/**
+ * Adds the distance between two basic blocks to 'distanceMatrix'.
+ *
+ * @param from
+ * @param to
+ * @param distance
+ */
 void addDistance(BasicBlock *from, BasicBlock *to, uint32_t distance) {
     if (distanceMatrix.count(from) == 0 || distanceMatrix[from].count(to) == 0) {
         distanceMatrix.emplace(from, std::map<BasicBlock *, uint32_t>{{to, distance}});
@@ -66,6 +71,11 @@ void addDistance(BasicBlock *from, BasicBlock *to, uint32_t distance) {
     }
 }
 
+/**
+ * Sets the indices of regular, critical, and target basic blocks.
+ *
+ * @param targetInfos
+ */
 void setBBIndices(const TargetInfos &targetInfos) {
     for (auto &[bb, dist] : dTb) {
         allBBIndices[bb] = numAllBBs++;
@@ -80,6 +90,16 @@ void setBBIndices(const TargetInfos &targetInfos) {
     }
 }
 
+/**
+ * Writes the values of a matrix into a file.
+ *
+ * @param filepath
+ * @param matrix
+ * @param nRows
+ * @param nColumns
+ * @param writeDims
+ * @param delimiter
+ */
 void writeMatrix(const std::string &filepath,
                  const std::vector<std::vector<uint32_t>> &matrix,
                  uint32_t nRows,
@@ -113,6 +133,11 @@ void writeMatrix(const std::string &filepath,
     outputFile.close();
 }
 
+/**
+ * Writes the distance values from critical to all target basic blocks into a file.
+ *
+ * @param filepath
+ */
 void writeDistanceMatrix(const std::string &filepath) {
     std::vector<std::vector<uint32_t>> matrixArray(numCriticalBBs, std::vector<uint32_t>(numTargetBBs));
 
@@ -128,7 +153,6 @@ void writeDistanceMatrix(const std::string &filepath) {
 
     writeMatrix(filepath, matrixArray, numCriticalBBs, numTargetBBs);
 }
-// ---------------------------------------------------------------------------------------------------------------------
 
 /**
  * Retrieves the debug information (source location) associated with a given basic block.
@@ -204,7 +228,6 @@ void countCGDistance(const TargetInfos &targetInfos) {
         dtf[bb] = df;
     }
 
-    // Calculate the (harmonic) distance to all targets
     for (auto svffun : *svfModule) {
         double df_tmp = 0;
         bool flag = false;
@@ -269,7 +292,6 @@ void countCFGDistance(const SVFFunction *svffun, const TargetInfos &targetInfos)
             }
         }
 
-        // if (targets_llvm_bb.find(bb) != targets_llvm_bb.end()) {
         if (targetInfos.count(bb)) {
             dTb[bb] = 0;
             target_bbs.insert(bb);
