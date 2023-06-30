@@ -11,10 +11,10 @@ class Target {
   private:
     std::string filename;
     LineNumber lineNumber;
-    double score;
+    float score;
 
   public:
-    Target(const std::string &filename, LineNumber lineNumber, double score);
+    Target(const std::string &filename, LineNumber lineNumber, float score);
 
     /**
      * Returns the target filename.
@@ -35,7 +35,7 @@ class Target {
      *
      * @return
      */
-    [[nodiscard]] double getScore() const;
+    [[nodiscard]] float getScore() const;
 
     /**
      * Creates a Target object from a ('delimiter'-separated) line.

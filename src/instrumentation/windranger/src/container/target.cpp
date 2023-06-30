@@ -4,14 +4,14 @@
 
 using namespace cbi;
 
-Target::Target(const std::string &filename, LineNumber lineNumber, double score)
+Target::Target(const std::string &filename, LineNumber lineNumber, float score)
     : filename(filename), lineNumber(lineNumber), score(score) {}
 
 const std::string &Target::getFilename() const { return filename; }
 
 LineNumber Target::getLineNumber() const { return lineNumber; }
 
-double Target::getScore() const { return score; }
+float Target::getScore() const { return score; }
 
 Target Target::fromLine(std::string &line, char delimiter) {
     std::istringstream iss(line);
@@ -26,8 +26,15 @@ Target Target::fromLine(std::string &line, char delimiter) {
     getline(iss, token, delimiter);
     LineNumber lineNumber = stoi(token);
 
-    // TODO: Read score from line.
-    double score = 0.5;
+    // Skip values in between ...
+    getline(iss, token, delimiter);
+    getline(iss, token, delimiter);
+    getline(iss, token, delimiter);
+    getline(iss, token, delimiter);
+    getline(iss, token, delimiter);
+
+    getline(iss, token, delimiter);
+    float score = std::stof(token);
 
     return {filename, lineNumber, score};
 }
