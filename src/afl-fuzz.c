@@ -32,6 +32,7 @@
 #include "hash.h"
 #include "types.h"
 
+#include <assert.h>
 #include <ctype.h>
 #include <dirent.h>
 #include <dlfcn.h>
@@ -58,8 +59,6 @@
 #include <termios.h>
 #include <time.h>
 #include <unistd.h>
-
-#include <assert.h>
 
 #if defined(__APPLE__) || defined(__FreeBSD__) || defined(__OpenBSD__)
 #include <sys/sysctl.h>
@@ -331,7 +330,7 @@ static u8 no_target_favor;
 static u8 target_fast;
 static u8 no_dynamic_switch;
 
-static u32 targets_num = 0;
+static u32 num_target_bbs = 0;
 static u8 *targets_bits;
 static u8 targets_all = 0;
 
@@ -386,6 +385,41 @@ static s32 interesting_32[] = {INTERESTING_8, INTERESTING_16, INTERESTING_32};
 static float *target_bb_scores;
 
 static u32 *critical_bb_id_map;
+
+static u32 **distance_matrix;
+
+void dm_init(const char *filename, u32 ***matrix, u32 *n_rows, u32 *n_cols) {
+    FILE *file = fopen(filename, "r");
+    if (file == NULL) {
+        printf("ERROR: Could not open matrix file!\n");
+        return;
+    }
+
+    // Read the first line to get the dimensions
+    fscanf(file, "%d:%d", n_rows, n_cols);
+
+    // Allocate memory for the matrix
+    *matrix = (u32 **)ck_alloc(*n_rows * sizeof(u32 *));
+    for (int i = 0; i < *n_rows; i++) {
+        (*matrix)[i] = (u32 *)ck_alloc(*n_cols * sizeof(u32));
+    }
+
+    // Read the values from the file
+    for (int i = 0; i < *n_rows; i++) {
+        for (int j = 0; j < *n_cols; j++) {
+            fscanf(file, "%d,", &(*matrix)[i][j]);
+        }
+    }
+
+    fclose(file);
+}
+
+void dm_free(u32 **matrix, u32 n_rows) {
+    for (int i = 0; i < n_rows; i++) {
+        ck_free(matrix[i]);
+    }
+    ck_free(matrix);
+}
 // ---------------------------------------------------------------------------------------------------------------------
 
 /* Fuzzing stages */
@@ -1551,7 +1585,7 @@ static bool hit_rare_targets(struct queue_entry *q) {
         return false;
     }
     u32 i;
-    for (i = 0; i < targets_num; i++) {
+    for (i = 0; i < num_target_bbs; i++) {
         if (q->targets && q->targets[i]) {
             if (target_count[i] < TARGET_LIMIT) {
                 return true;
@@ -1723,11 +1757,11 @@ EXP_ST void setup_shm(void) {
     memset(virgin_tmout, 255, MAP_SIZE);
     memset(virgin_crash, 255, MAP_SIZE);
 
-    targets_bits = ck_alloc(targets_num);
-    target_count = ck_alloc(targets_num * sizeof(u32));
+    targets_bits = ck_alloc(num_target_bbs);
+    target_count = ck_alloc(num_target_bbs * sizeof(u32));
 
     /* Allocate 24 byte more for distance info */
-    shm_id = shmget(IPC_PRIVATE, MAP_SIZE + 16 + targets_num, IPC_CREAT | IPC_EXCL | 0600);
+    shm_id = shmget(IPC_PRIVATE, MAP_SIZE + 16 + num_target_bbs, IPC_CREAT | IPC_EXCL | 0600);
 
     if (shm_id < 0) {
         PFATAL("shmget() failed");
@@ -3007,7 +3041,7 @@ static u8 run_target(char **argv, u32 timeout) {
        must prevent any earlier operations from venturing into that
        territory. */
 
-    memset(trace_bits, 0, MAP_SIZE + 16 + targets_num);
+    memset(trace_bits, 0, MAP_SIZE + 16 + num_target_bbs);
     memset(critical_bits, 0, MAP_SIZE);
     memset(distance_bits, 0, MAP_SIZE);
     memset(condition_bits, 0, sizeof(u64) * cond_num * 2);
@@ -3215,7 +3249,7 @@ static u8 run_target2(char **argv, u32 timeout) {
        must prevent any earlier operations from venturing into that
        territory. */
 
-    memset(trace_bits, 0, MAP_SIZE + 16 + targets_num);
+    memset(trace_bits, 0, MAP_SIZE + 16 + num_target_bbs);
     memset(critical_bits, 0, MAP_SIZE);
     memset(distance_bits, 0, MAP_SIZE);
     memset(condition_bits, 0, sizeof(u64) * cond_num * 2);
@@ -3539,8 +3573,8 @@ static u8 calibrate_case(char **argv, struct queue_entry *q, u8 *use_mem, u32 ha
         is_target = 0;
         is_rare_target = 0;
         targets_all = 1;
-        u8 *tmp_targets = ck_alloc(targets_num);
-        for (i = 0; i < targets_num; i++) {
+        u8 *tmp_targets = ck_alloc(num_target_bbs);
+        for (i = 0; i < num_target_bbs; i++) {
             u8 flag = *(trace_bits + MAP_SIZE + 16 + i);
             if (flag) {
                 is_target = 1;
@@ -5983,9 +6017,9 @@ EXP_ST u8 common_fuzz_stuff(char **argv, u8 *out_buf, u32 len) {
     is_target = 0;
     is_rare_target = 0;
     targets_all = 1;
-    u8 *tmp_targets = ck_alloc(targets_num);
+    u8 *tmp_targets = ck_alloc(num_target_bbs);
 
-    for (i = 0; i < targets_num; i++) {
+    for (i = 0; i < num_target_bbs; i++) {
         u8 flag = *(trace_bits + MAP_SIZE + 16 + i);
         if (flag) {
             is_target = 1;
@@ -10149,7 +10183,6 @@ int stricmp(char const *a, char const *b) {
 
 void readDistanceAndTargets() {
     FILE *distance_file = fopen("distance.txt", "r");
-    FILE *targets_file = fopen("targets.txt", "r");
     char buf[1024];
 
     if (distance_file == NULL) {
@@ -10190,15 +10223,18 @@ void readDistanceAndTargets() {
         }
     }
 
+    fclose(distance_file);
+
     // critical_count = ck_alloc(sizeof(u32)*count);
 
+    FILE *targets_file = fopen("targets.txt", "r");
     if (targets_file == NULL) {
         FATAL("targets.txt not exist");
     }
 
     // First line contains the number of target BBs
     fgets(buf, sizeof(buf), targets_file);
-    u32 num_target_bbs = atoi(buf);
+    num_target_bbs = atoi(buf);
 
     target_bb_scores = ck_alloc(sizeof(u32) * num_critical_bbs);
 
@@ -10214,11 +10250,8 @@ void readDistanceAndTargets() {
         assert(target_bb_idx < num_target_bbs);
 
         target_bb_scores[target_bb_idx] = vuln_score;
-
-        targets_num++;
     }
 
-    fclose(distance_file);
     fclose(targets_file);
 }
 
@@ -10709,6 +10742,9 @@ int main(int argc, char **argv) {
     readDistanceAndTargets();
     readCondition();
 
+    u32 dm_n_rows, dm_n_cols;
+    dm_init("./dm.csv", &distance_matrix, &dm_n_rows, &dm_n_cols);
+
     setup_post();
     setup_shm();
     init_count_class16();
@@ -10927,6 +10963,8 @@ stop_fuzzing:
 
     ck_free(target_bb_scores);
     ck_free(critical_bb_id_map);
+
+    dm_free(distance_matrix, dm_n_rows);
 
     ck_free(critical_ids);
 
