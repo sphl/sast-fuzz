@@ -54,6 +54,18 @@ std::map<BasicBlock *, uint32_t> criticalBBIndices;
 
 std::map<const SVFFunction *, std::map<BasicBlock *, uint32_t>> targetCGDistances;
 
+std::map<BasicBlock *, std::map<BasicBlock *, uint32_t>> distanceMatrix;
+
+void addDistance(BasicBlock *from, BasicBlock *to, uint32_t distance) {
+    if (distanceMatrix.count(from) == 0 || distanceMatrix[from].count(to) == 0) {
+        distanceMatrix.emplace(from, std::map<BasicBlock *, uint32_t>{{to, distance}});
+    } else {
+        if (distanceMatrix[from][to] > distance) {
+            distanceMatrix[from][to] = distance;
+        }
+    }
+}
+
 void writeMatrix(const std::string &filepath,
                  uint32_t **matrix,
                  uint32_t nRows,
@@ -197,6 +209,8 @@ void countCFGDistance(const SVFFunction *svffun, const TargetInfos &targetInfos)
     std::map<BasicBlock *, std::map<BasicBlock *, uint32_t>> dtb;
     std::set<BasicBlock *> target_bbs;
 
+    std::map<BasicBlock *, const SVFFunction *> functionCalls;
+
     for (auto &bit : *svffun->getLLVMFun()) {
         BasicBlock *bb = &bit;
         for (BasicBlock::iterator it = bb->begin(), eit = bb->end(); it != eit; ++it) {
@@ -209,13 +223,17 @@ void countCFGDistance(const SVFFunction *svffun, const TargetInfos &targetInfos)
                 const SVFFunction *svffunc_tmp = svfModule->getSVFFunction(CB->getCalledFunction());
 
                 if (dTf.count(svffunc_tmp) != 0) {
+                    functionCalls.emplace(bb, svffunc_tmp);
+
                     if (target_bbs.find(bb) != target_bbs.end()) {
                         if (dTb[bb] > 10 * dTf[svffunc_tmp]) {
                             dTb[bb] = 10 * dTf[svffunc_tmp];
+                            functionCalls[bb] = svffunc_tmp;
                         }
                     } else {
                         target_bbs.insert(bb);
                         dTb[bb] = 10 * dTf[svffunc_tmp];
+                        functionCalls[bb] = svffunc_tmp;
                     }
                 }
             }
@@ -290,6 +308,15 @@ void countCFGDistance(const SVFFunction *svffun, const TargetInfos &targetInfos)
         BasicBlock *bb = &bit;
 
         if (target_bbs.find(bb) != target_bbs.end()) {
+            if (functionCalls.count(bb) == 0) {
+                // Target BB (trivial case)
+                addDistance(bb, bb, 0);
+            } else {
+                // Target function call BB
+                for (auto &[targetBB, targetDist] : targetCGDistances.at(functionCalls[bb])) {
+                    addDistance(bb, targetBB, targetDist);
+                }
+            }
             continue;
         }
 
@@ -299,6 +326,16 @@ void countCFGDistance(const SVFFunction *svffun, const TargetInfos &targetInfos)
             if (db.second.count(bb)) {
                 db_tmp += (double)1 / (db.second[bb] + dTb[db.first]);
                 flag = true;
+
+                if (functionCalls.count(bb) == 0 || targetInfos.count(bb)) {
+                    // Target BB
+                    addDistance(bb, db.first, db.second[bb]);
+                } else {
+                    // Target function call BB
+                    for (auto &[targetBB, targetDist] : targetCGDistances.at(functionCalls[db.first])) {
+                        addDistance(bb, targetBB, db.second[bb] + targetDist);
+                    }
+                }
             }
         }
 
