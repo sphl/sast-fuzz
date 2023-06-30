@@ -59,6 +59,8 @@
 #include <time.h>
 #include <unistd.h>
 
+#include <assert.h>
+
 #if defined(__APPLE__) || defined(__FreeBSD__) || defined(__OpenBSD__)
 #include <sys/sysctl.h>
 #endif /* __APPLE__ || __FreeBSD__ || __OpenBSD__ */
@@ -379,6 +381,12 @@ static u8 *(*post_handler)(u8 *buf, u32 *len);
 static s8 interesting_8[] = {INTERESTING_8};
 static s16 interesting_16[] = {INTERESTING_8, INTERESTING_16};
 static s32 interesting_32[] = {INTERESTING_8, INTERESTING_16, INTERESTING_32};
+
+// ---------------------------------------------------------------------------------------------------------------------
+static float *target_bb_scores;
+
+static u32 *critical_bb_id_map;
+// ---------------------------------------------------------------------------------------------------------------------
 
 /* Fuzzing stages */
 
@@ -10148,27 +10156,39 @@ void readDistanceAndTargets() {
         FATAL("distance.txt not exist");
     }
 
-    u32 count = 0;
-    critical_ids = ck_alloc(sizeof(u32) * 100);
+    // First line contains the number of critical BBs
+    fgets(buf, sizeof(buf), distance_file);
+    u32 num_critical_bbs = atoi(buf);
+
+    critical_ids = ck_alloc(sizeof(u32) * (num_critical_bbs + 1));
+    critical_bb_id_map = ck_alloc(sizeof(u32) * (num_critical_bbs + 1));
+
+    critical_ids[0] = num_critical_bbs;
+
+    u32 idx = 0;
     while (fgets(buf, sizeof(buf), distance_file) != NULL) {
         char *token;
+
         token = strtok(buf, " ");
-        int idx = atoi(token);
+        int bb_idx = atoi(token);
+
+        token = strtok(NULL, " ");
+        int critical_bb_idx = atoi(token);
+
         token = strtok(NULL, " ");
         int dis = atoi(token);
-        distance_val[idx] = dis;
-        token = strtok(NULL, " ");
-        if (strcmp(token, "1") == 0) {
-            count++;
-            if (count % 100 == 0) {
-                critical_ids = ck_realloc(critical_ids, sizeof(u32) * (count + 100));
-            }
-            critical_ids[count] = idx;
+
+        distance_val[bb_idx] = dis;
+
+        if (critical_bb_idx > -1) {
+            idx++;
+
+            assert(critical_bb_idx < num_critical_bbs);
+
+            critical_ids[idx] = bb_idx;
+            critical_bb_id_map[idx] = critical_bb_idx;
         }
     }
-
-    // NOTE: First index contains the number of critical BBs identified
-    critical_ids[0] = count;
 
     // critical_count = ck_alloc(sizeof(u32)*count);
 
@@ -10176,7 +10196,25 @@ void readDistanceAndTargets() {
         FATAL("targets.txt not exist");
     }
 
+    // First line contains the number of target BBs
+    fgets(buf, sizeof(buf), targets_file);
+    u32 num_target_bbs = atoi(buf);
+
+    target_bb_scores = ck_alloc(sizeof(u32) * num_critical_bbs);
+
     while (fgets(buf, sizeof(buf), targets_file) != NULL) {
+        char *token;
+
+        token = strtok(buf, " ");
+        u32 target_bb_idx = atoi(token);
+
+        token = strtok(NULL, " ");
+        float vuln_score = atof(token);
+
+        assert(target_bb_idx < num_target_bbs);
+
+        target_bb_scores[target_bb_idx] = vuln_score;
+
         targets_num++;
     }
 
@@ -10886,6 +10924,9 @@ stop_fuzzing:
     ck_free(target_path);
     ck_free(target_path2);
     ck_free(sync_id);
+
+    ck_free(target_bb_scores);
+    ck_free(critical_bb_id_map);
 
     ck_free(critical_ids);
 
