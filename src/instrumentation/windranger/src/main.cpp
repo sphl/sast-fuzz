@@ -66,6 +66,20 @@ void addDistance(BasicBlock *from, BasicBlock *to, uint32_t distance) {
     }
 }
 
+void setBBIndices(const TargetInfos &targetInfos) {
+    for (auto &[bb, dist] : dTb) {
+        allBBIndices[bb] = numAllBBs++;
+
+        if (targetInfos.count(bb)) {
+            targetBBIndices[bb] = numTargetBBs++;
+        }
+
+        if (criticalBBs.count(bb)) {
+            criticalBBIndices[bb] = numCriticalBBs++;
+        }
+    }
+}
+
 void writeMatrix(const std::string &filepath,
                  const std::vector<std::vector<uint32_t>> &matrix,
                  uint32_t nRows,
@@ -97,6 +111,22 @@ void writeMatrix(const std::string &filepath,
     }
 
     outputFile.close();
+}
+
+void writeDistanceMatrix(const std::string &filepath) {
+    std::vector<std::vector<uint32_t>> matrixArray(numCriticalBBs, std::vector<uint32_t>(numTargetBBs));
+
+    for (auto &[criticalBB, criticalBBId] : criticalBBIndices) {
+        for (auto &[targetBB, targetBBId] : targetBBIndices) {
+            if (distanceMatrix.at(criticalBB).count(targetBB) == 0) {
+                matrixArray[criticalBBId][targetBBId] = 0;
+            } else {
+                matrixArray[criticalBBId][targetBBId] = distanceMatrix[criticalBB][targetBB];
+            }
+        }
+    }
+
+    writeMatrix(filepath, matrixArray, numCriticalBBs, numTargetBBs);
 }
 // ---------------------------------------------------------------------------------------------------------------------
 
@@ -412,9 +442,9 @@ void instrument(const TargetInfos &targetInfos) {
     ofstream distanceFile("distance.txt", std::ios::out);
     ofstream outfile2("functions.txt", std::ios::out);
     ofstream targetBBFile("targets.txt", std::ios::out);
-    // uint32_t bb_id = 0;
+
     uint32_t func_id = 0;
-    // uint32_t target_id = 0;
+
     uint32_t v_instrument_num = 0;
     uint32_t c_instrument_num = 0;
 
@@ -890,39 +920,13 @@ int main(int argc, char **argv) {
     countVanillaDistance(targetInfos);
     identifyCriticalBB();
 
-    // -----------------------------------------------------------------------------------------------------------------
-    for (auto &[bb, dist] : dTb) {
-        allBBIndices[bb] = numAllBBs++;
-
-        if (targetInfos.count(bb)) {
-            targetBBIndices[bb] = numTargetBBs++;
-        }
-
-        if (criticalBBs.count(bb)) {
-            criticalBBIndices[bb] = numCriticalBBs++;
-        }
-    }
-    // -----------------------------------------------------------------------------------------------------------------
+    setBBIndices(targetInfos);
 
     instrument(targetInfos);
     analyzeCondition();
     instrumentCondition();
 
-    // -----------------------------------------------------------------------------------------------------------------
-    std::vector<std::vector<uint32_t>> matrixArray(numCriticalBBs, std::vector<uint32_t>(numTargetBBs));
-
-    for (auto &[criticalBB, criticalBBId] : criticalBBIndices) {
-        for (auto &[targetBB, targetBBId] : targetBBIndices) {
-            if (distanceMatrix.at(criticalBB).count(targetBB) == 0) {
-                matrixArray[criticalBBId][targetBBId] = 0;
-            } else {
-                matrixArray[criticalBBId][targetBBId] = distanceMatrix[criticalBB][targetBB];
-            }
-        }
-    }
-
-    writeMatrix("./dm.csv", matrixArray, numCriticalBBs, numTargetBBs, true, ',');
-    // -----------------------------------------------------------------------------------------------------------------
+    writeDistanceMatrix("dm.csv");
 
     LLVMModuleSet::getLLVMModuleSet()->dumpModulesToFile(".ci.bc");
 
