@@ -423,6 +423,17 @@ void dm_free(u32 **matrix, u32 n_rows) {
     }
     ck_free(matrix);
 }
+
+// TODO: Use hashmap instead.
+inline int lookup_cbb_id(u32 id) {
+    for (int i = 0; i < num_critical_bbs; i++) {
+        int idx = i + 1;
+        if (critical_ids[idx] == id) {
+            return critical_bb_id_map[idx];
+        }
+    }
+    return -1;
+}
 // ---------------------------------------------------------------------------------------------------------------------
 
 /* Fuzzing stages */
@@ -10200,6 +10211,7 @@ void readDistanceAndTargets() {
     critical_bb_id_map = ck_alloc(sizeof(u32) * (num_critical_bbs + 1));
 
     critical_ids[0] = num_critical_bbs;
+    critical_bb_id_map[0] = num_critical_bbs;
 
     u32 idx = 0;
     while (fgets(buf, sizeof(buf), distance_file) != NULL) {
