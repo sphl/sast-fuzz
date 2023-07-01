@@ -435,6 +435,26 @@ inline int lookup_cbb_id(u32 id) {
     }
     return -1;
 }
+
+void update_cbb_distances() {
+    for (int c = 0; c < num_critical_bbs; c++) {
+        float cbb_dist = 0.0f;
+
+        for (int t = 0; t < num_target_bbs; t++) {
+            // If the target BB is enabled and the distance value is greater than 0, then include the (reciprocal)
+            // distance in the calculation.
+            if (target_bb_bitvec[t] && distance_matrix[c][t] > 0) {
+                cbb_dist += 1.0f / distance_matrix[c][t];
+            }
+        }
+
+        if (cbb_dist > 0.0f) {
+            critical_bb_distances[c] = 1.0f / cbb_dist;
+        } else {
+            critical_bb_distances[c] = 0.0f;
+        }
+    }
+}
 // ---------------------------------------------------------------------------------------------------------------------
 
 /* Fuzzing stages */
@@ -10768,6 +10788,8 @@ int main(int argc, char **argv) {
     assert(dm_n_cols == num_target_bbs);
 
     critical_bb_distances = ck_alloc(sizeof(float) * num_critical_bbs);
+
+    update_cbb_distances();
 
     setup_post();
     setup_shm();
