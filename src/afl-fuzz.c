@@ -429,10 +429,12 @@ void dm_free(u32 **matrix, u32 n_rows) {
 inline int lookup_cbb_id(u32 id) {
     for (int i = 0; i < num_critical_bbs; i++) {
         int idx = i + 1;
+
         if (critical_ids[idx] == id) {
             return critical_bb_id_map[idx];
         }
     }
+
     return -1;
 }
 
@@ -444,6 +446,7 @@ void update_cbb_distances() {
             // If the target BB is enabled and the distance value is greater than 0, then include the (reciprocal)
             // distance in the calculation.
             if (target_bb_bitvec[t] && distance_matrix[c][t] > 0) {
+                // TODO: Also factor in the target BB vulnerability score in the distance calculation.
                 cbb_dist += 1.0f / distance_matrix[c][t];
             }
         }
@@ -966,7 +969,13 @@ double calculate_cb_distance() {
 
     for (i = 0; i < MAP_SIZE; i++) {
         if (critical_bits[i] == 1) {
-            distance += (distance_val[i] * DEFAULT_DIFFICULTY);
+            int cbb_idx = lookup_cbb_id(i);
+
+            assert(cbb_idx > -1);
+
+            // distance += (distance_val[i] * DEFAULT_DIFFICULTY);
+            distance += (critical_bb_distances[cbb_idx] * DEFAULT_DIFFICULTY);
+
             count++;
         } else if (critical_bits[i] == 2) {
             solved_cbbs[i] = 1;
@@ -6639,16 +6648,24 @@ bool need_sniff(struct queue_entry *q) {
 void update_distance(struct queue_entry *q) {
     u32 i;
     u32 distance = 0;
+
     for (i = 0; i < q->critical_bbs[0]; i++) {
+        int cbb_idx = lookup_cbb_id(q->critical_bbs[i + 1]);
+
+        assert(cbb_idx > -1);
+
         if (q->critical_difficulty[i] == 0) {
-            distance += (distance_val[q->critical_bbs[i + 1]] * DEFAULT_DIFFICULTY);
+            // distance += (distance_val[q->critical_bbs[i + 1]] * DEFAULT_DIFFICULTY);
+            distance += (critical_bb_distances[cbb_idx] * DEFAULT_DIFFICULTY);
         } else {
             u32 quo = (q->critical_difficulty[i] / DIFFICULTY_STEP) + 1;
 
             if (quo < DEFAULT_DIFFICULTY) {
-                distance += (distance_val[q->critical_bbs[i + 1]] * quo);
+                // distance += (distance_val[q->critical_bbs[i + 1]] * quo);
+                distance += (critical_bb_distances[cbb_idx] * quo);
             } else {
-                distance += (distance_val[q->critical_bbs[i + 1]] * DEFAULT_DIFFICULTY);
+                // distance += (distance_val[q->critical_bbs[i + 1]] * DEFAULT_DIFFICULTY);
+                distance += (critical_bb_distances[cbb_idx] * DEFAULT_DIFFICULTY);
             }
         }
     }
