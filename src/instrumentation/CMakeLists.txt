@@ -15,5 +15,5 @@ add_library(afl-llvm-rt STATIC afl-llvm-rt.o.c)
 target_link_libraries(afl-llvm-rt PRIVATE afl_config)
 set_target_properties(afl-llvm-rt PROPERTIES PREFIX "")
 
-add_subdirectory(beacon)
+# add_subdirectory(beacon)
 add_subdirectory(windranger)
