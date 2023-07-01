@@ -450,19 +450,19 @@ u16 get_num_active_tbbs() {
 
 void update_cbb_distances() {
     for (int c = 0; c < num_critical_bbs; c++) {
-        float cbb_dist = 0.0f;
+        float cbb_distance = 0.0f;
 
         for (int t = 0; t < num_target_bbs; t++) {
             // If the target BB is enabled and the distance value is greater than 0, then include the (reciprocal)
             // distance in the calculation.
             if (tbb_activation_map[t] > 0 && distance_matrix[c][t] > 0) {
-                // TODO: Also factor in the target BB vulnerability score in the distance calculation.
-                cbb_dist += 1.0f / distance_matrix[c][t];
+                // TODO: Also factor in the target BB vulnerability score ('target_bb_scores[t]') in the distance calculation.
+                cbb_distance += 1.0f / distance_matrix[c][t];
             }
         }
 
-        if (cbb_dist > 0.0f) {
-            critical_bb_distances[c] = 1.0f / cbb_dist;
+        if (cbb_distance > 0.0f) {
+            critical_bb_distances[c] = 1.0f / cbb_distance;
         } else {
             critical_bb_distances[c] = 0.0f;
         }
