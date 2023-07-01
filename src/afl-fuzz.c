@@ -10251,7 +10251,7 @@ void readDistanceAndTargets() {
     fgets(buf, sizeof(buf), targets_file);
     num_target_bbs = atoi(buf);
 
-    target_bb_scores = ck_alloc(sizeof(u32) * num_critical_bbs);
+    target_bb_scores = ck_alloc(sizeof(float) * num_target_bbs);
 
     while (fgets(buf, sizeof(buf), targets_file) != NULL) {
         char *token;
@@ -10260,11 +10260,11 @@ void readDistanceAndTargets() {
         u32 target_bb_idx = atoi(token);
 
         token = strtok(NULL, " ");
-        float vuln_score = atof(token);
+        float score = atof(token);
 
         assert(target_bb_idx < num_target_bbs);
 
-        target_bb_scores[target_bb_idx] = vuln_score;
+        target_bb_scores[target_bb_idx] = score;
     }
 
     fclose(targets_file);
