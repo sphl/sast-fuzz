@@ -382,7 +382,7 @@ static s16 interesting_16[] = {INTERESTING_8, INTERESTING_16};
 static s32 interesting_32[] = {INTERESTING_8, INTERESTING_16, INTERESTING_32};
 
 // ---------------------------------------------------------------------------------------------------------------------
-static u8 *target_bb_bitvec;
+static u16 *tbb_activation_map;
 
 static float *target_bb_scores;
 
@@ -426,7 +426,7 @@ void dm_free(u32 **matrix, u32 n_rows) {
 }
 
 // TODO: Use hashmap instead.
-inline int lookup_cbb_id(u32 id) {
+int lookup_cbb_id(u32 id) {
     for (int i = 0; i < num_critical_bbs; i++) {
         int idx = i + 1;
 
@@ -438,6 +438,16 @@ inline int lookup_cbb_id(u32 id) {
     return -1;
 }
 
+u16 get_num_active_tbbs() {
+    u16 n = 0;
+
+    for (int i = 0; i < num_target_bbs; i++) {
+        n += ((tbb_activation_map[i] > 0) ? 1 : 0);
+    }
+
+    return n;
+}
+
 void update_cbb_distances() {
     for (int c = 0; c < num_critical_bbs; c++) {
         float cbb_dist = 0.0f;
@@ -445,7 +455,7 @@ void update_cbb_distances() {
         for (int t = 0; t < num_target_bbs; t++) {
             // If the target BB is enabled and the distance value is greater than 0, then include the (reciprocal)
             // distance in the calculation.
-            if (target_bb_bitvec[t] && distance_matrix[c][t] > 0) {
+            if (tbb_activation_map[t] > 0 && distance_matrix[c][t] > 0) {
                 // TODO: Also factor in the target BB vulnerability score in the distance calculation.
                 cbb_dist += 1.0f / distance_matrix[c][t];
             }
@@ -3629,6 +3639,8 @@ static u8 calibrate_case(char **argv, struct queue_entry *q, u8 *use_mem, u32 ha
                 if (target_count[i] < TARGET_LIMIT) {
                     is_rare_target = 1;
                 }
+
+                // TODO: Check if target BBs should also be disabled during calibration?
             }
             if (targets_bits[i] == 0) {
                 targets_all = 0;
@@ -6063,6 +6075,8 @@ EXP_ST u8 common_fuzz_stuff(char **argv, u8 *out_buf, u32 len) {
     targets_all = 1;
     u8 *tmp_targets = ck_alloc(num_target_bbs);
 
+    u16 num_active_tbbs = get_num_active_tbbs();
+
     for (i = 0; i < num_target_bbs; i++) {
         u8 flag = *(trace_bits + MAP_SIZE + 16 + i);
         if (flag) {
@@ -6074,6 +6088,10 @@ EXP_ST u8 common_fuzz_stuff(char **argv, u8 *out_buf, u32 len) {
             if (target_count[i] < TARGET_LIMIT) {
                 is_rare_target = 1;
             }
+
+            if (tbb_activation_map[i] > 0) {
+                tbb_activation_map[i]--;
+            }
         }
         if (targets_bits[i] == 0) {
             targets_all = 0;
@@ -6084,6 +6102,13 @@ EXP_ST u8 common_fuzz_stuff(char **argv, u8 *out_buf, u32 len) {
                 targets_bits[i] = 1;
             }
         }
+    }
+
+    // TODO: Switch into exploration mode if 'num_active_tbbs' == 0!
+
+    // Update the critical BB distances if one or more target BBs were deactivated
+    if (num_active_tbbs != get_num_active_tbbs()) {
+        update_cbb_distances();
     }
 
     /* This handles FAULT_ERROR for us: */
@@ -10795,8 +10820,9 @@ int main(int argc, char **argv) {
     readDistanceAndTargets();
     readCondition();
 
-    target_bb_bitvec = ck_alloc(num_target_bbs);
-    memset(target_bb_bitvec, 1, num_target_bbs);
+    tbb_activation_map = ck_alloc(sizeof(u16) * num_target_bbs);
+    // NOTE: We require the target BB to be executed only once to be removed from the target set.
+    memset(tbb_activation_map, 1, num_target_bbs);
 
     u32 dm_n_rows, dm_n_cols;
     dm_init("./dm.csv", &distance_matrix, &dm_n_rows, &dm_n_cols);
@@ -11025,7 +11051,7 @@ stop_fuzzing:
     ck_free(sync_id);
 
     ck_free(target_bb_scores);
-    ck_free(target_bb_bitvec);
+    ck_free(tbb_activation_map);
 
     ck_free(critical_bb_id_map);
 
