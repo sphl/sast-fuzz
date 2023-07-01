@@ -388,6 +388,7 @@ static float *target_bb_scores;
 
 static u32 num_critical_bbs;
 static u32 *critical_bb_id_map;
+static float *critical_bb_distances;
 
 static u32 **distance_matrix;
 
@@ -10766,6 +10767,8 @@ int main(int argc, char **argv) {
     assert(dm_n_rows == num_critical_bbs);
     assert(dm_n_cols == num_target_bbs);
 
+    critical_bb_distances = ck_alloc(sizeof(float) * num_critical_bbs);
+
     setup_post();
     setup_shm();
     init_count_class16();
@@ -10989,6 +10992,7 @@ stop_fuzzing:
 
     dm_free(distance_matrix, dm_n_rows);
 
+    ck_free(critical_bb_distances);
     ck_free(critical_ids);
 
     fclose(critical_log);
