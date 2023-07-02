@@ -6,15 +6,25 @@ set(SVF_DIR "/opt/svf-2.2")
 include("${CMAKE_SOURCE_DIR}/cmake/find_svf.cmake")
 
 add_library(afl_config INTERFACE)
-# target_compile_options(afl_config INTERFACE -funroll-loops -O3 -Wall -Wno-pointer-sign)
-target_compile_options(
-    afl_config
-    INTERFACE -funroll-loops
-              -g
-              -O0
-              -Wall
-              -Wno-pointer-sign
-)
+
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    target_compile_options(
+        afl_config
+        INTERFACE -g
+                  -O0
+                  -Wall
+                  -Wno-pointer-sign
+    )
+else ()
+    target_compile_options(
+        afl_config
+        INTERFACE -funroll-loops
+                  -O3
+                  -Wall
+                  -Wno-pointer-sign
+    )
+endif ()
+
 target_compile_definitions(
     afl_config
     INTERFACE _FORTIFY_SOURCE=2
