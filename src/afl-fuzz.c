@@ -10260,11 +10260,11 @@ int stricmp(char const *a, char const *b) {
 
 void readDistanceAndTargets() {
     FILE *distance_file = fopen("distance.txt", "r");
-    char buf[1024];
-
     if (distance_file == NULL) {
         FATAL("distance.txt not exist");
     }
+
+    char buf[1024];
 
     // First line contains the number of critical BBs
     fgets(buf, sizeof(buf), distance_file);
@@ -10276,28 +10276,28 @@ void readDistanceAndTargets() {
     critical_ids[0] = num_critical_bbs;
     critical_bb_id_map[0] = num_critical_bbs;
 
-    u32 idx = 0;
+    u32 i = 0;
     while (fgets(buf, sizeof(buf), distance_file) != NULL) {
         char *token;
 
         token = strtok(buf, " ");
-        int bb_idx = atoi(token);
+        int bb_id = atoi(token);
 
         token = strtok(NULL, " ");
-        int critical_bb_idx = atoi(token);
+        int critical_bb_id = atoi(token);
 
         token = strtok(NULL, " ");
-        int dis = atoi(token);
+        int bb_dist = atoi(token);
 
-        distance_val[bb_idx] = dis;
+        distance_val[bb_id] = bb_dist;
 
-        if (critical_bb_idx > -1) {
-            idx++;
+        if (critical_bb_id > -1) {
+            i++;
 
-            assert(critical_bb_idx < num_critical_bbs);
+            assert(critical_bb_id < num_critical_bbs);
 
-            critical_ids[idx] = bb_idx;
-            critical_bb_id_map[idx] = critical_bb_idx;
+            critical_ids[i] = bb_id;
+            critical_bb_id_map[i] = critical_bb_id;
         }
     }
 
