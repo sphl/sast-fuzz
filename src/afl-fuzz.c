@@ -388,7 +388,7 @@ static float *target_bb_scores;
 
 static u32 num_critical_bbs;
 // static u32 *critical_bb_id_map;
-int critical_bb_id_map[MAP_SIZE];
+static int critical_bb_id_map[MAP_SIZE];
 static float *critical_bb_distances;
 
 static u32 **distance_matrix;
@@ -426,7 +426,7 @@ void dm_free(u32 **matrix, u32 n_rows) {
     ck_free(matrix);
 }
 
-inline int lookup_cbb_id(u32 bb_id) {
+int lookup_cbb_id(u32 bb_id) {
     // for (int i = 0; i < num_critical_bbs; i++) {
     //     int idx = i + 1;
     //
