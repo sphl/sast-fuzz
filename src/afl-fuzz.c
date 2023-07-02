@@ -387,7 +387,8 @@ static u16 *tbb_activation_map;
 static float *target_bb_scores;
 
 static u32 num_critical_bbs;
-static u32 *critical_bb_id_map;
+// static u32 *critical_bb_id_map;
+int critical_bb_id_map[MAP_SIZE];
 static float *critical_bb_distances;
 
 static u32 **distance_matrix;
@@ -425,17 +426,18 @@ void dm_free(u32 **matrix, u32 n_rows) {
     ck_free(matrix);
 }
 
-// TODO: Use hashmap instead.
-int lookup_cbb_id(u32 id) {
-    for (int i = 0; i < num_critical_bbs; i++) {
-        int idx = i + 1;
+inline int lookup_cbb_id(u32 bb_id) {
+    // for (int i = 0; i < num_critical_bbs; i++) {
+    //     int idx = i + 1;
+    //
+    //     if (critical_ids[idx] == bb_id) {
+    //         return critical_bb_id_map[idx];
+    //     }
+    // }
+    //
+    // return -1;
 
-        if (critical_ids[idx] == id) {
-            return critical_bb_id_map[idx];
-        }
-    }
-
-    return -1;
+    return critical_bb_id_map[bb_id];
 }
 
 u16 get_num_active_tbbs() {
@@ -456,7 +458,8 @@ void update_cbb_distances() {
             // If the target BB is enabled and the distance value is greater than 0, then include the (reciprocal)
             // distance in the calculation.
             if (tbb_activation_map[t] > 0 && distance_matrix[c][t] > 0) {
-                // TODO: Also factor in the target BB vulnerability score ('target_bb_scores[t]') in the distance calculation.
+                // TODO: Also factor in the target BB vulnerability score ('target_bb_scores[t]') in the distance
+                // calculation.
                 cbb_distance += 1.0f / distance_matrix[c][t];
             }
         }
@@ -10271,10 +10274,10 @@ void readDistanceAndTargets() {
     num_critical_bbs = atoi(buf);
 
     critical_ids = ck_alloc(sizeof(u32) * (num_critical_bbs + 1));
-    critical_bb_id_map = ck_alloc(sizeof(u32) * (num_critical_bbs + 1));
+    // critical_bb_id_map = ck_alloc(sizeof(u32) * (num_critical_bbs + 1));
 
     critical_ids[0] = num_critical_bbs;
-    critical_bb_id_map[0] = num_critical_bbs;
+    // critical_bb_id_map[0] = num_critical_bbs;
 
     u32 i = 0;
     while (fgets(buf, sizeof(buf), distance_file) != NULL) {
@@ -10291,13 +10294,17 @@ void readDistanceAndTargets() {
 
         distance_val[bb_id] = bb_dist;
 
-        if (critical_bb_id > -1) {
+        if (critical_bb_id == -1) {
+            critical_bb_id_map[bb_id] = -1;
+        } else {
             i++;
 
             assert(critical_bb_id < num_critical_bbs);
 
             critical_ids[i] = bb_id;
-            critical_bb_id_map[i] = critical_bb_id;
+            // critical_bb_id_map[i] = critical_bb_id;
+
+            critical_bb_id_map[bb_id] = critical_bb_id;
         }
     }
 
@@ -11053,7 +11060,7 @@ stop_fuzzing:
     ck_free(target_bb_scores);
     ck_free(tbb_activation_map);
 
-    ck_free(critical_bb_id_map);
+    // ck_free(critical_bb_id_map);
 
     dm_free(distance_matrix, dm_n_rows);
 
