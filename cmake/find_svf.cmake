@@ -6,7 +6,7 @@ if (NOT DEFINED SVF_DIR)
     endif ()
 endif ()
 
-if (CMAKE_BUILD_TYPE MATCHES "Debug")
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(SVF_BUILD_DIR "${SVF_DIR}/Debug-build")
 else ()
     set(SVF_BUILD_DIR "${SVF_DIR}/Release-build")
