@@ -22,7 +22,6 @@ void io::writeFile(const string &filepath, const string &text) {
     ofstream outputFile(filepath);
 
     if (outputFile.is_open()) {
-        //outputFile << text << endl;
         outputFile << text;
         outputFile.close();
     }
