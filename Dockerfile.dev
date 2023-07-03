@@ -18,6 +18,7 @@ ARG LLVM_VARIANT="custom"
 ENV CODEQL_VERSION="2.12.0"
 ENV FLAWFINDER_VERSION="2.0.19"
 ENV INFER_VERSION="1.1.0"
+ENV SEMGREP_VERSION="1.24.0"
 ENV LLVM_VERSION="12.0.0"
 ENV SVF_VERSION="2.2"
 
@@ -101,6 +102,8 @@ RUN apt-get update -qq \
     && unzip -q "v${CODEQL_VERSION}.zip" \
     && rm -f "v${CODEQL_VERSION}.zip" \
     && mv "codeql-codeql-cli-v${CODEQL_VERSION}" "/opt/codeql-${CODEQL_VERSION}/lib" \
+    # Install Semgrep
+    && pip3 install semgrep==${SEMGREP_VERSION} \
     # Setup SSH
     && ( \
     echo 'LogLevel DEBUG2'; \
