@@ -7,7 +7,7 @@ using namespace std;
 using namespace rapidjson;
 using namespace sfi;
 
-string JSONPrinter::format(vector<FuncInfo> &funcInfos, map<BBId, set<BBId>> &icfgInfos) {
+string JSONPrinter::format(vector<FuncInfo> &funcInfos, optional<map<BBId, set<BBId>>> icfgInfos) {
     StringBuffer sb;
     Writer<StringBuffer> writer(sb);
 
@@ -69,24 +69,27 @@ string JSONPrinter::format(vector<FuncInfo> &funcInfos, map<BBId, set<BBId>> &ic
     }
     writer.EndArray();  // functions
 
-    writer.Key("iCFG");
-    writer.StartArray();
-    for (auto p : icfgInfos) {
-        BBId srcId = p.first;
-
-        writer.StartObject();
-        writer.Key("src");
-        writer.Uint64(srcId);
-
-        writer.Key("dst");
+    if (icfgInfos.has_value()) {
+        writer.Key("iCFG");
         writer.StartArray();
-        for (auto dstId : p.second) {
-            writer.Uint64(dstId);
+        for (auto p : icfgInfos.value()) {
+            BBId srcId = p.first;
+
+            writer.StartObject();
+            writer.Key("src");
+            writer.Uint64(srcId);
+
+            writer.Key("dst");
+            writer.StartArray();
+            for (auto dstId : p.second) {
+                writer.Uint64(dstId);
+            }
+            writer.EndArray();  // edge -- dest. block IDs
+            writer.EndObject();
         }
-        writer.EndArray();  // edge -- dest. block IDs
-        writer.EndObject();
+        writer.EndArray();  // edges (iCFG)
     }
-    writer.EndArray();  // edges (iCFG)
+
     writer.EndObject();
 
     return sb.GetString();

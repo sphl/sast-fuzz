@@ -20,7 +20,8 @@ class Printer {
      * @param icfgInfos Map of BBId to BBId sets (iCFG).
      * @return A string representation of the formatted information.
      */
-    virtual std::string format(std::vector<FuncInfo> &funcInfos, std::map<BBId, std::set<BBId>> &icfgInfos) = 0;
+    virtual std::string format(std::vector<FuncInfo> &funcInfos,
+                               std::optional<std::map<BBId, std::set<BBId>>> icfgInfos = std::nullopt) = 0;
 
     /**
      * This method writes the formatted information to a file.
@@ -28,8 +29,9 @@ class Printer {
      * @param funcInfos Vector of FuncInfo objects.
      * @param icfgInfos Map of BBId to BBId sets (iCFG).
      */
-    void
-    printToFile(std::string &filepath, std::vector<FuncInfo> &funcInfos, std::map<BBId, std::set<BBId>> &icfgInfos) {
+    void printToFile(std::string &filepath,
+                     std::vector<FuncInfo> &funcInfos,
+                     std::optional<std::map<BBId, std::set<BBId>>> icfgInfos = std::nullopt) {
         io::writeFile(filepath, format(funcInfos, icfgInfos));
     }
 };
@@ -43,7 +45,8 @@ class JSONPrinter : public Printer {
      * @param icfgInfos Map of BBId to BBId sets (iCFG).
      * @return A JSON string representation of the formatted information.
      */
-    std::string format(std::vector<FuncInfo> &funcInfos, std::map<BBId, std::set<BBId>> &icfgInfos) override;
+    std::string format(std::vector<FuncInfo> &funcInfos,
+                       std::optional<std::map<BBId, std::set<BBId>>> icfgInfos = std::nullopt) override;
 };
 
 }  // namespace sfi

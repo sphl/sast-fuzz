@@ -25,9 +25,9 @@ int main(int argc, char **argv) {
         Inspector inspector(inputFile);
 
         auto funcInfos = inspector.getFuncInfos();
-        auto icfgInfos = inspector.getICFGInfos();
+        // auto icfgInfos = inspector.getICFGInfos();
 
-        printer.printToFile(outputFile, funcInfos, icfgInfos);
+        printer.printToFile(outputFile, funcInfos);
 
         return 0;
 
