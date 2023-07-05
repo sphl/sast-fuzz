@@ -426,17 +426,19 @@ void dm_free(u32 **matrix, u32 n_rows) {
     ck_free(matrix);
 }
 
-int lookup_cbb_id(u32 bb_id) {
-    // for (int i = 0; i < num_critical_bbs; i++) {
-    //     int idx = i + 1;
-    //
-    //     if (critical_ids[idx] == bb_id) {
-    //         return critical_bb_id_map[idx];
-    //     }
-    // }
-    //
-    // return -1;
+//int lookup_cbb_id(u32 bb_id) {
+//    for (int i = 0; i < num_critical_bbs; i++) {
+//        int idx = i + 1;
+//
+//        if (critical_ids[idx] == bb_id) {
+//            return critical_bb_id_map[idx];
+//        }
+//    }
+//
+//    return -1;
+//}
 
+int lookup_cbb_id(u32 bb_id) {
     return critical_bb_id_map[bb_id];
 }
 

@@ -581,6 +581,7 @@ void instrument(const TargetInfos &targetInfos) {
                                 ->setMetadata(M->getMDKindID("nosanitize"), MDNode::get(*C, None));
                         c_instrument_num++;
                     }
+
                     critical_ids[bb] = bbId;
                 }
 
