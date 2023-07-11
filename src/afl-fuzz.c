@@ -463,15 +463,15 @@ void update_cbb_distances() {
             // If the target BB is enabled and the distance value is greater than 0, then include the (reciprocal)
             // distance in the calculation.
             if (tbb_activation_map[t] > 0 && distance_matrix[c][t] > 0) {
-                // cbb_distance += 1.0f / distance_matrix[c][t];
+                cbb_distance += 1.0f / distance_matrix[c][t];
 
-                if (fabsf(target_bb_scores[t] - 1.0f) < 0.001f) {
-                    vuln_factor = 1.0f;
-                } else {
-                    vuln_factor = 10.0f * (1.0f - target_bb_scores[t]);
-                }
-
-                cbb_distance += 1.0f / (distance_matrix[c][t] * vuln_factor);
+                // if (fabsf(target_bb_scores[t] - 1.0f) < 0.001f) {
+                //     vuln_factor = 1.0f;
+                // } else {
+                //     vuln_factor = 10.0f * (1.0f - target_bb_scores[t]);
+                // }
+                //
+                // cbb_distance += 1.0f / (distance_matrix[c][t] * vuln_factor);
 
                 n++;
             }
