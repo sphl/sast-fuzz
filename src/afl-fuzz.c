@@ -384,8 +384,6 @@ static s32 interesting_32[] = {INTERESTING_8, INTERESTING_16, INTERESTING_32};
 // ---------------------------------------------------------------------------------------------------------------------
 static u16 *tbb_activation_map;
 
-static float *target_bb_scores;
-
 static u32 num_critical_bbs;
 // static u32 *critical_bb_id_map;
 static int critical_bb_id_map[MAP_SIZE];
@@ -484,6 +482,39 @@ void update_cbb_distances() {
         }
     }
 }
+// ---------------------------------------------------------------------------------------------------------------------
+enum tbb_status { finished = 0, active = 1, paused = 2 };
+
+struct tbb_info {
+    enum tbb_status status;
+    float vuln_score;
+    bool cov_flag;
+    uint64_t n_input_execs;
+    uint32_t n_cycle_skips;
+    uint32_t n_prev_cycle_skips;
+};
+
+typedef struct tbb_info tbb_info_t;
+
+tbb_info_t *tbb_info_init(float vuln_score) {
+    tbb_info_t *info = ck_alloc(sizeof(tbb_info_t));
+
+    info->status = active;
+    info->vuln_score = vuln_score;
+    info->cov_flag = false;
+
+    info->n_input_execs = 0;
+    info->n_cycle_skips = 0;
+    info->n_prev_cycle_skips = 1;
+
+    return info;
+}
+
+void tbb_info_free(tbb_info_t *info) {
+    ck_free(info);
+}
+
+tbb_info_t **tbb_infos;
 // ---------------------------------------------------------------------------------------------------------------------
 
 /* Fuzzing stages */
@@ -10334,7 +10365,7 @@ void readDistanceAndTargets() {
     fgets(buf, sizeof(buf), targets_file);
     num_target_bbs = atoi(buf);
 
-    target_bb_scores = ck_alloc(sizeof(float) * num_target_bbs);
+    tbb_infos = ck_alloc(sizeof(tbb_info_t *) * num_target_bbs);
 
     while (fgets(buf, sizeof(buf), targets_file) != NULL) {
         char *token;
@@ -10347,7 +10378,7 @@ void readDistanceAndTargets() {
 
         assert(target_bb_idx < num_target_bbs);
 
-        target_bb_scores[target_bb_idx] = score;
+        tbb_infos[target_bb_idx] = tbb_info_init(score);
     }
 
     fclose(targets_file);
@@ -11070,8 +11101,12 @@ stop_fuzzing:
     ck_free(target_path2);
     ck_free(sync_id);
 
-    ck_free(target_bb_scores);
     ck_free(tbb_activation_map);
+
+    for (int i = 0; i < num_target_bbs; i++) {
+        tbb_info_free(tbb_infos[i]);
+    }
+    ck_free(tbb_infos);
 
     // ck_free(critical_bb_id_map);
 
