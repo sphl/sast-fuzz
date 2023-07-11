@@ -382,6 +382,9 @@ static s16 interesting_16[] = {INTERESTING_8, INTERESTING_16};
 static s32 interesting_32[] = {INTERESTING_8, INTERESTING_16, INTERESTING_32};
 
 // ---------------------------------------------------------------------------------------------------------------------
+uint64_t cycle_length = 10000;
+uint64_t n_cycle_inputs = 0;
+
 enum tbb_status { finished = 0, active = 1, paused = 2 };
 
 struct tbb_info {
@@ -409,11 +412,55 @@ tbb_info_t *tbb_info_init(float vuln_score) {
     return info;
 }
 
-void tbb_info_free(tbb_info_t *info) {
-    ck_free(info);
-}
+void tbb_info_free(tbb_info_t *info) { ck_free(info); }
 
 tbb_info_t **tbb_infos;
+
+void update_tbb_status() {
+    float sum_vuln_score = 0.0f;
+
+    for (int i = 0; i < num_target_bbs; i++) {
+        if (tbb_infos[i]->status == active || tbb_infos[i]->status == paused) {
+            sum_vuln_score += tbb_infos[i]->vuln_score;
+        }
+    }
+
+    for (int i = 0; i < num_target_bbs; i++) {
+        if (tbb_infos[i]->status == active || tbb_infos[i]->status == paused) {
+            uint64_t n_req_input_execs = (uint64_t)roundf(cycle_length * (tbb_infos[i]->vuln_score / sum_vuln_score));
+
+            if ((n_req_input_execs - tbb_infos[i]->n_input_execs) <= 0) {
+                // We do not care if the target BB is activated or paused. When it has been executed frequently enough
+                // by the generated fuzzy inputs, we mark it as finished
+                tbb_infos[i]->status = finished;
+            } else {
+                if (tbb_infos[i]->cov_flag) {
+                    // Each executed target BB will automatically be activated in the next cycle, regardless if paused
+                    // or already activated
+                    tbb_infos[i]->status = active;
+                    tbb_infos[i]->n_cycle_skips = 0;
+                    tbb_infos[i]->n_prev_cycle_skips = 1;
+                } else {
+                    if (tbb_infos[i]->n_cycle_skips == 0) {
+                        tbb_infos[i]->status = paused;
+                        tbb_infos[i]->n_cycle_skips = tbb_infos[i]->n_prev_cycle_skips;
+                        tbb_infos[i]->n_prev_cycle_skips++;
+                    } else {
+                        // Reactivate target BB if it has been "sufficiently" paused
+                        if ((tbb_infos[i]->n_cycle_skips - 1) == 0) {
+                            tbb_infos[i]->status = active;
+                            tbb_infos[i]->n_cycle_skips = 0;
+                        } else {
+                            tbb_infos[i]->n_cycle_skips--;
+                        }
+                    }
+                }
+            }
+
+            tbb_infos[i]->cov_flag = false;
+        }
+    }
+}
 // ---------------------------------------------------------------------------------------------------------------------
 static u32 num_critical_bbs;
 // static u32 *critical_bb_id_map;
@@ -467,9 +514,7 @@ void dm_free(u32 **matrix, u32 n_rows) {
 //     return -1;
 // }
 
-int lookup_cbb_id(u32 bb_id) {
-    return critical_bb_id_map[bb_id];
-}
+int lookup_cbb_id(u32 bb_id) { return critical_bb_id_map[bb_id]; }
 
 // u16 get_num_active_tbbs() {
 //     u16 n = 0;
@@ -6134,10 +6179,22 @@ EXP_ST u8 common_fuzz_stuff(char **argv, u8 *out_buf, u32 len) {
                 is_rare_target = 1;
             }
 
-            // if (tbb_activation_map[i] > 0) {
-            //     tbb_activation_map[i]--;
-            // }
+            tbb_infos[i]->cov_flag = true;
+            tbb_infos[i]->n_input_execs++;
         }
+
+        n_cycle_inputs++;
+
+        if (n_cycle_inputs == cycle_length) {
+            n_cycle_inputs = 0;
+
+            update_tbb_status();
+            update_cbb_distances();
+
+            // TODO: Set length for the next cycle!
+            // cycle_length = ...
+        }
+
         if (targets_bits[i] == 0) {
             targets_all = 0;
             if (flag) {
