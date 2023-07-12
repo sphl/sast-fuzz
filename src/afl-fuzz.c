@@ -385,6 +385,8 @@ static s32 interesting_32[] = {INTERESTING_8, INTERESTING_16, INTERESTING_32};
 uint64_t cycle_length = 10000;
 uint64_t n_cycle_inputs = 0;
 
+float vuln_score_thres = 0.5f;
+
 enum tbb_status { finished = 0, active = 1, paused = 2 };
 
 struct tbb_info {
@@ -487,8 +489,7 @@ void update_tbb_status() {
         // All target BBs have been finished, so focus on those with a vuln. score of at least X
         for (int i = 0; i < num_target_bbs; i++) {
 
-            // TODO: Make this threshold a parameter!
-            if (tbb_infos[i]->vuln_score >= 0.5) {
+            if (tbb_infos[i]->vuln_score >= vuln_score_thres) {
                 // Reset target BB infos
                 tbb_infos[i]->status = active;
                 tbb_infos[i]->cov_flag = false;
@@ -9752,10 +9753,14 @@ static void usage(u8 *argv0) {
 
          "WindRanger flag:\n\n"
 
-         "  -e            - disable critical basic blocks"
-         "  -a            - disable cbb-based seed prioritization"
-         "  -k            - disable data-flow sensitive mutation"
-         "  -s            - disable dynamic switch between explore and exploit stage"
+         "  -e            - disable critical basic blocks\n"
+         "  -a            - disable cbb-based seed prioritization\n"
+         "  -k            - disable data-flow sensitive mutation\n"
+         "  -s            - disable dynamic switch between explore and exploit stage\n"
+
+         "SASTFuzz:\n\n"
+
+         "  -v score      - minimum vuln. score a target BB must have for reactivation\n\n"
 
          "For additional tips, please consult %s/README.\n\n",
 
@@ -10555,7 +10560,9 @@ int main(int argc, char **argv) {
     gettimeofday(&tv, &tz);
     srandom(tv.tv_sec ^ tv.tv_usec ^ getpid());
 
-    while ((opt = getopt(argc, argv, "+i:o:f:m:t:T:E:dnCB:S:M:x:Qz:c:ealkjpus")) > 0) {
+    float temp;
+
+    while ((opt = getopt(argc, argv, "+i:o:f:m:t:T:E:dnCB:S:M:x:Qz:c:ealkjpusv:")) > 0) {
         switch (opt) {
         case 'i': /* input dir */
 
@@ -10876,6 +10883,17 @@ int main(int argc, char **argv) {
                 FATAL("Multiple -s options not supported");
             }
             no_dynamic_switch = 1;
+            break;
+
+        case 'v':
+            temp = atof(optarg);
+
+            if (temp >= 0.0f && temp <= 1.0f) {
+                vuln_score_thres = temp;
+            } else {
+                FATAL("Threshold of the vulnerability score must be between 0 and 1");
+            }
+
             break;
 
         default:
