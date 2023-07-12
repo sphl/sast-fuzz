@@ -6,7 +6,7 @@ ColumnLimit: 120
 ContinuationIndentWidth: 8
 FixNamespaceComments: true
 IndentWidth: 4
-KeepEmptyLinesAtTheStartOfBlocks: false
+KeepEmptyLinesAtTheStartOfBlocks: true
 Language: Cpp
 MaxEmptyLinesToKeep: 1
 ReflowComments: true

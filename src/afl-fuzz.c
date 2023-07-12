@@ -425,27 +425,40 @@ void update_tbb_status() {
         }
     }
 
+    uint32_t n_tbbs_paused = 0;
+    uint32_t n_tbbs_finished = 0;
+
     for (int i = 0; i < num_target_bbs; i++) {
         if (tbb_infos[i]->status == active || tbb_infos[i]->status == paused) {
+
             uint64_t n_req_input_execs = (uint64_t)roundf(cycle_length * (tbb_infos[i]->vuln_score / sum_vuln_score));
 
             if ((n_req_input_execs - tbb_infos[i]->n_input_execs) <= 0) {
+
                 // We do not care if the target BB is activated or paused. When it has been executed frequently enough
                 // by the generated fuzzy inputs, we mark it as finished
                 tbb_infos[i]->status = finished;
+
             } else {
+
                 if (tbb_infos[i]->cov_flag) {
+
                     // Each executed target BB will automatically be activated in the next cycle, regardless if paused
                     // or already activated
                     tbb_infos[i]->status = active;
                     tbb_infos[i]->n_cycle_skips = 0;
                     tbb_infos[i]->n_prev_cycle_skips = 1;
+
                 } else {
+
                     if (tbb_infos[i]->n_cycle_skips == 0) {
+
                         tbb_infos[i]->status = paused;
                         tbb_infos[i]->n_cycle_skips = tbb_infos[i]->n_prev_cycle_skips;
                         tbb_infos[i]->n_prev_cycle_skips++;
+
                     } else {
+
                         // Reactivate target BB if it has been "sufficiently" paused
                         if ((tbb_infos[i]->n_cycle_skips - 1) == 0) {
                             tbb_infos[i]->status = active;
@@ -458,6 +471,37 @@ void update_tbb_status() {
             }
 
             tbb_infos[i]->cov_flag = false;
+        }
+
+        if (tbb_infos[i]->status == paused) {
+            n_tbbs_paused++;
+        }
+
+        if (tbb_infos[i]->status == finished) {
+            n_tbbs_finished++;
+        }
+    }
+
+    if (n_tbbs_finished == num_target_bbs) {
+
+        // All target BBs have been finished, so focus on those with a vuln. score of at least X
+        for (int i = 0; i < num_target_bbs; i++) {
+
+            // TODO: Make this threshold a parameter!
+            if (tbb_infos[i]->vuln_score >= 0.5) {
+                // Reset target BB infos
+                tbb_infos[i]->status = active;
+                tbb_infos[i]->cov_flag = false;
+                tbb_infos[i]->n_input_execs = 0;
+                tbb_infos[i]->n_cycle_skips = 0;
+                tbb_infos[i]->n_prev_cycle_skips = 1;
+            }
+        }
+    } else {
+
+        if ((n_tbbs_paused + n_tbbs_finished) == num_target_bbs) {
+            // Seems like we are stuck right now — go into "coverage mode" trying to discover new code regions
+            explore_status = 1;
         }
     }
 }
