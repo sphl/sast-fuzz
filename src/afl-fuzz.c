@@ -6241,7 +6241,7 @@ EXP_ST u8 common_fuzz_stuff(char **argv, u8 *out_buf, u32 len) {
 
         n_cycle_inputs++;
 
-        if (n_cycle_inputs == cycle_length) {
+        if (n_cycle_inputs >= cycle_length) {
             n_cycle_inputs = 0;
 
             update_tbb_status();
