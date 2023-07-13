@@ -382,7 +382,10 @@ static s16 interesting_16[] = {INTERESTING_8, INTERESTING_16};
 static s32 interesting_32[] = {INTERESTING_8, INTERESTING_16, INTERESTING_32};
 
 // ---------------------------------------------------------------------------------------------------------------------
-uint64_t cycle_length = 10000;
+// TODO: Find "better" default value!
+uint64_t init_cycle_length = 10000;
+uint64_t cycle_length;
+
 uint64_t n_cycle_inputs = 0;
 
 float vuln_score_thres = 0.5f;
@@ -507,6 +510,15 @@ void update_tbb_status() {
     }
 }
 // ---------------------------------------------------------------------------------------------------------------------
+void update_cycle_length_fix() {
+    cycle_length = init_cycle_length;
+}
+
+void update_cycle_length_log(uint16_t duration) {
+    uint16_t h = duration / 60;
+    cycle_length = (uint64_t)(log2(h + 1) * 1000) + init_cycle_length;
+}
+// ---------------------------------------------------------------------------------------------------------------------
 static u32 num_critical_bbs;
 // static u32 *critical_bb_id_map;
 static int critical_bb_id_map[MAP_SIZE];
@@ -582,7 +594,7 @@ void update_cbb_distances() {
             // If the target BB is enabled and the distance value is greater than 0, then include the (reciprocal)
             // distance in the calculation.
             if (tbb_infos[t]->status == active && distance_matrix[c][t] > 0) {
-                cbb_distance += 1.0f / distance_matrix[c][t];
+                cbb_distance += (1.0f / distance_matrix[c][t]);
 
                 // if (fabsf(target_bb_scores[t] - 1.0f) < 0.001f) {
                 //     vuln_factor = 1.0f;
@@ -6236,8 +6248,10 @@ EXP_ST u8 common_fuzz_stuff(char **argv, u8 *out_buf, u32 len) {
             update_tbb_status();
             update_cbb_distances();
 
-            // TODO: Set length for the next cycle!
-            // cycle_length = ...
+            // Minutes spent in the campaign up to this point
+            uint32_t duration = ((get_cur_time() - start_time) / 1000) / 60;
+
+            update_cycle_length_log(duration);
         }
 
         if (targets_bits[i] == 0) {
@@ -10984,6 +10998,8 @@ int main(int argc, char **argv) {
 
     check_crash_handling();
     check_cpu_governor();
+
+    cycle_length = init_cycle_length;
 
     readDistanceAndTargets();
     readCondition();
