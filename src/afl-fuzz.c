@@ -510,13 +510,9 @@ void update_tbb_status() {
     }
 }
 // ---------------------------------------------------------------------------------------------------------------------
-void update_cycle_length_fix() {
-    cycle_length = init_cycle_length;
-}
+void update_cycle_length_fix() { cycle_length = init_cycle_length; }
 
-void update_cycle_length_lin(uint32_t inc) {
-    cycle_length = (cycle_length + inc);
-}
+void update_cycle_length_lin(uint32_t inc) { cycle_length = (cycle_length + inc); }
 
 void update_cycle_length_log(uint32_t dur) {
     cycle_length = (uint64_t)(log2((dur / 60) + 1) * 1000) + init_cycle_length;
@@ -9777,7 +9773,11 @@ static void usage(u8 *argv0) {
 
          "SASTFuzz:\n\n"
 
-         "  -v score      - minimum vuln. score a target BB must have for reactivation\n\n"
+         "  -L #inputs    - cycle length, i.e. number of fuzz inputs per cycle\n"
+         "                  (range: #inputs >= 1000, default: 10000)\n"
+
+         "  -v score      - minimum vuln. score a target BB must have for reactivation\n"
+         "                  (range: 0 <= score <= 1, default: 0.5)\n\n"
 
          "For additional tips, please consult %s/README.\n\n",
 
@@ -10577,9 +10577,7 @@ int main(int argc, char **argv) {
     gettimeofday(&tv, &tz);
     srandom(tv.tv_sec ^ tv.tv_usec ^ getpid());
 
-    float temp;
-
-    while ((opt = getopt(argc, argv, "+i:o:f:m:t:T:E:dnCB:S:M:x:Qz:c:ealkjpusv:")) > 0) {
+    while ((opt = getopt(argc, argv, "+i:o:f:m:t:T:E:dnCB:S:M:x:Qz:c:ealkjpusL:v:")) > 0) {
         switch (opt) {
         case 'i': /* input dir */
 
@@ -10902,16 +10900,29 @@ int main(int argc, char **argv) {
             no_dynamic_switch = 1;
             break;
 
-        case 'v':
-            temp = atof(optarg);
+        case 'L': {
+            int length = atoi(optarg);
 
-            if (temp >= 0.0f && temp <= 1.0f) {
-                vuln_score_thres = temp;
+            if (length >= 1000) {
+                init_cycle_length = length;
+            } else {
+                FATAL("Cycle length must be at least 1000 inputs");
+            }
+
+            break;
+        }
+
+        case 'v': {
+            float thres = atof(optarg);
+
+            if (thres >= 0.0f && thres <= 1.0f) {
+                vuln_score_thres = thres;
             } else {
                 FATAL("Threshold of the vulnerability score must be between 0 and 1");
             }
 
             break;
+        }
 
         default:
 
