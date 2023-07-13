@@ -436,9 +436,12 @@ void update_tbb_status() {
     for (int i = 0; i < num_target_bbs; i++) {
         if (tbb_infos[i]->status == active || tbb_infos[i]->status == paused) {
 
-            int64_t n_req_input_execs = (uint64_t)roundf(cycle_length * (tbb_infos[i]->vuln_score / sum_vuln_score));
+            int64_t n_req_input_execs = (int64_t)roundf(cycle_length * (tbb_infos[i]->vuln_score / sum_vuln_score));
 
             int64_t diff = (n_req_input_execs - tbb_infos[i]->n_input_execs);
+
+            printf("sast-fuzz: target BB = %d, vuln. score = %.2f, req. execs = %ld, execs = %lu (%ld)\n", i,
+                   tbb_infos[i]->vuln_score, n_req_input_execs, tbb_infos[i]->n_input_execs, diff);
 
             if (diff <= 0) {
 
@@ -489,6 +492,9 @@ void update_tbb_status() {
         }
     }
 
+    printf("sast-fuzz: target BBs finished = %d, active = %d, paused = %d\n", n_tbbs_finished,
+           (num_target_bbs - (n_tbbs_finished + n_tbbs_paused)), n_tbbs_paused);
+
     if (n_tbbs_finished == num_target_bbs) {
 
         // All target BBs have been finished, so focus on those with a vuln. score of at least X
@@ -505,7 +511,7 @@ void update_tbb_status() {
         }
     } else {
 
-        if ((n_tbbs_paused + n_tbbs_finished) == num_target_bbs) {
+        if ((n_tbbs_finished + n_tbbs_paused) == num_target_bbs) {
             // Seems like we are stuck right now — go into "coverage mode" trying to discover new code regions
             explore_status = 1;
         }
@@ -6257,6 +6263,8 @@ EXP_ST u8 common_fuzz_stuff(char **argv, u8 *out_buf, u32 len) {
             uint32_t duration = ((get_cur_time() - start_time) / 1000) / 60;
 
             update_cycle_length_log(duration);
+
+            printf("sast-fuzz: cycle length = %lu (%dm)\n", cycle_length, duration);
         }
 
         if (targets_bits[i] == 0) {
