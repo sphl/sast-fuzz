@@ -440,9 +440,6 @@ void update_tbb_status() {
 
             int64_t diff = (n_req_input_execs - tbb_infos[i]->n_input_execs);
 
-            printf("sast-fuzz: target BB = %d, vuln. score = %.2f, req. execs = %ld, execs = %lu (%ld)\n", i,
-                   tbb_infos[i]->vuln_score, n_req_input_execs, tbb_infos[i]->n_input_execs, diff);
-
             if (diff <= 0) {
 
                 // We do not care if the target BB is activated or paused. When it has been executed frequently enough
@@ -479,6 +476,23 @@ void update_tbb_status() {
                     }
                 }
             }
+
+            // ---------------------------------------------------------------------------------------------------------
+            char status_str[128];
+
+            if (tbb_infos[i]->status == finished) {
+                sprintf(status_str, "x");
+            } else {
+                if (tbb_infos[i]->status == active) {
+                    sprintf(status_str, "...");
+                } else {
+                    sprintf(status_str, "p (%d|%d)", tbb_infos[i]->n_cycle_skips, tbb_infos[i]->n_prev_cycle_skips);
+                }
+            }
+
+            printf("sast-fuzz: target BB = %d (%.2f), required = %ld, actual = %lu (%ld) %s\n", i,
+                   tbb_infos[i]->vuln_score, n_req_input_execs, tbb_infos[i]->n_input_execs, diff, status_str);
+            // ---------------------------------------------------------------------------------------------------------
 
             tbb_infos[i]->cov_flag = false;
         }
