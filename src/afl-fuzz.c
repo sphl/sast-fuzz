@@ -383,7 +383,7 @@ static s32 interesting_32[] = {INTERESTING_8, INTERESTING_16, INTERESTING_32};
 
 // ---------------------------------------------------------------------------------------------------------------------
 // TODO: Find "better" default value!
-uint64_t init_cycle_length = 10000;
+uint64_t init_cycle_length = 10000000;
 uint64_t cycle_length;
 
 uint64_t n_cycle_inputs = 0;
@@ -436,9 +436,11 @@ void update_tbb_status() {
     for (int i = 0; i < num_target_bbs; i++) {
         if (tbb_infos[i]->status == active || tbb_infos[i]->status == paused) {
 
-            uint64_t n_req_input_execs = (uint64_t)roundf(cycle_length * (tbb_infos[i]->vuln_score / sum_vuln_score));
+            int64_t n_req_input_execs = (uint64_t)roundf(cycle_length * (tbb_infos[i]->vuln_score / sum_vuln_score));
 
-            if ((n_req_input_execs - tbb_infos[i]->n_input_execs) <= 0) {
+            int64_t diff = (n_req_input_execs - tbb_infos[i]->n_input_execs);
+
+            if (diff <= 0) {
 
                 // We do not care if the target BB is activated or paused. When it has been executed frequently enough
                 // by the generated fuzzy inputs, we mark it as finished
@@ -6228,15 +6230,19 @@ EXP_ST u8 common_fuzz_stuff(char **argv, u8 *out_buf, u32 len) {
         if (flag) {
             is_target = 1;
             tmp_targets[i] = 1;
+
             if (target_count[i] < BIG_NUMBER) {
                 target_count[i]++;
             }
+
             if (target_count[i] < TARGET_LIMIT) {
                 is_rare_target = 1;
             }
 
-            tbb_infos[i]->cov_flag = true;
-            tbb_infos[i]->n_input_execs++;
+            if (tbb_infos[i]->status != finished) {
+                tbb_infos[i]->cov_flag = true;
+                tbb_infos[i]->n_input_execs++;
+            }
         }
 
         n_cycle_inputs++;
@@ -9774,7 +9780,7 @@ static void usage(u8 *argv0) {
          "SASTFuzz:\n\n"
 
          "  -L #inputs    - cycle length, i.e. number of fuzz inputs per cycle\n"
-         "                  (range: #inputs >= 1000, default: 10000)\n"
+         "                  (range: #inputs >= 10,000, default: 10,000,000)\n"
 
          "  -v score      - minimum vuln. score a target BB must have for reactivation\n"
          "                  (range: 0 <= score <= 1, default: 0.5)\n\n"
@@ -10903,10 +10909,10 @@ int main(int argc, char **argv) {
         case 'L': {
             int length = atoi(optarg);
 
-            if (length >= 1000) {
+            if (length >= 10000) {
                 init_cycle_length = length;
             } else {
-                FATAL("Cycle length must be at least 1000 inputs");
+                FATAL("Cycle length must be at least 10,000 inputs");
             }
 
             break;
