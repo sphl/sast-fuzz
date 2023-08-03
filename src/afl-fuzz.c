@@ -580,29 +580,7 @@ void dm_free(u32 **matrix, u32 n_rows) {
     ck_free(matrix);
 }
 
-// int lookup_cbb_id(u32 bb_id) {
-//     for (int i = 0; i < num_critical_bbs; i++) {
-//         int idx = i + 1;
-//
-//         if (critical_ids[idx] == bb_id) {
-//             return critical_bb_id_map[idx];
-//         }
-//     }
-//
-//     return -1;
-// }
-
 int lookup_cbb_id(u32 bb_id) { return critical_bb_id_map[bb_id]; }
-
-// u16 get_num_active_tbbs() {
-//     u16 n = 0;
-//
-//     for (int i = 0; i < num_target_bbs; i++) {
-//         n += ((tbb_activation_map[i] > 0) ? 1 : 0);
-//     }
-//
-//     return n;
-// }
 
 void update_cbb_distances() {
     float vuln_factor;
@@ -6283,10 +6261,13 @@ EXP_ST u8 common_fuzz_stuff(char **argv, u8 *out_buf, u32 len) {
 
         if (targets_bits[i] == 0) {
             targets_all = 0;
+
             if (flag) {
                 last_target_time = get_cur_time();
+
                 fprintf(targets_log, "%d : %s --- %s --- %s\n", i, DTD(last_target_time, start_time), DI(queued_paths),
                         DI(total_execs));
+
                 targets_bits[i] = 1;
             }
         }
