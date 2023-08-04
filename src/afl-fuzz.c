@@ -389,6 +389,7 @@ uint64_t cycle_length;
 uint64_t n_cycle_inputs = 0;
 
 float vuln_score_thres = 0.5f;
+float hc_reduct_factor = 1.0f;
 
 enum tbb_status { finished = 0, active = 1, paused = 2 };
 
@@ -437,6 +438,12 @@ void update_tbb_status() {
         if (tbb_infos[i]->status == active || tbb_infos[i]->status == paused) {
 
             int64_t n_req_input_execs = (int64_t)roundf(cycle_length * (tbb_infos[i]->vuln_score / sum_vuln_score));
+
+            if (hc_reduct_factor == 1.0f) {
+                n_req_input_execs = 1;
+            } else {
+                n_req_input_execs -= (int64_t)(n_req_input_execs * hc_reduct_factor);
+            }
 
             int64_t diff = (n_req_input_execs - tbb_infos[i]->n_input_execs);
 
@@ -490,8 +497,9 @@ void update_tbb_status() {
                 }
             }
 
-            printf("sast-fuzz: target BB = %d (%.2f), required = %ld, actual = %lu (%ld) %s\n", i,
-                   tbb_infos[i]->vuln_score, n_req_input_execs, tbb_infos[i]->n_input_execs, diff, status_str);
+            printf("sast-fuzz: target BB = %d (%.2f), required = %ld (%.1f), actual = %lu (%ld) %s\n", i,
+                   tbb_infos[i]->vuln_score, n_req_input_execs, hc_reduct_factor, tbb_infos[i]->n_input_execs, diff,
+                   status_str);
             // ---------------------------------------------------------------------------------------------------------
 
             tbb_infos[i]->cov_flag = false;
@@ -9778,12 +9786,15 @@ static void usage(u8 *argv0) {
          "  -e            - disable critical basic blocks\n"
          "  -a            - disable cbb-based seed prioritization\n"
          "  -k            - disable data-flow sensitive mutation\n"
-         "  -s            - disable dynamic switch between explore and exploit stage\n"
+         "  -s            - disable dynamic switch between explore and exploit stage\n\n"
 
          "SASTFuzz:\n\n"
 
          "  -L #inputs    - cycle length, i.e. number of fuzz inputs per cycle\n"
          "                  (range: #inputs >= 10,000, default: 10,000,000)\n"
+
+         "  -r factor     - factor for reducing the number of required BB hit-counts\n"
+         "                  (range: 0 <= factor <= 1, default: 0 [none])\n"
 
          "  -v score      - minimum vuln. score a target BB must have for reactivation\n"
          "                  (range: 0 <= score <= 1, default: 0.5)\n\n"
@@ -10586,7 +10597,7 @@ int main(int argc, char **argv) {
     gettimeofday(&tv, &tz);
     srandom(tv.tv_sec ^ tv.tv_usec ^ getpid());
 
-    while ((opt = getopt(argc, argv, "+i:o:f:m:t:T:E:dnCB:S:M:x:Qz:c:ealkjpusL:v:")) > 0) {
+    while ((opt = getopt(argc, argv, "+i:o:f:m:t:T:E:dnCB:S:M:x:Qz:c:ealkjpusL:r:v:")) > 0) {
         switch (opt) {
         case 'i': /* input dir */
 
@@ -10916,6 +10927,18 @@ int main(int argc, char **argv) {
                 init_cycle_length = length;
             } else {
                 FATAL("Cycle length must be at least 10,000 inputs");
+            }
+
+            break;
+        }
+
+        case 'r': {
+            float factor = atof(optarg);
+
+            if (factor >= 0.0f && factor <= 1.0f) {
+                hc_reduct_factor = factor;
+            } else {
+                FATAL("Reduction factor must be between 0 and 1");
             }
 
             break;
