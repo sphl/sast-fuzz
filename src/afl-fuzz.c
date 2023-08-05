@@ -554,8 +554,8 @@ void update_cycle_length_log(uint32_t dur) {
 // ---------------------------------------------------------------------------------------------------------------------
 static u32 num_critical_bbs;
 // static u32 *critical_bb_id_map;
-static int critical_bb_id_map[MAP_SIZE];
-static float *critical_bb_distances;
+static int cbb_id_map[MAP_SIZE];
+static float *cbb_distances;
 
 static u32 **distance_matrix;
 
@@ -592,7 +592,7 @@ void dm_free(u32 **matrix, u32 n_rows) {
     ck_free(matrix);
 }
 
-int lookup_cbb_id(u32 bb_id) { return critical_bb_id_map[bb_id]; }
+int lookup_cbb_id(u32 bb_id) { return cbb_id_map[bb_id]; }
 
 void update_cbb_distances() {
     float vuln_factor;
@@ -620,9 +620,9 @@ void update_cbb_distances() {
         }
 
         if (n == 0) {
-            critical_bb_distances[c] = 0.0f;
+            cbb_distances[c] = 0.0f;
         } else {
-            critical_bb_distances[c] = n / cbb_distance;
+            cbb_distances[c] = n / cbb_distance;
         }
     }
 }
@@ -1142,7 +1142,7 @@ double calculate_cb_distance() {
             assert(cbb_idx > -1);
 
             // distance += (distance_val[i] * DEFAULT_DIFFICULTY);
-            distance += (critical_bb_distances[cbb_idx] * DEFAULT_DIFFICULTY);
+            distance += (cbb_distances[cbb_idx] * DEFAULT_DIFFICULTY);
 
             count++;
         } else if (critical_bits[i] == 2) {
@@ -6862,16 +6862,16 @@ void update_distance(struct queue_entry *q) {
 
         if (q->critical_difficulty[i] == 0) {
             // distance += (distance_val[q->critical_bbs[i + 1]] * DEFAULT_DIFFICULTY);
-            distance += (critical_bb_distances[cbb_idx] * DEFAULT_DIFFICULTY);
+            distance += (cbb_distances[cbb_idx] * DEFAULT_DIFFICULTY);
         } else {
             u32 quo = (q->critical_difficulty[i] / DIFFICULTY_STEP) + 1;
 
             if (quo < DEFAULT_DIFFICULTY) {
                 // distance += (distance_val[q->critical_bbs[i + 1]] * quo);
-                distance += (critical_bb_distances[cbb_idx] * quo);
+                distance += (cbb_distances[cbb_idx] * quo);
             } else {
                 // distance += (distance_val[q->critical_bbs[i + 1]] * DEFAULT_DIFFICULTY);
-                distance += (critical_bb_distances[cbb_idx] * DEFAULT_DIFFICULTY);
+                distance += (cbb_distances[cbb_idx] * DEFAULT_DIFFICULTY);
             }
         }
     }
@@ -10484,7 +10484,7 @@ void readDistanceAndTargets() {
         distance_val[bb_id] = bb_dist;
 
         if (critical_bb_id == -1) {
-            critical_bb_id_map[bb_id] = -1;
+            cbb_id_map[bb_id] = -1;
         } else {
             i++;
 
@@ -10493,7 +10493,7 @@ void readDistanceAndTargets() {
             critical_ids[i] = bb_id;
             // critical_bb_id_map[i] = critical_bb_id;
 
-            critical_bb_id_map[bb_id] = critical_bb_id;
+            cbb_id_map[bb_id] = critical_bb_id;
         }
     }
 
@@ -11060,7 +11060,7 @@ int main(int argc, char **argv) {
     assert(dm_n_rows == num_critical_bbs);
     assert(dm_n_cols == num_target_bbs);
 
-    critical_bb_distances = ck_alloc(sizeof(float) * num_critical_bbs);
+    cbb_distances = ck_alloc(sizeof(float) * num_critical_bbs);
 
     update_cbb_distances();
 
@@ -11289,7 +11289,7 @@ stop_fuzzing:
 
     dm_free(distance_matrix, dm_n_rows);
 
-    ck_free(critical_bb_distances);
+    ck_free(cbb_distances);
     ck_free(critical_ids);
 
     fclose(critical_log);
