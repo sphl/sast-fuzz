@@ -382,6 +382,8 @@ static s16 interesting_16[] = {INTERESTING_8, INTERESTING_16};
 static s32 interesting_32[] = {INTERESTING_8, INTERESTING_16, INTERESTING_32};
 
 // ---------------------------------------------------------------------------------------------------------------------
+#define SASTFUZZ_DEBUG
+
 // TODO: Find "better" default value!
 uint64_t init_cycle_length = 10000000;
 uint64_t cycle_length;
@@ -484,7 +486,7 @@ void update_tbb_status() {
                 }
             }
 
-            // ---------------------------------------------------------------------------------------------------------
+#ifdef SASTFUZZ_DEBUG
             char status_str[128];
 
             if (tbb_infos[i]->status == finished) {
@@ -500,7 +502,7 @@ void update_tbb_status() {
             printf("sast-fuzz: target BB = %d (%.2f), required = %ld (%.1f), actual = %lu (%ld) %s\n", i,
                    tbb_infos[i]->vuln_score, n_req_input_execs, hc_reduct_factor, tbb_infos[i]->n_input_execs, diff,
                    status_str);
-            // ---------------------------------------------------------------------------------------------------------
+#endif
 
             tbb_infos[i]->cov_flag = false;
         }
@@ -514,8 +516,10 @@ void update_tbb_status() {
         }
     }
 
+#ifdef SASTFUZZ_DEBUG
     printf("sast-fuzz: target BBs finished = %d, active = %d, paused = %d\n", n_tbbs_finished,
            (num_target_bbs - (n_tbbs_finished + n_tbbs_paused)), n_tbbs_paused);
+#endif
 
     if (n_tbbs_finished == num_target_bbs) {
 
