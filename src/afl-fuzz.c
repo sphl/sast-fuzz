@@ -381,6 +381,10 @@ static s8 interesting_8[] = {INTERESTING_8};
 static s16 interesting_16[] = {INTERESTING_8, INTERESTING_16};
 static s32 interesting_32[] = {INTERESTING_8, INTERESTING_16, INTERESTING_32};
 
+float scale(float x, float min_x, float max_x, float min_y, float max_y) {
+    return (x - min_x) * ((max_y - min_y) / (max_x - min_x)) + min_y;
+}
+
 // ---------------------------------------------------------------------------------------------------------------------
 #define SASTFUZZ_DEBUG
 
@@ -542,6 +546,26 @@ void update_tbb_status() {
             explore_status = 1;
         }
     }
+}
+
+float get_scaled_vuln_score(const u8 *target_bits) {
+    assert(target_bits != NULL);
+    assert(tbb_infos != NULL);
+
+    float vs_tbb_all = 0.0f;
+    float vs_tbb_executed = 0.0f;
+
+    for (int i = 0; i < num_target_bbs; i++) {
+        if (tbb_infos[i]->status != finished) {
+            vs_tbb_all += tbb_infos[i]->vuln_score;
+
+            if (target_bits[i] >= 1) {
+                vs_tbb_executed += tbb_infos[i]->vuln_score;
+            }
+        }
+    }
+
+    return scale(vs_tbb_executed, 0.0f, vs_tbb_all, 1.0f, DEFAULT_DIFFICULTY);
 }
 // ---------------------------------------------------------------------------------------------------------------------
 void update_cycle_length_fix() { cycle_length = init_cycle_length; }
@@ -1135,6 +1159,10 @@ double calculate_cb_distance() {
     // if (is_target)
     //   return 1;
 
+    float vuln_score = get_scaled_vuln_score(trace_bits + MAP_SIZE + 16);
+
+    assert(vuln_score >= 1.0f && vuln_score <= DEFAULT_DIFFICULTY);
+
     for (i = 0; i < MAP_SIZE; i++) {
         if (critical_bits[i] == 1) {
             int cbb_idx = lookup_cbb_id(i);
@@ -1142,7 +1170,7 @@ double calculate_cb_distance() {
             assert(cbb_idx > -1);
 
             // distance += (distance_val[i] * DEFAULT_DIFFICULTY);
-            distance += (cbb_distances[cbb_idx] * DEFAULT_DIFFICULTY);
+            distance += (cbb_distances[cbb_idx] * DEFAULT_DIFFICULTY * vuln_score);
 
             count++;
         } else if (critical_bits[i] == 2) {
@@ -6849,26 +6877,28 @@ void update_distance(struct queue_entry *q) {
     u32 i;
     u32 distance = 0;
 
+    float vuln_score = get_scaled_vuln_score(q->targets);
+
+    assert(vuln_score >= 1.0f && vuln_score <= DEFAULT_DIFFICULTY);
+
     for (i = 0; i < q->critical_bbs[0]; i++) {
         int cbb_idx = lookup_cbb_id(q->critical_bbs[i + 1]);
 
         assert(cbb_idx > -1);
 
         if (q->critical_difficulty[i] == 0) {
-            // distance += (distance_val[q->critical_bbs[i + 1]] * DEFAULT_DIFFICULTY);
-            distance += (cbb_distances[cbb_idx] * DEFAULT_DIFFICULTY);
+            distance += (cbb_distances[cbb_idx] * DEFAULT_DIFFICULTY * vuln_score);
         } else {
             u32 quo = (q->critical_difficulty[i] / DIFFICULTY_STEP) + 1;
 
             if (quo < DEFAULT_DIFFICULTY) {
-                // distance += (distance_val[q->critical_bbs[i + 1]] * quo);
-                distance += (cbb_distances[cbb_idx] * quo);
+                distance += (cbb_distances[cbb_idx] * quo * vuln_score);
             } else {
-                // distance += (distance_val[q->critical_bbs[i + 1]] * DEFAULT_DIFFICULTY);
-                distance += (cbb_distances[cbb_idx] * DEFAULT_DIFFICULTY);
+                distance += (cbb_distances[cbb_idx] * DEFAULT_DIFFICULTY * vuln_score);
             }
         }
     }
+
     if (q->critical_bbs[0]) {
         q->distance = (double)distance / q->critical_bbs[0];
     }
