@@ -381,7 +381,7 @@ static s8 interesting_8[] = {INTERESTING_8};
 static s16 interesting_16[] = {INTERESTING_8, INTERESTING_16};
 static s32 interesting_32[] = {INTERESTING_8, INTERESTING_16, INTERESTING_32};
 
-float scale(float x, float min_x, float max_x, float min_y, float max_y) {
+static inline float scale(float x, float min_x, float max_x, float min_y, float max_y) {
     return (x - min_x) * ((max_y - min_y) / (max_x - min_x)) + min_y;
 }
 
@@ -548,7 +548,7 @@ void update_tbb_status() {
     }
 }
 
-float get_scaled_vuln_score(const u8 *target_bits) {
+float get_vuln_factor(const u8 *target_bits) {
     assert(target_bits != NULL);
     assert(tbb_infos != NULL);
 
@@ -556,7 +556,7 @@ float get_scaled_vuln_score(const u8 *target_bits) {
     float vs_tbb_executed = 0.0f;
 
     for (int i = 0; i < num_target_bbs; i++) {
-        if (tbb_infos[i]->status != finished) {
+        if (tbb_infos[i]->status == active) {
             vs_tbb_all += tbb_infos[i]->vuln_score;
 
             if (target_bits[i] >= 1) {
@@ -565,19 +565,19 @@ float get_scaled_vuln_score(const u8 *target_bits) {
         }
     }
 
-    return scale(vs_tbb_executed, 0.0f, vs_tbb_all, 1.0f, DEFAULT_DIFFICULTY);
+    return scale(vs_tbb_executed, 0.0f, vs_tbb_all, 1.0f, DEFAULT_VULN_FACTOR);
 }
 // ---------------------------------------------------------------------------------------------------------------------
-void update_cycle_length_fix() { cycle_length = init_cycle_length; }
+static inline void update_cycle_length_fix() { cycle_length = init_cycle_length; }
 
-void update_cycle_length_lin(uint32_t inc) { cycle_length = (cycle_length + inc); }
+static inline void update_cycle_length_lin(uint32_t inc) { cycle_length = (cycle_length + inc); }
 
-void update_cycle_length_log(uint32_t dur) {
+static inline void update_cycle_length_log(uint32_t dur) {
     cycle_length = (uint64_t)(log2((dur / 60) + 1) * 1000) + init_cycle_length;
 }
 // ---------------------------------------------------------------------------------------------------------------------
 static u32 num_critical_bbs;
-// static u32 *critical_bb_id_map;
+
 static int cbb_id_map[MAP_SIZE];
 static float *cbb_distances;
 
@@ -619,26 +619,13 @@ void dm_free(u32 **matrix, u32 n_rows) {
 int lookup_cbb_id(u32 bb_id) { return cbb_id_map[bb_id]; }
 
 void update_cbb_distances() {
-    float vuln_factor;
-
     for (int c = 0; c < num_critical_bbs; c++) {
         float cbb_distance = 0.0f;
 
         u32 n = 0;
         for (int t = 0; t < num_target_bbs; t++) {
-            // If the target BB is enabled and the distance value is greater than 0, then include the (reciprocal)
-            // distance in the calculation.
             if (tbb_infos[t]->status == active && distance_matrix[c][t] > 0) {
                 cbb_distance += (1.0f / distance_matrix[c][t]);
-
-                // if (fabsf(target_bb_scores[t] - 1.0f) < 0.001f) {
-                //     vuln_factor = 1.0f;
-                // } else {
-                //     vuln_factor = 10.0f * (1.0f - target_bb_scores[t]);
-                // }
-                //
-                // cbb_distance += 1.0f / (distance_matrix[c][t] * vuln_factor);
-
                 n++;
             }
         }
@@ -646,7 +633,7 @@ void update_cbb_distances() {
         if (n == 0) {
             cbb_distances[c] = 0.0f;
         } else {
-            cbb_distances[c] = n / cbb_distance;
+            cbb_distances[c] = (n / cbb_distance);
         }
     }
 }
@@ -1156,12 +1143,7 @@ double calculate_cb_distance() {
     u32 count = 0;
     double res = -1;
 
-    // if (is_target)
-    //   return 1;
-
-    float vuln_score = get_scaled_vuln_score(trace_bits + MAP_SIZE + 16);
-
-    assert(vuln_score >= 1.0f && vuln_score <= DEFAULT_DIFFICULTY);
+    float vuln_factor = get_vuln_factor(trace_bits + MAP_SIZE + 16);
 
     for (i = 0; i < MAP_SIZE; i++) {
         if (critical_bits[i] == 1) {
@@ -1169,14 +1151,18 @@ double calculate_cb_distance() {
 
             assert(cbb_idx > -1);
 
-            // distance += (distance_val[i] * DEFAULT_DIFFICULTY);
-            distance += (cbb_distances[cbb_idx] * DEFAULT_DIFFICULTY * vuln_score);
+            distance += (cbb_distances[cbb_idx] * DEFAULT_DIFFICULTY * vuln_factor);
 
             count++;
+
         } else if (critical_bits[i] == 2) {
             solved_cbbs[i] = 1;
         }
     }
+
+#ifdef SASTFUZZ_DEBUG
+    printf("sast-fuzz: distance = %d (vf = %.2f)\n", distance, vuln_factor);
+#endif
 
     if (count) {
         res = (double)distance / count;
@@ -1269,51 +1255,15 @@ static void add_to_queue(u8 *fname, u32 len, u8 passed_det) {
             max_distance = cur_distance;
             min_distance = cur_distance;
         }
+
         if (cur_distance > max_distance) {
             max_distance = cur_distance;
         }
+
         if (cur_distance < min_distance) {
             min_distance = cur_distance;
             last_min_time = get_cur_time();
-
-            // u32 i;
-            // for (i=0;i<MAP_SIZE;i++) {
-            //   if (critical_bits[i]) {
-            //     //printf("%u\n",critical_bits[i]);
-            //     critical_bits_global[critical_bits[i]] = 1;
-            //   }
-            // }
-
-            // if (distance_log) {
-            //   fprintf(distance_log, "--------------------------------\n");
-            //   u32 i;
-            //   for (i=0;i<MAP_SIZE;i++) {
-            //     if (distance_bits[i])
-            //       fprintf(distance_log, "%d : %u\n",i,distance_bits[i]);
-            //   }
-            //   fprintf(distance_log,"--------------------------------\n\n");
-            // }
         }
-
-        // if (critical_log) {
-        //   fprintf(critical_log, "--------------------------------\n");
-        //   u32 i;
-        //   for (i=0;i<MAP_SIZE;i++) {
-        //     if (critical_bits[i])
-        //       fprintf(critical_log, "%u\n",i);
-        //   }
-        //   fprintf(critical_log,"--------------------------------\n\n");
-        // }
-
-        // if (distance_log) {
-        //   fprintf(distance_log, "--------------------------------\n");
-        //   u32 i;
-        //   for (i=0;i<MAP_SIZE;i++) {
-        //     if (distance_bits[i])
-        //       fprintf(distance_log, "%u\n",i);
-        //   }
-        //   fprintf(distance_log,"--------------------------------\n\n");
-        // }
     }
 
     if (q->depth > max_depth) {
@@ -6875,11 +6825,10 @@ bool need_sniff(struct queue_entry *q) {
 
 void update_distance(struct queue_entry *q) {
     u32 i;
+    u32 cbb_diff = 0;
     u32 distance = 0;
 
-    float vuln_score = get_scaled_vuln_score(q->targets);
-
-    assert(vuln_score >= 1.0f && vuln_score <= DEFAULT_DIFFICULTY);
+    float vuln_factor = get_vuln_factor(q->targets);
 
     for (i = 0; i < q->critical_bbs[0]; i++) {
         int cbb_idx = lookup_cbb_id(q->critical_bbs[i + 1]);
@@ -6887,16 +6836,22 @@ void update_distance(struct queue_entry *q) {
         assert(cbb_idx > -1);
 
         if (q->critical_difficulty[i] == 0) {
-            distance += (cbb_distances[cbb_idx] * DEFAULT_DIFFICULTY * vuln_score);
+            cbb_diff = DEFAULT_DIFFICULTY;
         } else {
             u32 quo = (q->critical_difficulty[i] / DIFFICULTY_STEP) + 1;
 
             if (quo < DEFAULT_DIFFICULTY) {
-                distance += (cbb_distances[cbb_idx] * quo * vuln_score);
+                cbb_diff = quo;
             } else {
-                distance += (cbb_distances[cbb_idx] * DEFAULT_DIFFICULTY * vuln_score);
+                cbb_diff = DEFAULT_DIFFICULTY;
             }
         }
+
+        distance += (cbb_distances[cbb_idx] * cbb_diff * vuln_factor);
+
+#ifdef SASTFUZZ_DEBUG
+        printf("sast-fuzz: distance = %d (vf = %.2f, df = %d)\n", distance, vuln_factor, cbb_diff);
+#endif
     }
 
     if (q->critical_bbs[0]) {

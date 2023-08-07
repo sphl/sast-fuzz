@@ -382,4 +382,6 @@
 
 #define DIFFICULTY_STEP 5
 
+#define DEFAULT_VULN_FACTOR 10
+
 #endif /* ! _HAVE_CONFIG_H */
