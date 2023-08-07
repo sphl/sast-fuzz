@@ -6237,6 +6237,7 @@ EXP_ST u8 common_fuzz_stuff(char **argv, u8 *out_buf, u32 len) {
 
     for (i = 0; i < num_target_bbs; i++) {
         u8 flag = *(trace_bits + MAP_SIZE + 16 + i);
+
         if (flag) {
             is_target = 1;
             tmp_targets[i] = 1;
@@ -6284,13 +6285,6 @@ EXP_ST u8 common_fuzz_stuff(char **argv, u8 *out_buf, u32 len) {
             }
         }
     }
-
-    // TODO: Switch into exploration mode if 'num_active_tbbs' == 0!
-
-    // Update the critical BB distances if one or more target BBs were deactivated
-    // if (num_active_tbbs != get_num_active_tbbs()) {
-    //     update_cbb_distances();
-    // }
 
     /* This handles FAULT_ERROR for us: */
 
