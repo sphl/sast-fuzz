@@ -395,7 +395,7 @@ uint64_t cycle_length;
 uint64_t n_cycle_inputs = 0;
 
 float vuln_score_thres = 0.5f;
-float hc_reduct_factor = 1.0f;
+float hc_reduct_factor = 0.0f;
 
 enum tbb_status { finished = 0, active = 1, paused = 2 };
 
