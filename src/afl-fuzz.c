@@ -566,7 +566,9 @@ float get_vuln_factor(const u8 *target_bits) {
         }
     }
 
-    return scale(vs_tbb_executed, 0.0f, vs_tbb_all, 1.0f, DEFAULT_VULN_FACTOR);
+    float value = scale(vs_tbb_executed, 0.0f, vs_tbb_all, 1.0f, DEFAULT_VULN_FACTOR);
+
+    return (DEFAULT_VULN_FACTOR - value) + 1.0f;
 }
 // ---------------------------------------------------------------------------------------------------------------------
 static inline void update_cycle_length_fix() { cycle_length = init_cycle_length; }
