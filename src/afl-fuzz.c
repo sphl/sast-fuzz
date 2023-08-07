@@ -451,9 +451,9 @@ void update_tbb_status() {
                 n_req_input_execs -= (int64_t)(n_req_input_execs * hc_reduct_factor);
             }
 
-            int64_t diff = (n_req_input_execs - tbb_infos[i]->n_input_execs);
+            int64_t exec_diff = (n_req_input_execs - tbb_infos[i]->n_input_execs);
 
-            if (diff <= 0) {
+            if (exec_diff <= 0) {
 
                 // We do not care if the target BB is activated or paused. When it has been executed frequently enough
                 // by the generated fuzzy inputs, we mark it as finished
@@ -504,7 +504,8 @@ void update_tbb_status() {
             }
 
             printf("sast-fuzz: target BB = %d (%.2f), required = %ld (%.1f), actual = %lu (%ld) %s\n", i,
-                   tbb_infos[i]->vuln_score, n_req_input_execs, hc_reduct_factor, tbb_infos[i]->n_input_execs, diff,
+                   tbb_infos[i]->vuln_score, n_req_input_execs, hc_reduct_factor, tbb_infos[i]->n_input_execs,
+                   exec_diff,
                    status_str);
 #endif
 
