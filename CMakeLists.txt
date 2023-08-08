@@ -12,4 +12,4 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 include_directories(include)
 
-add_subdirectory(src)
+add_subdirectory(sast-fuzz)

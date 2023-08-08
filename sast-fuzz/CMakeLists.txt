@@ -34,19 +34,7 @@ target_compile_definitions(
 )
 target_link_libraries(afl_config INTERFACE ${CMAKE_DL_LIBS} m)
 
-set(afl_targets
-    afl-analyze
-    afl-fuzz
-    afl-gotcpu
-    afl-showmap
-    afl-tmin
-)
-
-foreach (target ${afl_targets})
-    add_executable(${target} ${target}.c)
-    target_link_libraries(${target} PRIVATE afl_config)
-endforeach ()
-
 add_subdirectory(static_analysis)
-add_subdirectory(instrumentation)
-add_subdirectory(libs)
+add_subdirectory(fuzzing)
+add_subdirectory(instrum)
+add_subdirectory(utils)
