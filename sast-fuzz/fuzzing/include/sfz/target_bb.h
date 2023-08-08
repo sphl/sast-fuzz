@@ -17,7 +17,7 @@ struct tbb_info {
 
 typedef struct tbb_info tbb_info_t;
 
-extern tbb_info_t *tbb_info_init(float vuln_score);
+extern tbb_info_t *tbb_info_create(float vuln_score);
 
 extern void tbb_info_free(tbb_info_t *info);
 

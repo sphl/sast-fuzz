@@ -3,7 +3,7 @@
 
 #include <sfz/target_bb.h>
 
-tbb_info_t *tbb_info_init(float vuln_score) {
+tbb_info_t *tbb_info_create(float vuln_score) {
     tbb_info_t *info = ck_alloc(sizeof(tbb_info_t));
 
     info->state = active;

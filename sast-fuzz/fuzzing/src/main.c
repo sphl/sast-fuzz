@@ -10442,7 +10442,7 @@ void readDistanceAndTargets() {
 
         assert(target_bb_idx < num_target_bbs);
 
-        tbb_infos[target_bb_idx] = tbb_info_init(score);
+        tbb_infos[target_bb_idx] = tbb_info_create(score);
     }
 
     fclose(targets_file);
