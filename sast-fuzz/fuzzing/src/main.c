@@ -60,6 +60,7 @@
 #include <unistd.h>
 
 #include <sfz/cycle_length.h>
+#include <sfz/distance_matrix.h>
 #include <sfz/target_bb.h>
 
 #if defined(__APPLE__) || defined(__FreeBSD__) || defined(__OpenBSD__)
@@ -388,7 +389,7 @@ static inline float scale(float x, float min_x, float max_x, float min_y, float 
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
-#define SASTFUZZ_DEBUG
+#define SFZ_DEBUG
 
 uint64_t init_cycle_length = 10000000;
 uint64_t cycle_length;
@@ -408,7 +409,7 @@ float get_vuln_factor(const u8 *target_bits) {
     float vs_tbb_executed = 0.0f;
 
     for (int i = 0; i < num_target_bbs; i++) {
-        if (tbb_infos[i]->status == active) {
+        if (tbb_infos[i]->state == active) {
             vs_tbb_all += tbb_infos[i]->vuln_score;
 
             if (target_bits[i] >= 1) {
@@ -428,50 +429,138 @@ static u32 num_critical_bbs;
 static int cbb_id_map[MAP_SIZE];
 static float *cbb_distances;
 
-static u32 **distance_matrix;
+static uint32_t **distance_matrix;
 
-void dm_init(const char *filename, u32 ***matrix, u32 *n_rows, u32 *n_cols) {
-    FILE *file = fopen(filename, "r");
-    if (file == NULL) {
-        printf("ERROR: Could not open matrix file!\n");
-        return;
-    }
+static inline int lookup_cbb_id(uint32_t bb_id) { return cbb_id_map[bb_id]; }
 
-    // Read the first line to get the dimensions
-    fscanf(file, "%d:%d", n_rows, n_cols);
+void update_tbb_states() {
+    float sum_vuln_score = 0.0f;
 
-    // Allocate memory for the matrix
-    *matrix = (u32 **)ck_alloc(*n_rows * sizeof(u32 *));
-    for (int i = 0; i < *n_rows; i++) {
-        (*matrix)[i] = (u32 *)ck_alloc(*n_cols * sizeof(u32));
-    }
-
-    // Read the values from the file
-    for (int i = 0; i < *n_rows; i++) {
-        for (int j = 0; j < *n_cols; j++) {
-            fscanf(file, "%d,", &(*matrix)[i][j]);
+    for (int i = 0; i < num_target_bbs; i++) {
+        if (tbb_infos[i]->state == active || tbb_infos[i]->state == paused) {
+            sum_vuln_score += tbb_infos[i]->vuln_score;
         }
     }
 
-    fclose(file);
-}
+    uint32_t n_tbbs_paused = 0;
+    uint32_t n_tbbs_finished = 0;
 
-void dm_free(u32 **matrix, u32 n_rows) {
-    for (int i = 0; i < n_rows; i++) {
-        ck_free(matrix[i]);
+    for (int i = 0; i < num_target_bbs; i++) {
+        if (tbb_infos[i]->state == active || tbb_infos[i]->state == paused) {
+
+            int64_t n_req_input_execs =
+                    (int64_t)roundf((float)cycle_length * (tbb_infos[i]->vuln_score / sum_vuln_score));
+
+            if (hc_reduct_factor == 1.0f) {
+                n_req_input_execs = 1;
+            } else {
+                n_req_input_execs -= (int64_t)((float)n_req_input_execs * hc_reduct_factor);
+            }
+
+            int64_t exec_diff = (n_req_input_execs - (int64_t)tbb_infos[i]->n_input_execs);
+
+            if (exec_diff <= 0) {
+
+                // We do not care if the target BB is activated or paused. When it has been executed frequently enough
+                // by the generated fuzzy inputs, we mark it as finished
+                tbb_infos[i]->state = finished;
+
+            } else {
+
+                if (tbb_infos[i]->cov_flag) {
+
+                    // Each executed target BB will automatically be activated in the next cycle, regardless if paused
+                    // or already activated
+                    tbb_infos[i]->state = active;
+                    tbb_infos[i]->n_cycle_skips = 0;
+                    tbb_infos[i]->n_prev_cycle_skips = 1;
+
+                } else {
+
+                    if (tbb_infos[i]->n_cycle_skips == 0) {
+
+                        tbb_infos[i]->state = paused;
+                        tbb_infos[i]->n_cycle_skips = tbb_infos[i]->n_prev_cycle_skips;
+                        tbb_infos[i]->n_prev_cycle_skips++;
+
+                    } else {
+
+                        // Reactivate target BB if it has been "sufficiently" paused
+                        if ((tbb_infos[i]->n_cycle_skips - 1) == 0) {
+                            tbb_infos[i]->state = active;
+                            tbb_infos[i]->n_cycle_skips = 0;
+                        } else {
+                            tbb_infos[i]->n_cycle_skips--;
+                        }
+                    }
+                }
+            }
+
+#ifdef SFZ_DEBUG
+            char status_str[128];
+
+            if (tbb_infos[i]->state == finished) {
+                sprintf(status_str, "x");
+            } else {
+                if (tbb_infos[i]->state == active) {
+                    sprintf(status_str, "...");
+                } else {
+                    sprintf(status_str, "p (%d|%d)", tbb_infos[i]->n_cycle_skips, tbb_infos[i]->n_prev_cycle_skips);
+                }
+            }
+
+            printf("sast-fuzz: target BB = %d (%.2f), required = %ld (%.1f), actual = %lu (%ld) %s\n", i,
+                   tbb_infos[i]->vuln_score, n_req_input_execs, hc_reduct_factor, tbb_infos[i]->n_input_execs,
+                   exec_diff, status_str);
+#endif
+
+            tbb_infos[i]->cov_flag = false;
+        }
+
+        if (tbb_infos[i]->state == paused) {
+            n_tbbs_paused++;
+        }
+
+        if (tbb_infos[i]->state == finished) {
+            n_tbbs_finished++;
+        }
     }
-    ck_free(matrix);
-}
 
-int lookup_cbb_id(u32 bb_id) { return cbb_id_map[bb_id]; }
+#ifdef SFZ_DEBUG
+    printf("sast-fuzz: target BBs finished = %d, active = %d, paused = %d\n", n_tbbs_finished,
+           (num_target_bbs - (n_tbbs_finished + n_tbbs_paused)), n_tbbs_paused);
+#endif
+
+    if (n_tbbs_finished == num_target_bbs) {
+
+        // All target BBs have been finished, so focus on those with a vuln. score of at least X
+        for (int i = 0; i < num_target_bbs; i++) {
+
+            if (tbb_infos[i]->vuln_score >= vuln_score_thres) {
+                // Reset target BB infos
+                tbb_infos[i]->state = active;
+                tbb_infos[i]->cov_flag = false;
+                tbb_infos[i]->n_input_execs = 0;
+                tbb_infos[i]->n_cycle_skips = 0;
+                tbb_infos[i]->n_prev_cycle_skips = 1;
+            }
+        }
+    } else {
+
+        if ((n_tbbs_finished + n_tbbs_paused) == num_target_bbs) {
+            // Seems like we are stuck right now — go into "coverage mode" trying to discover new code regions
+            explore_status = 1;
+        }
+    }
+}
 
 void update_cbb_distances() {
     for (int c = 0; c < num_critical_bbs; c++) {
         float cbb_distance = 0.0f;
 
-        u32 n = 0;
+        uint32_t n = 0;
         for (int t = 0; t < num_target_bbs; t++) {
-            if (tbb_infos[t]->status == active && distance_matrix[c][t] > 0) {
+            if (tbb_infos[t]->state == active && distance_matrix[c][t] > 0) {
                 cbb_distance += (1.0f / (float)distance_matrix[c][t]);
                 n++;
             }
@@ -1008,7 +1097,7 @@ double calculate_cb_distance() {
         }
     }
 
-#ifdef SASTFUZZ_DEBUG
+#ifdef SFZ_DEBUG
     printf("sast-fuzz: distance = %.2f (vf = %.2f)\n", distance, vuln_factor);
 #endif
 
@@ -6076,7 +6165,7 @@ EXP_ST u8 common_fuzz_stuff(char **argv, u8 *out_buf, u32 len) {
                 is_rare_target = 1;
             }
 
-            if (tbb_infos[i]->status != finished) {
+            if (tbb_infos[i]->state != finished) {
                 tbb_infos[i]->cov_flag = true;
                 tbb_infos[i]->n_input_execs++;
             }
@@ -6087,7 +6176,7 @@ EXP_ST u8 common_fuzz_stuff(char **argv, u8 *out_buf, u32 len) {
         if (n_cycle_inputs >= cycle_length) {
             n_cycle_inputs = 0;
 
-            tbb_update_status(tbb_infos, num_target_bbs, cycle_length, hc_reduct_factor, vuln_score_thres);
+            update_tbb_states();
             update_cbb_distances();
 
             // Minutes spent in the campaign up to this point
@@ -6095,7 +6184,9 @@ EXP_ST u8 common_fuzz_stuff(char **argv, u8 *out_buf, u32 len) {
 
             update_cycle_length_log(duration);
 
+#ifdef SFZ_DEBUG
             printf("sast-fuzz: cycle length = %lu (%dm)\n", cycle_length, duration);
+#endif
         }
 
         if (targets_bits[i] == 0) {
@@ -6698,7 +6789,7 @@ void update_distance(struct queue_entry *q) {
 
         distance += (cbb_distances[cbb_idx] * cbb_diff * vuln_factor);
 
-#ifdef SASTFUZZ_DEBUG
+#ifdef SFZ_DEBUG
         printf("sast-fuzz: distance = %.2f (vf = %.2f, df = %.2f)\n", distance, vuln_factor, cbb_diff);
 #endif
     }
@@ -10883,7 +10974,7 @@ int main(int argc, char **argv) {
     readCondition();
 
     u32 dm_n_rows, dm_n_cols;
-    dm_init("./dm.csv", &distance_matrix, &dm_n_rows, &dm_n_cols);
+    distance_matrix = dm_create_from_file("./dm.csv", &dm_n_rows, &dm_n_cols);
 
     assert(dm_n_rows == num_critical_bbs);
     assert(dm_n_cols == num_target_bbs);
