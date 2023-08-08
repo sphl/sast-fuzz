@@ -26,18 +26,16 @@
 #define _GNU_SOURCE
 #define _FILE_OFFSET_BITS 64
 
-#include "alloc-inl.h"
-#include "config.h"
-#include "debug.h"
-#include "hash.h"
-#include "types.h"
-
+#include <alloc-inl.h>
 #include <assert.h>
+#include <config.h>
 #include <ctype.h>
+#include <debug.h>
 #include <dirent.h>
 #include <dlfcn.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <hash.h>
 #include <limits.h>
 #include <math.h>
 #include <sched.h>
@@ -58,7 +56,11 @@
 #include <sys/wait.h>
 #include <termios.h>
 #include <time.h>
+#include <types.h>
 #include <unistd.h>
+
+#include <sfz/cycle_length.h>
+#include <sfz/target_bb.h>
 
 #if defined(__APPLE__) || defined(__FreeBSD__) || defined(__OpenBSD__)
 #include <sys/sysctl.h>
@@ -388,7 +390,6 @@ static inline float scale(float x, float min_x, float max_x, float min_y, float 
 // ---------------------------------------------------------------------------------------------------------------------
 #define SASTFUZZ_DEBUG
 
-// TODO: Find "better" default value!
 uint64_t init_cycle_length = 10000000;
 uint64_t cycle_length;
 
@@ -397,157 +398,7 @@ uint64_t n_cycle_inputs = 0;
 float vuln_score_thres = 0.5f;
 float hc_reduct_factor = 0.0f;
 
-enum tbb_status { finished = 0, active = 1, paused = 2 };
-
-struct tbb_info {
-    enum tbb_status status;
-    float vuln_score;
-    bool cov_flag;
-    uint64_t n_input_execs;
-    uint32_t n_cycle_skips;
-    uint32_t n_prev_cycle_skips;
-};
-
-typedef struct tbb_info tbb_info_t;
-
-tbb_info_t *tbb_info_init(float vuln_score) {
-    tbb_info_t *info = ck_alloc(sizeof(tbb_info_t));
-
-    info->status = active;
-    info->vuln_score = vuln_score;
-    info->cov_flag = false;
-
-    info->n_input_execs = 0;
-    info->n_cycle_skips = 0;
-    info->n_prev_cycle_skips = 1;
-
-    return info;
-}
-
-void tbb_info_free(tbb_info_t *info) { ck_free(info); }
-
 tbb_info_t **tbb_infos;
-
-void update_tbb_status() {
-    float sum_vuln_score = 0.0f;
-
-    for (int i = 0; i < num_target_bbs; i++) {
-        if (tbb_infos[i]->status == active || tbb_infos[i]->status == paused) {
-            sum_vuln_score += tbb_infos[i]->vuln_score;
-        }
-    }
-
-    uint32_t n_tbbs_paused = 0;
-    uint32_t n_tbbs_finished = 0;
-
-    for (int i = 0; i < num_target_bbs; i++) {
-        if (tbb_infos[i]->status == active || tbb_infos[i]->status == paused) {
-
-            int64_t n_req_input_execs = (int64_t)roundf(cycle_length * (tbb_infos[i]->vuln_score / sum_vuln_score));
-
-            if (hc_reduct_factor == 1.0f) {
-                n_req_input_execs = 1;
-            } else {
-                n_req_input_execs -= (int64_t)(n_req_input_execs * hc_reduct_factor);
-            }
-
-            int64_t exec_diff = (n_req_input_execs - tbb_infos[i]->n_input_execs);
-
-            if (exec_diff <= 0) {
-
-                // We do not care if the target BB is activated or paused. When it has been executed frequently enough
-                // by the generated fuzzy inputs, we mark it as finished
-                tbb_infos[i]->status = finished;
-
-            } else {
-
-                if (tbb_infos[i]->cov_flag) {
-
-                    // Each executed target BB will automatically be activated in the next cycle, regardless if paused
-                    // or already activated
-                    tbb_infos[i]->status = active;
-                    tbb_infos[i]->n_cycle_skips = 0;
-                    tbb_infos[i]->n_prev_cycle_skips = 1;
-
-                } else {
-
-                    if (tbb_infos[i]->n_cycle_skips == 0) {
-
-                        tbb_infos[i]->status = paused;
-                        tbb_infos[i]->n_cycle_skips = tbb_infos[i]->n_prev_cycle_skips;
-                        tbb_infos[i]->n_prev_cycle_skips++;
-
-                    } else {
-
-                        // Reactivate target BB if it has been "sufficiently" paused
-                        if ((tbb_infos[i]->n_cycle_skips - 1) == 0) {
-                            tbb_infos[i]->status = active;
-                            tbb_infos[i]->n_cycle_skips = 0;
-                        } else {
-                            tbb_infos[i]->n_cycle_skips--;
-                        }
-                    }
-                }
-            }
-
-#ifdef SASTFUZZ_DEBUG
-            char status_str[128];
-
-            if (tbb_infos[i]->status == finished) {
-                sprintf(status_str, "x");
-            } else {
-                if (tbb_infos[i]->status == active) {
-                    sprintf(status_str, "...");
-                } else {
-                    sprintf(status_str, "p (%d|%d)", tbb_infos[i]->n_cycle_skips, tbb_infos[i]->n_prev_cycle_skips);
-                }
-            }
-
-            printf("sast-fuzz: target BB = %d (%.2f), required = %ld (%.1f), actual = %lu (%ld) %s\n", i,
-                   tbb_infos[i]->vuln_score, n_req_input_execs, hc_reduct_factor, tbb_infos[i]->n_input_execs,
-                   exec_diff,
-                   status_str);
-#endif
-
-            tbb_infos[i]->cov_flag = false;
-        }
-
-        if (tbb_infos[i]->status == paused) {
-            n_tbbs_paused++;
-        }
-
-        if (tbb_infos[i]->status == finished) {
-            n_tbbs_finished++;
-        }
-    }
-
-#ifdef SASTFUZZ_DEBUG
-    printf("sast-fuzz: target BBs finished = %d, active = %d, paused = %d\n", n_tbbs_finished,
-           (num_target_bbs - (n_tbbs_finished + n_tbbs_paused)), n_tbbs_paused);
-#endif
-
-    if (n_tbbs_finished == num_target_bbs) {
-
-        // All target BBs have been finished, so focus on those with a vuln. score of at least X
-        for (int i = 0; i < num_target_bbs; i++) {
-
-            if (tbb_infos[i]->vuln_score >= vuln_score_thres) {
-                // Reset target BB infos
-                tbb_infos[i]->status = active;
-                tbb_infos[i]->cov_flag = false;
-                tbb_infos[i]->n_input_execs = 0;
-                tbb_infos[i]->n_cycle_skips = 0;
-                tbb_infos[i]->n_prev_cycle_skips = 1;
-            }
-        }
-    } else {
-
-        if ((n_tbbs_finished + n_tbbs_paused) == num_target_bbs) {
-            // Seems like we are stuck right now — go into "coverage mode" trying to discover new code regions
-            explore_status = 1;
-        }
-    }
-}
 
 float get_vuln_factor(const u8 *target_bits) {
     assert(target_bits != NULL);
@@ -571,15 +422,7 @@ float get_vuln_factor(const u8 *target_bits) {
     // Use the reverse value to increase the distance for inputs that hit no/only few target BBs.
     return (DEFAULT_VULN_FACTOR - value) + 1.0f;
 }
-// ---------------------------------------------------------------------------------------------------------------------
-static inline void update_cycle_length_fix() { cycle_length = init_cycle_length; }
 
-static inline void update_cycle_length_lin(uint32_t inc) { cycle_length = (cycle_length + inc); }
-
-static inline void update_cycle_length_log(uint32_t dur) {
-    cycle_length = (uint64_t)(log2f(((float)dur / 60) + 1) * 1000) + init_cycle_length;
-}
-// ---------------------------------------------------------------------------------------------------------------------
 static u32 num_critical_bbs;
 
 static int cbb_id_map[MAP_SIZE];
@@ -6244,7 +6087,7 @@ EXP_ST u8 common_fuzz_stuff(char **argv, u8 *out_buf, u32 len) {
         if (n_cycle_inputs >= cycle_length) {
             n_cycle_inputs = 0;
 
-            update_tbb_status();
+            tbb_update_status(tbb_infos, num_target_bbs, cycle_length, hc_reduct_factor, vuln_score_thres);
             update_cbb_distances();
 
             // Minutes spent in the campaign up to this point
