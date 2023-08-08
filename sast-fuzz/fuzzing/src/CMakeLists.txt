@@ -1,10 +1,9 @@
-add_executable(
-        sast-fuzz
-        cycle_length.c
-        distance_matrix.c
-        main.c
-        target_bb.c
-)
+add_library(libsfz STATIC cycle_length.c distance_matrix.c target_bb.c)
 
-target_include_directories(sast-fuzz PRIVATE ${SFZ_INCLUDE_DIR})
-target_link_libraries(sast-fuzz PRIVATE afl_config)
+target_include_directories(libsfz PUBLIC ${SFZ_INCLUDE_DIR})
+target_link_libraries(libsfz PUBLIC afl_config)
+set_target_properties(libsfz PROPERTIES PREFIX "")
+
+add_executable(sast-fuzz main.c)
+
+target_link_libraries(sast-fuzz libsfz)
