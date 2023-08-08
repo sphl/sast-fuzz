@@ -568,6 +568,7 @@ float get_vuln_factor(const u8 *target_bits) {
 
     float value = scale(vs_tbb_executed, 0.0f, vs_tbb_all, 1.0f, DEFAULT_VULN_FACTOR);
 
+    // Use the reverse value to increase the distance for inputs that hit no/only few target BBs.
     return (DEFAULT_VULN_FACTOR - value) + 1.0f;
 }
 // ---------------------------------------------------------------------------------------------------------------------
@@ -576,7 +577,7 @@ static inline void update_cycle_length_fix() { cycle_length = init_cycle_length;
 static inline void update_cycle_length_lin(uint32_t inc) { cycle_length = (cycle_length + inc); }
 
 static inline void update_cycle_length_log(uint32_t dur) {
-    cycle_length = (uint64_t)(log2((dur / 60) + 1) * 1000) + init_cycle_length;
+    cycle_length = (uint64_t)(log2f(((float)dur / 60) + 1) * 1000) + init_cycle_length;
 }
 // ---------------------------------------------------------------------------------------------------------------------
 static u32 num_critical_bbs;
@@ -628,7 +629,7 @@ void update_cbb_distances() {
         u32 n = 0;
         for (int t = 0; t < num_target_bbs; t++) {
             if (tbb_infos[t]->status == active && distance_matrix[c][t] > 0) {
-                cbb_distance += (1.0f / distance_matrix[c][t]);
+                cbb_distance += (1.0f / (float)distance_matrix[c][t]);
                 n++;
             }
         }
@@ -636,7 +637,7 @@ void update_cbb_distances() {
         if (n == 0) {
             cbb_distances[c] = 0.0f;
         } else {
-            cbb_distances[c] = (n / cbb_distance);
+            cbb_distances[c] = ((float)n / cbb_distance);
         }
     }
 }
@@ -1142,9 +1143,10 @@ double calculate_distance() {
 
 double calculate_cb_distance() {
     u32 i;
-    u32 distance = 0;
     u32 count = 0;
-    double res = -1;
+
+    float distance = 0;
+    float res = -1;
 
     float vuln_factor = get_vuln_factor(trace_bits + MAP_SIZE + 16);
 
@@ -1164,7 +1166,7 @@ double calculate_cb_distance() {
     }
 
 #ifdef SASTFUZZ_DEBUG
-    printf("sast-fuzz: distance = %d (vf = %.2f)\n", distance, vuln_factor);
+    printf("sast-fuzz: distance = %.2f (vf = %.2f)\n", distance, vuln_factor);
 #endif
 
     if (count) {
@@ -6828,8 +6830,9 @@ bool need_sniff(struct queue_entry *q) {
 
 void update_distance(struct queue_entry *q) {
     u32 i;
-    u32 cbb_diff = 0;
-    u32 distance = 0;
+
+    float cbb_diff = 0;
+    float distance = 0;
 
     float vuln_factor = get_vuln_factor(q->targets);
 
@@ -6841,7 +6844,7 @@ void update_distance(struct queue_entry *q) {
         if (q->critical_difficulty[i] == 0) {
             cbb_diff = DEFAULT_DIFFICULTY;
         } else {
-            u32 quo = (q->critical_difficulty[i] / DIFFICULTY_STEP) + 1;
+            float quo = ((float)q->critical_difficulty[i] / DIFFICULTY_STEP) + 1;
 
             if (quo < DEFAULT_DIFFICULTY) {
                 cbb_diff = quo;
@@ -6853,7 +6856,7 @@ void update_distance(struct queue_entry *q) {
         distance += (cbb_distances[cbb_idx] * cbb_diff * vuln_factor);
 
 #ifdef SASTFUZZ_DEBUG
-        printf("sast-fuzz: distance = %d (vf = %.2f, df = %d)\n", distance, vuln_factor, cbb_diff);
+        printf("sast-fuzz: distance = %.2f (vf = %.2f, df = %.2f)\n", distance, vuln_factor, cbb_diff);
 #endif
     }
 
