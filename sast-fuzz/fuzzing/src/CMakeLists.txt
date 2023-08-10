@@ -1,4 +1,4 @@
-add_library(libsfz STATIC cycle_length.c distance_matrix.c target_bb.c)
+add_library(libsfz STATIC cycle_length.c container/distance_matrix.c container/target_bb.c)
 
 target_include_directories(libsfz PUBLIC ${SFZ_INCLUDE_DIR})
 target_link_libraries(libsfz PUBLIC afl_config)
