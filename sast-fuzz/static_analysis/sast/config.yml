@@ -1,8 +1,8 @@
 ---
 scoring:
   weights:
-    flags: 0.3
-    tools: 0.7
+    flags: 0.5
+    tools: 0.5
 tools:
   flawfinder:
     path: 'python2 /opt/flawfinder-2.0.19/flawfinder.py'
@@ -25,7 +25,7 @@ tools:
       - 'r/c.lang.security.insecure-use-strtok-fn.insecure-use-strtok-fn'
       - 'r/c.lang.security.random-fd-exhaustion.random-fd-exhaustion'
       - 'r/c.lang.security.use-after-free.use-after-free'
-    num_threads: 4
+    num_threads: 8
   infer:
     path: '/opt/infer-1.1.0/bin/infer'
     checks:
@@ -39,7 +39,7 @@ tools:
       - '--siof'
       # - '--starvation'
       - '--uninit'
-    num_threads: 4
+    num_threads: 8
   codeql:
     lib_path: '/opt/codeql-2.12.0/lib'
     path: '/opt/codeql-2.12.0/cli/codeql'
@@ -258,7 +258,7 @@ tools:
       - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-764/UnreleasedLock.ql'
       - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-807/TaintedCondition.ql'
       - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-835/InfiniteLoopWithUnsatisfiableExitCondition.ql'
-    num_threads: 4
+    num_threads: 8
   clang_scan:
     path: '/opt/llvm-12.0.0/build/bin/scan-build'
     checks:
