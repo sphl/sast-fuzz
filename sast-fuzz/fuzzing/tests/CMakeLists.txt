@@ -4,7 +4,7 @@ file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/data" DESTINATION "${CMAKE_CURRENT_BINARY
 include("${CMAKE_SOURCE_DIR}/cmake/google_test.cmake")
 
 # Create binary for test execution
-add_executable(sfz_tests main.cpp test_distance_matrix.cpp)
+add_executable(sfz_tests main.cpp test_cycle_length.cpp test_distance_matrix.cpp)
 
 # Link gtest as static library
 target_link_libraries(
