@@ -1,4 +1,5 @@
 #include <filesystem>
+#include <iostream>
 #include <set>
 
 #include <llvm/IR/DebugInfo.h>
@@ -63,11 +64,19 @@ optional<Lines> llvm_utils::getBBLines(const BasicBlock &bb) {
         if (debugLoc) {
             LineNumber line = debugLoc.getLine();
             if (line > 0) {
-                assert(line >= parentFunc->getSubprogram()->getLine() &&
-                       "ERROR: One of the analyzed instructions is located outside the corresponding function, e.g. in "
-                       "a C macro, and the passed bitcode file was not compiled with '-g -O0 -fno-inline'. In this "
-                       "case, we cannot reliably determine the line range of the function!");
-                lineNumbers.insert(line);
+                // assert(line >= parentFunc->getSubprogram()->getLine() &&
+                //        "ERROR: One of the analyzed instructions is located outside the corresponding function, e.g.
+                //        in " "a C macro, and the passed bitcode file was not compiled with '-g -O0 -fno-inline'. In
+                //        this " "case, we cannot reliably determine the line range of the function!");
+
+                LineNumber firstFuncLine = parentFunc->getSubprogram()->getLine();
+
+                if (line >= firstFuncLine) {
+                    lineNumbers.insert(line);
+                } else {
+                    cout << "INFO: Analyzed line is out of function-scope (line = " << line
+                         << ", function = " << firstFuncLine << ")!" << endl;
+                }
             }
         }
     }
