@@ -12,10 +12,12 @@ static llvm::cl::opt<std::string> inputFile(llvm::cl::Positional, llvm::cl::desc
 
 static llvm::cl::opt<std::string> outputFile(llvm::cl::Positional, llvm::cl::desc("<output: JSON file>"));
 
+static llvm::cl::opt<bool> outputICFG ("icfg", llvm::cl::desc("Output inter-procedural CFG"));
+
 int main(int argc, char **argv) {
     llvm::cl::ParseCommandLineOptions(argc, argv, "SASTFuzz Inspector (SFI)\n");
 
-    if (argc != 3) {
+    if (inputFile.empty() || outputFile.empty()) {
         cerr << "ERROR: LLVM bitcode file and/or JSON output file not specified!" << endl;
         return 1;
     }
@@ -25,7 +27,13 @@ int main(int argc, char **argv) {
         Inspector inspector(inputFile);
 
         auto funcInfos = inspector.getFuncInfos();
-        auto icfgInfos = inspector.getICFGInfos();
+
+        std::optional<std::map<BBId, std::set<BBId>>> icfgInfos;
+        if (!outputICFG) {
+            icfgInfos = nullopt;
+        } else {
+            icfgInfos = inspector.getICFGInfos();
+        }
 
         printer.printToFile(outputFile, funcInfos, icfgInfos);
 

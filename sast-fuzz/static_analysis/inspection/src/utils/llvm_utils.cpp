@@ -74,8 +74,9 @@ optional<Lines> llvm_utils::getBBLines(const BasicBlock &bb) {
                 if (line >= firstFuncLine) {
                     lineNumbers.insert(line);
                 } else {
-                    cout << "INFO: Analyzed line is out of function-scope (line = " << line
-                         << ", function = " << firstFuncLine << ")!" << endl;
+                    cout << "INFO: " << llvm_utils::getFilename(*parentFunc) << ":" << parentFunc->getName().str()
+                         << ": Analyzed line is out of function scope (line = " << line
+                         << ", function-begin = " << firstFuncLine << ")!" << endl;
                 }
             }
         }
