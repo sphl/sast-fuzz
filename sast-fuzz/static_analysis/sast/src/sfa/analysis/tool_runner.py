@@ -175,7 +175,7 @@ class InferRunner(SASTToolRunner):
             f"{self._config.path} analyze --results-dir {working_dir} --jobs {self._config.num_threads} --keep-going {' '.join(self._config.checks)}"
         )
 
-        time.sleep(3)
+        time.sleep(5)
 
         # By default, Infer writes the results into the 'report.json' file once the analysis is complete.
         return (working_dir / "report.json").read_text()
@@ -219,7 +219,7 @@ class CodeQLRunner(SASTToolRunner):
             f"{self._config.path} database analyze --output={result_file} --format=sarifv2.1.0 --threads={self._config.num_threads} {working_dir} {' '.join(self._config.checks)}"
         )
 
-        time.sleep(3)
+        time.sleep(5)
 
         return result_file.read_text()
 
