@@ -20,7 +20,7 @@ jobs:
     
     defaults:
       run:
-        working-directory: src/static_analysis/sast
+        working-directory: sast-fuzz/static_analysis/sast
     
     steps:
       - name: Checkout
