@@ -3,7 +3,7 @@ name: Format check + static analysis + testing
 on:
   push:
     paths:
-      - "src/static_analysis/sast/src/**.py"
+      - "sast-fuzz/static_analysis/sast/src/**.py"
 
 permissions:
   contents: read
