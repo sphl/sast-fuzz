@@ -34,7 +34,7 @@ target_compile_definitions(
 )
 target_link_libraries(afl_config INTERFACE ${CMAKE_DL_LIBS} m)
 
-add_subdirectory(static_analysis)
 add_subdirectory(fuzzing)
-add_subdirectory(instrum)
+add_subdirectory(code_instrumentation)
+add_subdirectory(static_analysis)
 add_subdirectory(utils)
