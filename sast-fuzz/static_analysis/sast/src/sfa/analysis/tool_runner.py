@@ -1,6 +1,8 @@
 import json
+import logging
 import os
 import time
+import traceback
 from abc import ABC, abstractmethod
 from itertools import chain
 from pathlib import Path
@@ -104,11 +106,18 @@ class SASTToolRunner(ABC):
 
         :return:
         """
-        with TemporaryDirectory() as temp_dir:
-            working_dir = self._setup(Path(temp_dir))
-            flags = self._analyze(working_dir)
+        try:
+            with TemporaryDirectory() as temp_dir:
+                working_dir = self._setup(Path(temp_dir))
+                flags = self._analyze(working_dir)
 
-        return self._format(flags)
+            return self._format(flags)
+
+        except Exception as ex:
+            logging.info(ex)
+            logging.info(traceback.format_exc())
+
+            return SASTFlags()
 
 
 class FlawfinderRunner(SASTToolRunner):
