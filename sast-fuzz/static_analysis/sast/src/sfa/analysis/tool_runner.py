@@ -114,8 +114,8 @@ class SASTToolRunner(ABC):
             return self._format(flags)
 
         except Exception as ex:
-            logging.info(ex)
-            logging.info(traceback.format_exc())
+            logging.error(ex)
+            logging.error(traceback.format_exc())
 
             return SASTFlags()
 
