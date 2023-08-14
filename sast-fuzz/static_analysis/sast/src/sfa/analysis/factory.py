@@ -4,7 +4,7 @@ from typing import Any, Dict, Iterable
 
 from sfa import SASTToolConfig
 from sfa.analysis.filter import ReachabilityFilter
-from sfa.analysis.grouping import BasicBlockGrouping
+from sfa.analysis.grouping import BasicBlockGrouping, FunctionGrouping
 from sfa.analysis.tool_runner import (
     AddressSanitizerRunner,
     ClangScanRunner,
@@ -32,6 +32,7 @@ class SASTFlagFilterMode(Enum):
 
 class SASTFlagGroupingMode(Enum):
     BASIC_BLOCK = "basic-block"
+    FUNCTION = "function"
 
 
 class Factory(ABC):
@@ -90,4 +91,7 @@ class SASTFlagGroupingFactory(Factory):
 
     def _create_instances(self, param: Any) -> Dict:
         inspec_file, app_config = param
-        return {SASTFlagGroupingMode.BASIC_BLOCK: BasicBlockGrouping(inspec_file, app_config.score_weights)}
+        return {
+            SASTFlagGroupingMode.BASIC_BLOCK: BasicBlockGrouping(inspec_file, app_config.score_weights),
+            SASTFlagGroupingMode.FUNCTION: FunctionGrouping(inspec_file, app_config.score_weights),
+        }
