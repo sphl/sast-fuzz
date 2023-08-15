@@ -26,9 +26,9 @@ ENV DEBIAN_FRONTEND="noninteractive"
 
 ENV CC="clang"
 ENV CXX="clang++"
-ENV LLVM_COMPILER_PATH="${LLVM_DIR}/bin" 
 ENV LLVM_COMPILER="clang"
 ENV LLVM_DIR="/opt/llvm-${LLVM_VERSION}/build"
+ENV LLVM_COMPILER_PATH="${LLVM_DIR}/bin"
 ENV SVF_DIR="/opt/svf-${SVF_VERSION}"
 
 ENV PATH="${HOME}/.local/bin:$PATH"
