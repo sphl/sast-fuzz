@@ -32,3 +32,4 @@ target_link_libraries(
             ${SVF_CUDD_LIB}
             ${LLVM_LIBS}
 )
+add_dependencies(cbi libcbi)

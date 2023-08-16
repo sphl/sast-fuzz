@@ -9,5 +9,5 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
 endif ()
 
 add_executable(sast-fuzz main.c)
-
 target_link_libraries(sast-fuzz libsfz)
+add_dependencies(sast-fuzz libsfz)

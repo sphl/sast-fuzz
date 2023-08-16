@@ -40,3 +40,4 @@ target_compile_options(sfi PRIVATE -fno-rtti -fPIC ${SFI_COMPILE_OPTIONS})
 # Note that creating static libraries does not involve a linking steps, so we need to link "sfi" against SVF and cannot
 # simply use it through "libsfi".
 target_link_libraries(sfi PRIVATE libsfi ${SVF_LIB})
+add_dependencies(sfi libsfi)
