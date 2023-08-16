@@ -19,6 +19,17 @@ GroupedSASTFlag = namedtuple(
 SASTFlagType = Union[SASTFlag, GroupedSASTFlag]
 
 
+def div(a: Union[int, float], b: Union[int, float]) -> float:
+    """
+    Safe division of a by b.
+
+    :param a: numerator
+    :param b: denominator
+    :return:
+    """
+    return 0 if b == 0 else (a / b)
+
+
 class SASTFlags:
     """
     SAST flag container.

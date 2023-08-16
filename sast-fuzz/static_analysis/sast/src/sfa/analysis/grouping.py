@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Dict
 
 from sfa import ScoreWeights
-from sfa.analysis import GroupedSASTFlag, SASTFlags
+from sfa.analysis import GroupedSASTFlag, SASTFlags, div
 
 # Decimal precision of the vulnerability scores
 SCORE_PRECISION = 3
@@ -85,8 +85,8 @@ class BasicBlockGrouping(SASTFlagGrouping):
             n_run_tools = len(bb_tools)
             n_all_tools = n_tools
 
-            r_flg_lines = n_flg_lines / n_all_lines
-            r_run_tools = n_run_tools / n_all_tools
+            r_flg_lines = div(n_flg_lines, n_all_lines)
+            r_run_tools = div(n_run_tools, n_all_tools)
 
             # Calculate the vulnerability score
             score = round((self._weights.flags * r_flg_lines) + (self._weights.tools * r_run_tools), SCORE_PRECISION)
@@ -156,8 +156,8 @@ class FunctionGrouping(SASTFlagGrouping):
             n_run_tools = len(bb_tools)
             n_all_tools = n_tools
 
-            r_flg_lines = n_flg_lines / n_all_lines
-            r_run_tools = n_run_tools / n_all_tools
+            r_flg_lines = div(n_flg_lines, n_all_lines)
+            r_run_tools = div(n_run_tools, n_all_tools)
 
             # Calculate the vulnerability score
             score = round((self._weights.flags * r_flg_lines) + (self._weights.tools * r_run_tools), SCORE_PRECISION)
