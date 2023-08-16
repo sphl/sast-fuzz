@@ -15,7 +15,7 @@ RUN wget https://github.com/google/AFL/archive/refs/tags/v${AFL_VERSION}.tar.gz 
     && mv AFL-${AFL_VERSION} afl-${AFL_VERSION} \
     && cd afl-${AFL_VERSION} \
     && make \
-    && cd llvm_mode && make && cd ..
+    && cd llvm_mode && make
 
 WORKDIR /
 

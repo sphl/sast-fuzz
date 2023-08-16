@@ -389,7 +389,12 @@ static inline float scale(float x, float min_x, float max_x, float min_y, float 
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
-#define SFZ_DEBUG
+#ifdef SFZ_OUTPUT_STATS
+uint64_t sfz_stats_n = 1;
+uint64_t sfz_stats_interval = (5 * 60);  // seconds
+
+FILE *sfz_stats_fd = NULL;
+#endif
 
 uint64_t init_cycle_length = 10000000;
 uint64_t cycle_length;
@@ -6189,6 +6194,32 @@ EXP_ST u8 common_fuzz_stuff(char **argv, u8 *out_buf, u32 len) {
 #endif
         }
 
+#ifdef SFZ_OUTPUT_STATS
+        uint32_t fuzz_duration = (get_cur_time() - start_time) / 1000;
+
+        if (fuzz_duration >= (sfz_stats_n * sfz_stats_interval)) {
+            uint32_t n_tbbs_hit = 0;
+            uint32_t n_tbbs_finished = 0;
+
+            for (int i = 0; i < num_target_bbs; i++) {
+                if (tbb_infos[i]->n_input_execs > 0) {
+                    n_tbbs_hit++;
+                }
+                if (tbb_infos[i]->state == finished) {
+                    n_tbbs_finished++;
+                }
+            }
+
+            fprintf(sfz_stats_fd, "%d,%lu,%lu,%d,%d,%d,%llu\n", fuzz_duration, init_cycle_length, cycle_length,
+                    num_target_bbs, n_tbbs_hit, n_tbbs_finished, unique_crashes);
+
+            // Enforce file write operation ...
+            fflush(sfz_stats_fd);
+
+            sfz_stats_n++;
+        }
+#endif
+
         if (targets_bits[i] == 0) {
             targets_all = 0;
 
@@ -11036,6 +11067,16 @@ int main(int argc, char **argv) {
     distance_log = fopen(tmp, "w");
     ck_free(tmp);
 
+#ifdef SFZ_OUTPUT_STATS
+    tmp = alloc_printf("%s/sfz_stats.csv", out_dir);
+    sfz_stats_fd = fopen(tmp, "w");
+
+    fprintf(sfz_stats_fd, "%s,%s,%s,%s,%s,%s,%s\n", "fuzz_duration", "init_cycle_length", "cur_cycle_length",
+            "n_target_bbs", "n_target_bbs_hit", "n_target_bbs_finished", "n_unique_crashes");
+
+    ck_free(tmp);
+#endif
+
     perform_dry_run(use_argv);
 
     cull_queue();
@@ -11214,7 +11255,11 @@ stop_fuzzing:
     fclose(critical_log);
     fclose(distance_log);
 
-    alloc_report();
+#ifdef SFZ_OUTPUT_STATS
+    fclose(sfz_stats_fd)
+#endif
+
+            alloc_report();
 
     OKF("We're done here. Have a nice day!\n");
 

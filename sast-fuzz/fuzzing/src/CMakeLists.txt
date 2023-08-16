@@ -4,9 +4,11 @@ target_include_directories(libsfz PUBLIC ${SFZ_INCLUDE_DIR})
 target_link_libraries(libsfz PUBLIC afl_config)
 set_target_properties(libsfz PROPERTIES PREFIX "")
 
-if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    target_compile_definitions(libsfz PUBLIC SFZ_DEBUG)
-endif ()
+target_compile_definitions(libsfz PUBLIC SFZ_OUTPUT_STATS)
+
+# if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+#     target_compile_definitions(libsfz PUBLIC SFZ_DEBUG)
+# endif ()
 
 add_executable(sast-fuzz main.c)
 target_link_libraries(sast-fuzz libsfz)
