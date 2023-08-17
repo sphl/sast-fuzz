@@ -4,11 +4,7 @@ from typing import Any, Dict, Iterable
 
 from sfa import SASTToolConfig
 from sfa.analysis.filter import ReachabilityFilter
-from sfa.analysis.grouping import (
-    BasicBlockGrouping,
-    BasicBlockV2Grouping,
-    FunctionGrouping,
-)
+from sfa.analysis.grouping import BasicBlockGrouping, BasicBlockV2Grouping, FunctionGrouping
 from sfa.analysis.tool_runner import (
     AddressSanitizerRunner,
     ClangScanRunner,
