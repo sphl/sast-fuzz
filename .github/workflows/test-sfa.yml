@@ -42,8 +42,8 @@ jobs:
 
       - name: Check code formatting
         run: |-
-          poetry run black --check src --line-length 120 --skip-magic-trailing-comma
           poetry run isort --check src --profile black
+          poetry run black --check src --line-length 120 --skip-magic-trailing-comma
 
       - name: Run static analysis
         run: |-
