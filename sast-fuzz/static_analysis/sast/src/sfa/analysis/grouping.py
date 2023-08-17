@@ -2,7 +2,7 @@ import json
 from abc import ABC, abstractmethod
 from collections import defaultdict, namedtuple
 from pathlib import Path
-from typing import Dict
+from typing import Tuple, List, Dict
 
 from sfa import ScoreWeights
 from sfa.analysis import GroupedSASTFlag, SASTFlags, div
@@ -147,13 +147,13 @@ class FunctionGrouping(SASTFlagGrouping):
         n_tools = len({flag.tool for flag in flags})
         grouped_flags = SASTFlags()
 
-        for func_name, bb_flags in flags_per_func.items():
-            bb_tools = {flag.tool for flag in bb_flags}
-            bb_vulns = {f"{flag.vuln}:{flag.line}" for flag in bb_flags}
+        for func_name, func_flags in flags_per_func.items():
+            func_tools = {flag.tool for flag in func_flags}
+            func_vulns = {f"{flag.vuln}:{flag.line}" for flag in func_flags}
 
-            n_flg_lines = len({flag.line for flag in bb_flags})
+            n_flg_lines = len({flag.line for flag in func_flags})
             n_all_lines = self._func_infos[func_name].n_lines
-            n_run_tools = len(bb_tools)
+            n_run_tools = len(func_tools)
             n_all_tools = n_tools
 
             r_flg_lines = div(n_flg_lines, n_all_lines)
@@ -164,10 +164,10 @@ class FunctionGrouping(SASTFlagGrouping):
 
             grouped_flags.add(
                 GroupedSASTFlag(
-                    CONCAT_CHAR.join(bb_tools),
+                    CONCAT_CHAR.join(func_tools),
                     self._func_infos[func_name].file,
                     self._func_infos[func_name].line_start + 1,
-                    CONCAT_CHAR.join(bb_vulns),
+                    CONCAT_CHAR.join(func_vulns),
                     n_flg_lines,
                     n_all_lines,
                     n_run_tools,
