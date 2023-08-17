@@ -2,7 +2,7 @@ import json
 from abc import ABC, abstractmethod
 from collections import defaultdict, namedtuple
 from pathlib import Path
-from typing import Tuple, List, Dict
+from typing import Dict, List, Tuple
 
 from sfa import ScoreWeights
 from sfa.analysis import GroupedSASTFlag, SASTFlags, div
@@ -104,6 +104,88 @@ class BasicBlockGrouping(SASTFlagGrouping):
                     score,
                 )
             )
+
+        return grouped_flags
+
+
+class BasicBlockV2Grouping(SASTFlagGrouping):
+    """
+    SAST flag basic block grouping with function-level vuln. score.
+    """
+
+    def __init__(self, inspec_file: Path, weights: ScoreWeights) -> None:
+        super().__init__(inspec_file, weights)
+        self._func_infos: Dict[str, Tuple[CodeBlockInfo, List[CodeBlockInfo]]] = {}
+
+        data = json.loads(inspec_file.read_text())
+
+        for func in data["functions"]:
+            func_file = func["location"]["filename"]
+            func_name = f"{func['location']['filename']}:{func['name']}"
+
+            func_info = CodeBlockInfo(
+                func_file, func["location"]["line"]["start"], func["location"]["line"]["end"], func["LoC"]
+            )
+
+            blk_infos = []
+            for bb in func["basic_blocks"]:
+                blk_infos.append(
+                    CodeBlockInfo(
+                        func["location"]["filename"],
+                        bb["location"]["line"]["start"],
+                        bb["location"]["line"]["end"],
+                        bb["LoC"],
+                    )
+                )
+
+            self._func_infos[func_name] = (func_info, blk_infos)
+
+    def group(self, flags: SASTFlags) -> SASTFlags:
+        flags_per_func: Dict = defaultdict(set)
+        flagged_blocks: Dict = defaultdict(set)
+
+        for flag in flags:
+            for func_name, (func_info, blk_infos) in self._func_infos.items():
+                if flag.file == func_info.file:
+                    if func_info.line_start <= flag.line <= func_info.line_end:
+                        flags_per_func[func_name].add(flag)
+
+                        for bb_info in blk_infos:
+                            if bb_info.line_start <= flag.line <= bb_info.line_end:
+                                flagged_blocks[func_name].add(bb_info)
+
+        n_tools = len({flag.tool for flag in flags})
+        grouped_flags = SASTFlags()
+
+        for func_name, func_flags in flags_per_func.items():
+            func_tools = {flag.tool for flag in func_flags}
+            func_vulns = {f"{flag.vuln}:{flag.line}" for flag in func_flags}
+
+            n_flg_lines = len({flag.line for flag in func_flags})
+            n_all_lines = self._func_infos[func_name][0].n_lines
+            n_run_tools = len(func_tools)
+            n_all_tools = n_tools
+
+            r_flg_lines = div(n_flg_lines, n_all_lines)
+            r_run_tools = div(n_run_tools, n_all_tools)
+
+            # Calculate the vulnerability score
+            score = round((self._weights.flags * r_flg_lines) + (self._weights.tools * r_run_tools), SCORE_PRECISION)
+
+            for bb_info in flagged_blocks[func_name]:
+                grouped_flags.add(
+                    GroupedSASTFlag(
+                        CONCAT_CHAR.join(func_tools),
+                        bb_info.file,
+                        bb_info.line_start,
+                        CONCAT_CHAR.join(func_vulns),
+                        n_flg_lines,
+                        n_all_lines,
+                        n_run_tools,
+                        n_all_tools,
+                        score,
+                    )
+                )
 
         return grouped_flags
 
