@@ -154,6 +154,8 @@ class BasicBlockV2Grouping(SASTFlagGrouping):
                             if bb_info.line_start <= flag.line <= bb_info.line_end:
                                 flagged_blocks[func_name].add(bb_info)
 
+                        break
+
         n_tools = len({flag.tool for flag in flags})
         grouped_flags = SASTFlags()
 
@@ -173,12 +175,17 @@ class BasicBlockV2Grouping(SASTFlagGrouping):
             score = round((self._weights.flags * r_flg_lines) + (self._weights.tools * r_run_tools), SCORE_PRECISION)
 
             for bb_info in flagged_blocks[func_name]:
+                bb_flags = [flag for flag in func_flags if bb_info.line_start <= flag.line <= bb_info.line_end]
+
+                bb_tools = {flag.tool for flag in bb_flags}
+                bb_vulns = {f"{flag.vuln}:{flag.line}" for flag in bb_flags}
+
                 grouped_flags.add(
                     GroupedSASTFlag(
-                        CONCAT_CHAR.join(func_tools),
+                        CONCAT_CHAR.join(bb_tools),
                         bb_info.file,
                         bb_info.line_start,
-                        CONCAT_CHAR.join(func_vulns),
+                        CONCAT_CHAR.join(bb_vulns),
                         n_flg_lines,
                         n_all_lines,
                         n_run_tools,

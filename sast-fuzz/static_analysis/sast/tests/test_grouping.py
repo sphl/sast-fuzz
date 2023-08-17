@@ -4,7 +4,7 @@ from typing import Set, Tuple
 
 from sfa import ScoreWeights
 from sfa.analysis import GroupedSASTFlag, SASTFlag, SASTFlags
-from sfa.analysis.grouping import CONCAT_CHAR, BasicBlockGrouping, FunctionGrouping
+from sfa.analysis.grouping import CONCAT_CHAR, BasicBlockGrouping, BasicBlockV2Grouping, FunctionGrouping
 
 
 def unfold(flags: SASTFlags) -> Set[Tuple]:
@@ -166,6 +166,150 @@ class TestBasicBlockGrouping(unittest.TestCase):
         expected = SASTFlags()
         expected.add(GroupedSASTFlag("tool2", "quicksort.c", 13, "vuln2:19", 1, 4, 1, 3, 0.292))
         expected.add(GroupedSASTFlag("tool3", "quicksort.c", 65, "vuln3:73", 1, 8, 1, 3, 0.229))
+
+        # Act
+        actual = self.grouping.group(flags)
+
+        # Assert
+        self.assertEqual(unfold(expected), unfold(actual))
+
+
+class TestBasicBlockV2Grouping(unittest.TestCase):
+    def setUp(self) -> None:
+        inspec_file = Path(__file__).parent / "data" / "sfi" / "quicksort.json"
+        self.grouping = BasicBlockV2Grouping(inspec_file, ScoreWeights(0.5, 0.5))
+
+    def test_group_same_func(self) -> None:
+        # Arrange
+        flags = SASTFlags()
+        flags.add(SASTFlag("tool1", "quicksort.c", 58, "vuln1"))  # Function "printArray", block 13
+        flags.add(SASTFlag("tool2", "quicksort.c", 59, "vuln2"))  # Function "printArray", block 13
+        flags.add(SASTFlag("tool3", "quicksort.c", 60, "vuln3"))  # Function "printArray", block 15
+
+        expected = SASTFlags()
+        expected.add(GroupedSASTFlag("tool1-tool2", "quicksort.c", 58, "vuln1:58-vuln2:59", 3, 6, 3, 3, 0.75))
+        expected.add(GroupedSASTFlag("tool3", "quicksort.c", 60, "vuln3:60", 3, 6, 3, 3, 0.75))
+
+        # Act
+        actual = self.grouping.group(flags)
+
+        # Assert
+        self.assertEqual(unfold(expected), unfold(actual))
+
+    def test_group_two_funcs(self) -> None:
+        # Arrange
+        flags = SASTFlags()
+        flags.add(SASTFlag("tool1", "quicksort.c", 58, "vuln1"))  # Function "printArray", block 13
+        flags.add(SASTFlag("tool2", "quicksort.c", 73, "vuln2"))  # Function "main", block 16
+        flags.add(SASTFlag("tool3", "quicksort.c", 60, "vuln3"))  # Function "printArray", block 15
+
+        expected = SASTFlags()
+        expected.add(GroupedSASTFlag("tool1", "quicksort.c", 58, "vuln1:58", 2, 6, 2, 3, 0.5))
+        expected.add(GroupedSASTFlag("tool2", "quicksort.c", 65, "vuln2:73", 1, 8, 1, 3, 0.229))
+        expected.add(GroupedSASTFlag("tool3", "quicksort.c", 60, "vuln3:60", 2, 6, 2, 3, 0.5))
+
+        # Act
+        actual = self.grouping.group(flags)
+
+        # Assert
+        self.assertEqual(unfold(expected), unfold(actual))
+
+    def test_group_three_funcs(self) -> None:
+        # Arrange
+        flags = SASTFlags()
+        flags.add(SASTFlag("tool1", "quicksort.c", 68, "vuln1"))  # Function "main", block 16
+        flags.add(SASTFlag("tool2", "quicksort.c", 56, "vuln2"))  # Function "printArray", block 11
+        flags.add(SASTFlag("tool3", "quicksort.c", 36, "vuln3"))  # Function "partition", block 7
+
+        expected = SASTFlags()
+        expected.add(GroupedSASTFlag("tool1", "quicksort.c", 65, "vuln1:68", 1, 8, 1, 3, 0.229))
+        expected.add(GroupedSASTFlag("tool2", "quicksort.c", 56, "vuln2:56", 1, 6, 1, 3, 0.25))
+        expected.add(GroupedSASTFlag("tool3", "quicksort.c", 34, "vuln3:36", 1, 11, 1, 3, 0.212))
+
+        # Act
+        actual = self.grouping.group(flags)
+
+        # Assert
+        self.assertEqual(unfold(expected), unfold(actual))
+
+    def test_group_same_tool(self) -> None:
+        # Arrange
+        flags = SASTFlags()
+        flags.add(SASTFlag("tool1", "quicksort.c", 48, "vuln1"))  # Function "quickSort", block 9
+        flags.add(SASTFlag("tool2", "quicksort.c", 67, "vuln2"))  # Function "main", block 16
+        flags.add(SASTFlag("tool1", "quicksort.c", 50, "vuln3"))  # Function "quickSort", block 9
+
+        expected = SASTFlags()
+        expected.add(GroupedSASTFlag("tool1", "quicksort.c", 45, "vuln1:48-vuln3:50", 2, 7, 1, 2, 0.393))
+        expected.add(GroupedSASTFlag("tool2", "quicksort.c", 65, "vuln2:67", 1, 8, 1, 2, 0.312))
+
+        # Act
+        actual = self.grouping.group(flags)
+
+        # Assert
+        self.assertEqual(unfold(expected), unfold(actual))
+
+    def test_group_same_vuln(self) -> None:
+        # Arrange
+        flags = SASTFlags()
+        flags.add(SASTFlag("tool1", "quicksort.c", 48, "vuln1"))  # Function "quickSort", block 9
+        flags.add(SASTFlag("tool2", "quicksort.c", 67, "vuln2"))  # Function "main", block 16
+        flags.add(SASTFlag("tool3", "quicksort.c", 48, "vuln1"))  # Function "quickSort", block 9
+
+        expected = SASTFlags()
+        expected.add(GroupedSASTFlag("tool1-tool3", "quicksort.c", 45, "vuln1:48", 1, 7, 2, 3, 0.405))
+        expected.add(GroupedSASTFlag("tool2", "quicksort.c", 65, "vuln2:67", 1, 8, 1, 3, 0.229))
+
+        # Act
+        actual = self.grouping.group(flags)
+
+        # Assert
+        self.assertEqual(unfold(expected), unfold(actual))
+
+    def test_group_diff_vuln_same_line(self) -> None:
+        # Arrange
+        flags = SASTFlags()
+        flags.add(SASTFlag("tool1", "quicksort.c", 48, "vuln1"))  # Function "quickSort", block 9
+        flags.add(SASTFlag("tool2", "quicksort.c", 27, "vuln2"))  # Function "partition", block 4
+        flags.add(SASTFlag("tool3", "quicksort.c", 48, "vuln3"))  # Function "quickSort", block 9
+
+        expected = SASTFlags()
+        expected.add(GroupedSASTFlag("tool1-tool3", "quicksort.c", 45, "vuln1:48-vuln3:48", 1, 7, 2, 3, 0.405))
+        expected.add(GroupedSASTFlag("tool2", "quicksort.c", 26, "vuln2:27", 1, 11, 1, 3, 0.212))
+
+        # Act
+        actual = self.grouping.group(flags)
+
+        # Assert
+        self.assertEqual(unfold(expected), unfold(actual))
+
+    def test_group_scope_func(self) -> None:
+        # Arrange
+        flags = SASTFlags()
+        flags.add(SASTFlag("tool1", "quicksort.c", 54, "vuln1"))  # Outside of function(s)
+        flags.add(SASTFlag("tool2", "quicksort.c", 60, "vuln2"))  # Function "printArray", block 15
+        flags.add(SASTFlag("tool3", "quicksort.c", 67, "vuln3"))  # Function "main", block 16
+
+        expected = SASTFlags()
+        expected.add(GroupedSASTFlag("tool2", "quicksort.c", 60, "vuln2:60", 1, 6, 1, 3, 0.25))
+        expected.add(GroupedSASTFlag("tool3", "quicksort.c", 65, "vuln3:67", 1, 8, 1, 3, 0.229))
+
+        # Act
+        actual = self.grouping.group(flags)
+
+        # Assert
+        self.assertEqual(unfold(expected), unfold(actual))
+
+    def test_group_scope_file(self) -> None:
+        # Arrange
+        flags = SASTFlags()
+        flags.add(SASTFlag("tool1", "main.c", 67, "vuln1"))  # Wrong file
+        flags.add(SASTFlag("tool2", "quicksort.c", 60, "vuln2"))  # Function "printArray", block 15
+        flags.add(SASTFlag("tool3", "quicksort.c", 67, "vuln3"))  # Function "main", block 16
+
+        expected = SASTFlags()
+        expected.add(GroupedSASTFlag("tool2", "quicksort.c", 60, "vuln2:60", 1, 6, 1, 3, 0.25))
+        expected.add(GroupedSASTFlag("tool3", "quicksort.c", 65, "vuln3:67", 1, 8, 1, 3, 0.229))
 
         # Act
         actual = self.grouping.group(flags)
