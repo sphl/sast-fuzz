@@ -27,6 +27,9 @@ DEFAULT_CONFIG_FILE = Path.cwd() / "config.yml"
 # Path of the default output file.
 DEFAULT_OUTPUT_FILE = Path.cwd() / "output.csv"
 
+# Default grouping mode for SAST flags.
+DEFAULT_FLAG_GROUPING = SASTFlagGroupingMode.BASIC_BLOCK_V2
+
 app = typer.Typer()
 
 
@@ -173,7 +176,7 @@ def main(
             "--grouping",
             help="Grouping to be applied on the SAST flags. Note: To apply the grouping, the SFI file must be specified (--inspection).",
         ),
-    ] = None,
+    ] = DEFAULT_FLAG_GROUPING,
 ) -> None:
     if tools:
         if subject_dir is None:
