@@ -1,8 +1,8 @@
 ---
 scoring:
   weights:
-    flags: 0.5
-    tools: 0.5
+    flags: 0.0
+    tools: 1.0
 tools:
   flawfinder:
     path: 'python2 /opt/flawfinder-2.0.19/flawfinder.py'
