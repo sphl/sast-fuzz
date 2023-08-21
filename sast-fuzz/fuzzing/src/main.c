@@ -6153,8 +6153,6 @@ EXP_ST u8 common_fuzz_stuff(char **argv, u8 *out_buf, u32 len) {
     targets_all = 1;
     u8 *tmp_targets = ck_alloc(num_target_bbs);
 
-    // u16 num_active_tbbs = get_num_active_tbbs();
-
     for (i = 0; i < num_target_bbs; i++) {
         u8 flag = *(trace_bits + MAP_SIZE + 16 + i);
 
@@ -10875,7 +10873,7 @@ int main(int argc, char **argv) {
             break;
 
         case 'L': {
-            int length = atoi(optarg);
+            uint64_t length = atol(optarg);
 
             if (length >= 10000) {
                 init_cycle_length = length;
