@@ -157,7 +157,7 @@ RUN cmake -G "Ninja" \
     # Install LLVMgold (LTO) into bfd-plugins
     && mkdir -p /usr/lib/bfd-plugins \
     && cp /usr/local/lib/libLTO.so /usr/lib/bfd-plugins \
-    && cp /usr/local/lib/LLVMgold.so /usr/lib/bfd-plugins \
+    && cp /usr/local/lib/LLVMgold.so /usr/lib/bfd-plugins
 
 WORKDIR /opt/llvm-${LLVM_VERSION}/compiler-rt/lib/fuzzer/standalone
 
