@@ -69,9 +69,7 @@ RUN apt-get update -qq \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     # Install Poetry
-    && wget --quiet https://install.python-poetry.org --output-file poetry.py \
-    && python3 poetry.py \
-    && rm poetry.py \
+    && curl -sSL https://install.python-poetry.org | python3 - \
     # Install WLLVM
     && python3 -m pip install -q --no-cache-dir --upgrade pip \
     && python3 -m pip install -q --no-cache-dir wllvm \
