@@ -449,15 +449,16 @@ void update_tbb_states() {
     for (u32 i = 0; i < num_target_bbs; i++) {
         if (tbb_infos[i]->state == active || tbb_infos[i]->state == paused) {
 
-            u64 n_req_input_execs = (u64)roundf((float)cycle_length * (tbb_infos[i]->vuln_score / sum_vuln_score));
+            int64_t n_req_input_execs =
+                    (int64_t)roundf((float)cycle_length * (tbb_infos[i]->vuln_score / sum_vuln_score));
 
             if (hc_reduct_factor == 1.0f) {
                 n_req_input_execs = 1;
             } else {
-                n_req_input_execs -= (u64)((float)n_req_input_execs * hc_reduct_factor);
+                n_req_input_execs -= (int64_t)((float)n_req_input_execs * hc_reduct_factor);
             }
 
-            u64 exec_diff = (n_req_input_execs - (u64)tbb_infos[i]->n_input_execs);
+            int64_t exec_diff = (n_req_input_execs - (int64_t)tbb_infos[i]->n_input_execs);
 
             if (exec_diff <= 0) {
 
@@ -509,7 +510,7 @@ void update_tbb_states() {
                 }
             }
 
-            printf("sast-fuzz: target BB = %d (%.2f), required = %llu (%.1f), actual = %llu (%llu) %s\n", i,
+            printf("sast-fuzz: target BB = %d (%.2f), required = %ld (%.1f), actual = %llu (%ld) %s\n", i,
                    tbb_infos[i]->vuln_score, n_req_input_execs, hc_reduct_factor, tbb_infos[i]->n_input_execs,
                    exec_diff, status_str);
 #endif
