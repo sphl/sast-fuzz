@@ -561,6 +561,7 @@ void update_tbb_states() {
 
 void update_cbb_distances() {
     for (u32 c = 0; c < num_critical_bbs; c++) {
+        // Harmonic critical-target-BB distance
         float cbb_distance = 0.0f;
 
         u32 n = 0;
