@@ -6144,7 +6144,7 @@ EXP_ST u8 common_fuzz_stuff(char **argv, u8 *out_buf, u32 len) {
             update_cbb_distances();
 
             // Minutes spent in the campaign up to this point
-            uint32_t duration = ((get_cur_time() - start_time) / 1000) / 60;
+            u32 duration = ((get_cur_time() - start_time) / 1000) / 60;
 
             update_cycle_length_log(duration);
 
@@ -6154,11 +6154,11 @@ EXP_ST u8 common_fuzz_stuff(char **argv, u8 *out_buf, u32 len) {
         }
 
 #ifdef SFZ_OUTPUT_STATS
-        uint32_t fuzz_duration = (get_cur_time() - start_time) / 1000;
+        u32 fuzz_duration = (get_cur_time() - start_time) / 1000;
 
         if (fuzz_duration >= (sfz_stats_n * sfz_stats_interval)) {
-            uint32_t n_tbbs_hit = 0;
-            uint32_t n_tbbs_finished = 0;
+            u32 n_tbbs_hit = 0;
+            u32 n_tbbs_finished = 0;
 
             for (int i = 0; i < num_target_bbs; i++) {
                 if (tbb_infos[i]->n_input_execs > 0) {
@@ -10714,7 +10714,7 @@ int main(int argc, char **argv) {
             break;
 
         case 'L': {
-            uint64_t length = atol(optarg);
+            u64 length = atol(optarg);
 
             if (length >= 10000) {
                 init_cycle_length = length;
