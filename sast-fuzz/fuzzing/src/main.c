@@ -518,6 +518,7 @@ void update_tbb_states() {
                    exec_diff, status_str);
 #endif
 
+            // Reset coverage flag
             tbb_infos[i]->cov_flag = false;
         }
 
@@ -537,7 +538,7 @@ void update_tbb_states() {
 
     if (n_tbbs_finished == num_target_bbs) {
 
-        // All target BBs have been finished, so focus on those with a vuln. score of at least X
+        // All target BBs have been finished, so focus on those with a vuln. score of at least 'vuln_score_thres'
         for (int i = 0; i < num_target_bbs; i++) {
 
             if (tbb_infos[i]->vuln_score >= vuln_score_thres) {
@@ -564,6 +565,7 @@ void update_cbb_distances() {
 
         u32 n = 0;
         for (u32 t = 0; t < num_target_bbs; t++) {
+            // Only include the distance to ACTIVE target BBs
             if (tbb_infos[t]->state == active && distance_matrix[c][t] > 0) {
                 cbb_distance += (1.0f / (float)distance_matrix[c][t]);
                 n++;
