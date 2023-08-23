@@ -7,12 +7,12 @@
 enum tbb_state { finished = 0, active = 1, paused = 2 };
 
 struct tbb_info {
-    enum tbb_state state;         //< Current state of the target BB.
-    float vuln_score;             //< Vulnerability score of the target BB.
-    bool cov_flag;                //< Flag if target BB was covered in the current cycle.
-    uint64_t n_input_execs;       //< Number of target BB executions (i.e., # inputs).
-    uint32_t n_cycle_skips;       //< Number of current cycle skips.
-    uint32_t n_prev_cycle_skips;  //< Number of previous cycle skips.
+    enum tbb_state state;    //< Current state of the target BB.
+    float vuln_score;        //< Vulnerability score of the target BB.
+    bool cov_flag;           //< Flag if target BB was covered in the current cycle.
+    u64 n_input_execs;       //< Number of target BB executions (i.e., # inputs).
+    u64 n_cycle_skips;       //< Number of current cycle skips.
+    u64 n_prev_cycle_skips;  //< Number of previous cycle skips.
 };
 
 typedef struct tbb_info tbb_info_t;

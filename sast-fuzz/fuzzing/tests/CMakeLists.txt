@@ -8,18 +8,18 @@ add_executable(sfz_tests main.cpp test_cycle_length.cpp test_distance_matrix.cpp
 
 # Link gtest as static library
 target_link_libraries(
-    sfz_tests
-    gtest_main
-    gmock_main
-    libsfz
+        sfz_tests
+        gtest_main
+        gmock_main
+        libsfz
 )
 
 # Automatic discovery of unit tests
 include(GoogleTest)
 gtest_discover_tests(
-    sfz_tests
-    PROPERTIES LABELS
-               "unit"
-               DISCOVERY_TIMEOUT # How long to wait (in seconds) before crashing
-               240
+        sfz_tests
+        PROPERTIES LABELS
+        "unit"
+        DISCOVERY_TIMEOUT # How long to wait (in seconds) before crashing
+        240
 )

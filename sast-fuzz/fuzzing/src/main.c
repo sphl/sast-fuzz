@@ -389,16 +389,16 @@ static inline float scale(float x, float min_x, float max_x, float min_y, float 
 }
 
 #ifdef SFZ_OUTPUT_STATS
-uint64_t sfz_stats_n = 1;
-uint64_t sfz_stats_interval = (5 * 60);  // seconds
+u64 sfz_stats_n = 1;
+u64 sfz_stats_interval = (5 * 60);  // seconds
 
 FILE *sfz_stats_fd = NULL;
 #endif
 
-uint64_t init_cycle_length = 10000000;
-uint64_t cycle_length;
+u64 init_cycle_length = 10000000;
+u64 cycle_length;
 
-uint64_t n_cycle_inputs = 0;
+u64 n_cycle_inputs = 0;
 
 float vuln_score_thres = 0.5f;
 float hc_reduct_factor = 0.0f;
@@ -406,9 +406,6 @@ float hc_reduct_factor = 0.0f;
 tbb_info_t **tbb_infos;
 
 float get_vuln_factor(const u8 *target_bits) {
-    assert(target_bits != NULL);
-    assert(tbb_infos != NULL);
-
     float vs_tbb_all = 0.0f;
     float vs_tbb_executed = 0.0f;
 
@@ -433,35 +430,34 @@ static u32 num_critical_bbs;
 static int cbb_id_map[MAP_SIZE];
 static float *cbb_distances;
 
-static uint32_t **distance_matrix;
+static u32 **distance_matrix;
 
-static inline int lookup_cbb_id(uint32_t bb_id) { return cbb_id_map[bb_id]; }
+static inline int lookup_cbb_id(u32 bb_id) { return cbb_id_map[bb_id]; }
 
 void update_tbb_states() {
     float sum_vuln_score = 0.0f;
 
-    for (int i = 0; i < num_target_bbs; i++) {
+    for (u32 i = 0; i < num_target_bbs; i++) {
         if (tbb_infos[i]->state == active || tbb_infos[i]->state == paused) {
             sum_vuln_score += tbb_infos[i]->vuln_score;
         }
     }
 
-    uint32_t n_tbbs_paused = 0;
-    uint32_t n_tbbs_finished = 0;
+    u32 n_tbbs_paused = 0;
+    u32 n_tbbs_finished = 0;
 
-    for (int i = 0; i < num_target_bbs; i++) {
+    for (u32 i = 0; i < num_target_bbs; i++) {
         if (tbb_infos[i]->state == active || tbb_infos[i]->state == paused) {
 
-            int64_t n_req_input_execs =
-                    (int64_t)roundf((float)cycle_length * (tbb_infos[i]->vuln_score / sum_vuln_score));
+            u64 n_req_input_execs = (u64)roundf((float)cycle_length * (tbb_infos[i]->vuln_score / sum_vuln_score));
 
             if (hc_reduct_factor == 1.0f) {
                 n_req_input_execs = 1;
             } else {
-                n_req_input_execs -= (int64_t)((float)n_req_input_execs * hc_reduct_factor);
+                n_req_input_execs -= (u64)((float)n_req_input_execs * hc_reduct_factor);
             }
 
-            int64_t exec_diff = (n_req_input_execs - (int64_t)tbb_infos[i]->n_input_execs);
+            u64 exec_diff = (n_req_input_execs - (u64)tbb_infos[i]->n_input_execs);
 
             if (exec_diff <= 0) {
 
@@ -509,11 +505,11 @@ void update_tbb_states() {
                 if (tbb_infos[i]->state == active) {
                     sprintf(status_str, "...");
                 } else {
-                    sprintf(status_str, "p (%d|%d)", tbb_infos[i]->n_cycle_skips, tbb_infos[i]->n_prev_cycle_skips);
+                    sprintf(status_str, "p (%llu|%llu)", tbb_infos[i]->n_cycle_skips, tbb_infos[i]->n_prev_cycle_skips);
                 }
             }
 
-            printf("sast-fuzz: target BB = %d (%.2f), required = %ld (%.1f), actual = %lu (%ld) %s\n", i,
+            printf("sast-fuzz: target BB = %d (%.2f), required = %llu (%.1f), actual = %llu (%llu) %s\n", i,
                    tbb_infos[i]->vuln_score, n_req_input_execs, hc_reduct_factor, tbb_infos[i]->n_input_execs,
                    exec_diff, status_str);
 #endif
@@ -559,11 +555,11 @@ void update_tbb_states() {
 }
 
 void update_cbb_distances() {
-    for (int c = 0; c < num_critical_bbs; c++) {
+    for (u32 c = 0; c < num_critical_bbs; c++) {
         float cbb_distance = 0.0f;
 
-        uint32_t n = 0;
-        for (int t = 0; t < num_target_bbs; t++) {
+        u32 n = 0;
+        for (u32 t = 0; t < num_target_bbs; t++) {
             if (tbb_infos[t]->state == active && distance_matrix[c][t] > 0) {
                 cbb_distance += (1.0f / (float)distance_matrix[c][t]);
                 n++;
@@ -6152,7 +6148,7 @@ EXP_ST u8 common_fuzz_stuff(char **argv, u8 *out_buf, u32 len) {
             update_cycle_length_log(duration);
 
 #ifdef SFZ_DEBUG
-            printf("sast-fuzz: cycle length = %lu (%dm)\n", cycle_length, duration);
+            printf("sast-fuzz: cycle length = %llu (%dm)\n", cycle_length, duration);
 #endif
         }
 
@@ -6172,7 +6168,7 @@ EXP_ST u8 common_fuzz_stuff(char **argv, u8 *out_buf, u32 len) {
                 }
             }
 
-            fprintf(sfz_stats_fd, "%d,%lu,%lu,%d,%d,%d,%llu\n", fuzz_duration, init_cycle_length, cycle_length,
+            fprintf(sfz_stats_fd, "%d,%llu,%llu,%d,%d,%d,%llu\n", fuzz_duration, init_cycle_length, cycle_length,
                     num_target_bbs, n_tbbs_hit, n_tbbs_finished, unique_crashes);
 
             // Enforce file write operation ...
@@ -11089,8 +11085,6 @@ stop_fuzzing:
         tbb_info_free(tbb_infos[i]);
     }
     ck_free(tbb_infos);
-
-    // ck_free(critical_bb_id_map);
 
     dm_free(distance_matrix, dm_n_rows);
 

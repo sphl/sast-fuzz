@@ -11,7 +11,7 @@
  * @param n_cols Number of matrix columns.
  * @return Pointer to distance matrix (2D array).
  */
-extern uint32_t **dm_create_from_file(const char *filename, uint32_t *n_rows, uint32_t *n_cols);
+extern u32 **dm_create_from_file(const char *filename, u32 *n_rows, u32 *n_cols);
 
 /**
  * Free a distance matrix.
@@ -19,6 +19,6 @@ extern uint32_t **dm_create_from_file(const char *filename, uint32_t *n_rows, ui
  * @param matrix Pointer to distance matrix.
  * @param n_rows Number of matrix rows.
  */
-extern void dm_free(uint32_t **matrix, uint32_t n_rows);
+extern void dm_free(u32 **matrix, u32 n_rows);
 
 #endif  // SFZ_DISTANCE_MATRIX_H
