@@ -406,6 +406,9 @@ float hc_reduct_factor = 0.0f;
 tbb_info_t **tbb_infos;
 
 float get_vuln_factor(const u8 *target_bits) {
+    assert(target_bits != NULL);
+    assert(tbb_infos != NULL);
+
     float vs_tbb_all = 0.0f;
     float vs_tbb_executed = 0.0f;
 
@@ -1075,7 +1078,7 @@ double calculate_cb_distance() {
     u32 count = 0;
 
     float distance = 0;
-    float res = -1;
+    double res = -1;
 
     float vuln_factor = get_vuln_factor(trace_bits + MAP_SIZE + 16);
 
