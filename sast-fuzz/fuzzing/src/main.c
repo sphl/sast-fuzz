@@ -338,7 +338,6 @@ static u8 *targets_bits;
 static u8 targets_all = 0;
 
 static u8 solved_cbbs[MAP_SIZE];
-// static u8 critical_bits_global[MAP_SIZE];
 static u32 distance_val[MAP_SIZE];
 
 EXP_ST u8 *distance_bits;
@@ -384,11 +383,11 @@ static s8 interesting_8[] = {INTERESTING_8};
 static s16 interesting_16[] = {INTERESTING_8, INTERESTING_16};
 static s32 interesting_32[] = {INTERESTING_8, INTERESTING_16, INTERESTING_32};
 
+// ---------------------------------------------------------------------------------------------------------------------
 static inline float scale(float x, float min_x, float max_x, float min_y, float max_y) {
     return (x - min_x) * ((max_y - min_y) / (max_x - min_x)) + min_y;
 }
 
-// ---------------------------------------------------------------------------------------------------------------------
 #ifdef SFZ_OUTPUT_STATS
 uint64_t sfz_stats_n = 1;
 uint64_t sfz_stats_interval = (5 * 60);  // seconds
@@ -643,10 +642,6 @@ void log_solve_status() {
     }
 
     for (int i = 0; i < critical_ids[0]; i++) {
-        // if (critical_count[critical_ids[i+1]] )
-        //   fprintf(f2,"%d:%d:%d\n",critical_ids[i+1],critical_count[critical_ids[i+1]],solved_cbbs[critical_ids[i+1]]);
-        // else
-        //   fprintf(f2,"%d:unknow:%d\n",critical_ids[i+1],solved_cbbs[critical_ids[i+1]]);
         u32 id = critical_ids[i + 1];
         if (critical_count[id] && !solved_cbbs[id] && critical_count[id] < BLOCK_TIMES) {
             fprintf(f2, "%d:%d\n", id, critical_count[critical_ids[i + 1]]);
@@ -836,8 +831,6 @@ static void locate_diffs(u8 *ptr1, u8 *ptr2, u32 len, s32 *first, s32 *last) {
 
     *first = f_loc;
     *last = l_loc;
-
-    return;
 }
 
 #endif /* !IGNORE_FINDS */
@@ -962,6 +955,7 @@ static u8 *DMS(u64 val) {
 
     /* 100T+ */
     strcpy(tmp[cur], "infty");
+
     return tmp[cur];
 }
 
@@ -984,6 +978,7 @@ static u8 *DTD(u64 cur_ms, u64 event_ms) {
     t_s = (delta / 1000) % 60;
 
     sprintf(tmp, "%s days, %u hrs, %u min, %u sec", DI(t_d), t_h, t_m, t_s);
+
     return tmp;
 }
 
@@ -1116,12 +1111,15 @@ double calculate_cb_distance() {
 void alloca_critical_bbs(struct queue_entry *q) {
     u32 i;
     u32 count = 0;
+
     if (q->critical_bbs) {
         ck_free(q->critical_bbs);
         ck_free(q->critical_vals);
     }
+
     q->critical_bbs = ck_alloc(sizeof(u32) * 100);
     q->critical_vals = ck_alloc(sizeof(u64) * 200);
+
     for (i = 0; i < MAP_SIZE; i++) {
         if (critical_bits[i] == 1) {
             count++;
@@ -1129,6 +1127,7 @@ void alloca_critical_bbs(struct queue_entry *q) {
                 q->critical_bbs = ck_realloc(q->critical_bbs, sizeof(u32) * (count + 100));
                 q->critical_vals = ck_realloc(q->critical_vals, sizeof(u64) * (2 * count + 200));
             }
+
             q->critical_bbs[count] = i;
             q->critical_vals[2 * count] = critical_condition[i] ? condition_bits[2 * critical_condition[i]] : 0;
             q->critical_vals[2 * count + 1] = critical_condition[i] ? condition_bits[2 * critical_condition[i] + 1] : 0;
@@ -1142,6 +1141,7 @@ void alloca_critical_bbs(struct queue_entry *q) {
 void alloca_cond_bits(struct queue_entry *q) {
     u32 i;
     u32 count = 0;
+
     if (q->cond_bits) {
         ck_free(q->cond_bits);
         ck_free(q->cond_vals);
@@ -1157,6 +1157,7 @@ void alloca_cond_bits(struct queue_entry *q) {
                 q->cond_bits = ck_realloc(q->cond_bits, sizeof(u32) * (count + 100));
                 q->cond_vals = ck_realloc(q->cond_vals, sizeof(u64) * (2 * count + 200));
             }
+
             q->cond_bits[count] = i;
             q->cond_vals[2 * count] = condition_bits[2 * i];
             q->cond_vals[2 * count + 1] = condition_bits[2 * i + 1];
@@ -1314,10 +1315,11 @@ static inline u8 has_new_bits(u8 *virgin_map) {
     // u64* total_distance = (u64*) (trace_bits + MAP_SIZE);
     // u64* total_count = (u64*) (trace_bits + MAP_SIZE + 8);
 
-    // if (*total_count > 0)
+    // if (*total_count > 0) {
     //   cur_distance = (double) (*total_distance) / (double) (*total_count);
-    // else
+    // } else {
     //   cur_distance = -1.0;
+    // }
 
 #else
 
@@ -1332,8 +1334,9 @@ static inline u8 has_new_bits(u8 *virgin_map) {
 
     // if (*total_count > 0) {
     //   cur_distance = (double) (*total_distance) / (double) (*total_count);
-    // else
+    // } else {
     //   cur_distance = -1.0;
+    // }
 
 #endif /* ^__x86_64__ */
 
@@ -1779,9 +1782,6 @@ static void cull_queue(void) {
             }
 
             top_rated[i]->favored = 1;
-            // queued_favored++;
-
-            // if (!top_rated[i]->was_fuzzed) pending_favored++;
         }
     }
 
@@ -1790,8 +1790,6 @@ static void cull_queue(void) {
             if (top_conformance[i] && (solved_cond[i] < 3)) {
                 top_conformance[i]->favored = 1;
                 top_conformance[i]->is_dead = 0;
-                // queued_favored++;
-                // if (!top_conformance[i]->was_fuzzed) pending_favored++;
             }
         }
     }
@@ -1846,9 +1844,6 @@ static void cb_cull_queue(void) {
 
             top_cb_rated[i]->favored = 1;
             top_cb_rated[i]->is_dead = 0;
-            // queued_favored++;
-
-            // if (!top_cb_rated[i]->was_fuzzed) pending_favored++;
         }
     }
 
@@ -1857,8 +1852,6 @@ static void cb_cull_queue(void) {
             if (top_conformance[i] && (solved_cond[i] < 3)) {
                 top_conformance[i]->favored = 1;
                 top_conformance[i]->is_dead = 0;
-                // queued_favored++;
-                // if (!top_conformance[i]->was_fuzzed) pending_favored++;
             }
         }
     }
@@ -3717,8 +3710,6 @@ static u8 calibrate_case(char **argv, struct queue_entry *q, u8 *use_mem, u32 ha
                 if (target_count[i] < TARGET_LIMIT) {
                     is_rare_target = 1;
                 }
-
-                // TODO: Check if target BBs should also be disabled during calibration?
             }
             if (targets_bits[i] == 0) {
                 targets_all = 0;
@@ -4317,12 +4308,6 @@ static void write_crash_readme(void) {
 }
 
 static void cb_count(void) {
-    // static FILE *f2 = NULL;
-    // if (f2 == NULL) {
-    //     u8 * fn = alloc_printf("%s/count.log", out_dir);
-    //     f2 = fopen(fn, "w");
-    //     ck_free(fn);
-    //   }
     u32 i;
     for (i = 0; i < critical_ids[0]; i++) {
         if (unlikely(critical_bits[critical_ids[i + 1]] == 1)) {
@@ -4333,7 +4318,6 @@ static void cb_count(void) {
                 period_critical_count++;
             }
             critical_count[critical_ids[i + 1]]++;
-            // fprintf(f2,"%d:%d\n",critical_ids[i+1],critical_count[i]);
         }
     }
 }
@@ -4372,7 +4356,6 @@ static bool has_new_conformace() {
             }
 
             if (conformace > condition_values[2 * i]) {
-                // condition_values[2*i] = conformace;
                 return true;
             }
         }
@@ -4396,7 +4379,6 @@ static bool has_new_critical_conformance() {
             }
 
             if (conformace > condition_values[2 * id]) {
-                // condition_values[2*i] = conformace;
                 return true;
             }
         }
@@ -4476,14 +4458,6 @@ static u8 save_if_interesting(char **argv, void *mem, u32 len, u8 fault) {
     }
 
     if (fault == crash_mode) {
-        // u32 i;
-        // for (i=0;i<MAP_SIZE;i++) {
-        //   if (critical_bits[i]) {
-        //     //printf("%u\n",critical_bits[i]);
-        //     critical_bits_global[critical_bits[i]] = 1;
-        //   }
-        // }
-
         /* Keep only if there are new bits in the map, add to queue for
            future fuzzing, etc. */
 
@@ -5627,16 +5601,6 @@ static void show_stats(void) {
     SAYF(bV bSTOP "  last uniq hang : " cRST "%-34s " bSTG bV bSTOP "   uniq hangs : " cRST "%-6s " bSTG bV "\n",
          DTD(cur_ms, last_hang_time), tmp);
 
-    // sprintf(tmp, "%f", min_distance);
-
-    // SAYF(bV bSTOP "  last min distance : " cRST "%-34s " bSTG bV bSTOP
-    //      " targets execs : " cRST "%-6s " bSTG bV "\n",
-    //      DTD(cur_ms, last_min_time), DI(target_exec));
-
-    // SAYF(bV bSTOP " last target time : " cRST "%-34s " bSTG bV bSTOP
-    //     " all targets : " cRST "%-6s " bSTG bV "\n",
-    //     DTD(cur_ms, last_target_time), targets_all ? "yes" : "no");
-
     SAYF(bVR bH bSTOP cCYA " cycle progress " bSTG bH20 bHB bH bSTOP cCYA " map coverage " bSTG bH bHT bH20 bH2 bH bVL
                            "\n");
 
@@ -6269,18 +6233,6 @@ EXP_ST u8 common_fuzz_stuff(char **argv, u8 *out_buf, u32 len) {
         show_stats();
     }
 
-    // for (i=1;i<cond_num;i++) {
-    //   printf("%d\n",cond_bits[i]);
-    // }
-
-    // if (last_target_time == 0) {
-    //   u8 flag = *(trace_bits + MAP_SIZE + 16);
-    //   if (flag) {
-    //     last_target_time = get_cur_time();
-    //     //exit(1);
-    //   }
-    // }
-
     return 0;
 }
 
@@ -6451,8 +6403,10 @@ static u32 calculate_score(struct queue_entry *q) {
 
         if (flag) {
             if (q->distance > 0) {
-                double normalized_d = 0;  // when "max_distance == min_distance", we set the normalized_d to 0 so that
-                                          // we can sufficiently explore those testcases whose distance >= 0.
+                double normalized_d = 0;
+
+                // When "max_distance == min_distance", we set the normalized_d to 0 so that we can sufficiently explore
+                // those testcases whose distance >= 0.
                 if (max_distance != min_distance) {
                     normalized_d = (q->distance - min_distance) / (max_distance - min_distance);
                 }
@@ -6460,7 +6414,7 @@ static u32 calculate_score(struct queue_entry *q) {
                 if (normalized_d >= 0) {
                     double p = (1.0 - normalized_d) * (1.0 - T) + 0.5 * T;
                     power_factor = pow(2.0, 2.0 * (double)log2(MAX_FACTOR) * (p - 0.5));
-                }  // else WARNF ("Normalized distance negative: %f", normalized_d);
+                }
             }
         }
     }
@@ -6482,18 +6436,11 @@ static u32 calculate_score(struct queue_entry *q) {
 
     perf_score *= factor;
 
-    // NOTE: At this point, we need to adjust the performance score so that particularly problematic BBs get more
-    // fuzzing time.
-
     /* Make sure that we don't go over limit. */
 
     if (perf_score > HAVOC_MAX_MULT * 100) {
         perf_score = HAVOC_MAX_MULT * 100;
     }
-
-    /* AFLGO-DEBUGGING */
-    // fprintf(stderr, "[Time %llu] q->distance: %4lf, max_distance: %4lf min_distance: %4lf, T: %4.3lf, power_factor:
-    // %4.3lf, adjusted perf_score: %4d\n", t, q->distance, max_distance, min_distance, T, power_factor, perf_score);
 
     return perf_score;
 }
@@ -6705,9 +6652,6 @@ u8 hit_critical(struct queue_entry *q) {
                     flag = 1;
                     q->critical_difficulty[i]++;
                 }
-                // if (condition_bits[2*(cond_id)+1] != q->critical_vals[2*(i+1)+1])
-                //   flag = 1;
-                // flag = true;
             }
         }
     } else {
@@ -6718,8 +6662,6 @@ u8 hit_critical(struct queue_entry *q) {
                     (condition_bits[2 * id + 1] != q->cond_vals[2 * (i + 1) + 1])) {
                     flag = 2;
                 }
-                // if (condition_bits[2*id+1] != q->cond_vals[2*(i+1)+1])
-                //   flag = 2;
             }
         }
     }
@@ -6732,18 +6674,6 @@ u8 hit_critical(struct queue_entry *q) {
 
     return flag;
 }
-
-// static bool has_byte(u64 value, u8 byte) {
-//     u8 *tmp = (u8 *)(&value);
-//     u32 i;
-//     for (i = 0; i < 6; i++) {
-//         if (*tmp == byte) {
-//             return true;
-//         }
-//         tmp = tmp + 1;
-//     }
-//     return false;
-// }
 
 static inline u8 *alloc_cb_mask(u32 size) {
     u8 *mem;
@@ -6764,8 +6694,7 @@ bool need_sniff(struct queue_entry *q) {
     if (q->len > 1000) {
         return false;
     }
-    // if (q->critical_bbs[0]==0)
-    //   return false;
+
     if (q->is_rare_target) {
         return true;
     }
@@ -6773,13 +6702,9 @@ bool need_sniff(struct queue_entry *q) {
     u32 i;
     if (!explore_status) {
         for (i = 0; i < q->critical_bbs[0]; i++) {
-            // u8* condition_ptr = (u8*)(condition_info + q->critical_bbs[i+1]);
-            // if (*condition_ptr == 1 && !solved_cbbs[q->critical_bbs[i+1]])
             if (critical_condition[q->critical_bbs[i + 1]] && !solved_cbbs[q->critical_bbs[i + 1]]) {
                 return true;
             }
-            // if (!solved_cbbs[q->critical_bbs[i+1]])
-            //   return true;
         }
     } else {
         for (i = 0; i < q->cond_bits[0]; i++) {
@@ -6977,61 +6902,7 @@ bool sniff_mask(char **argv, struct queue_entry *q, u8 *in_buf, u8 **cb_mask_ptr
         }
     }
 
-    //   static bool hit_direct_mapping(struct queue_entry* q,u8 value) {
-    //   u32 i;
-    //   for (i = 0; i < q->cond_bits[0]; i++) {
-    //     if (solved_cond[q->cond_bits[i+1]] < 3) {
-    //       u32 id = q->cond_bits[i+1];
-    //       if (has_byte(condition_bits[2*id],value))
-    //         return true;
-    //       if (has_byte(condition_bits[2*id+1],value))
-    //         return true;
-    //     }
-    //   }
-    //   return false;
-    // }
-
     u32 i;
-    // mutate direct mapping
-    //  stage_name = "mapping";
-    //  stage_short = "mapping";
-    //  for (stage_cur = 0; stage_cur < len; stage_cur++) {
-    //    for (i = 0; i < q->cond_bits[0]; i++) {
-    //      u32 id = q->cond_bits[i+1];
-    //      if (solved_cond[id] < 3 && ((condition_info[id] & 1) != 0)) {
-    //        if (has_byte(q->cond_vals[2*(i+1)], out_buf[stage_cur])) {
-    //          u8 constant_buf[sizeof(u64)*2];
-    //          memcpy(constant_buf, &(condition_values[2*id+1]), sizeof(u64));
-    //          for (int j=0;j<8;j++)
-    //            constant_buf[8+j] = constant_buf[7-j];
-
-    //         if (((condition_info[id] & 4) != 0) && ((len - stage_cur)>=sizeof(u32))) {
-    //           //u32 value = condition_values[2*id+1];
-    //           //order
-    //           memcpy(tmp_buf, out_buf, len);
-    //           memcpy(tmp_buf + stage_cur, constant_buf, sizeof(u32));
-    //           if (common_fuzz_stuff(argv, tmp_buf, len)) break;
-    //           //reverse
-    //           memcpy(tmp_buf, out_buf, len);
-    //           memcpy(tmp_buf + stage_cur, constant_buf + 12, sizeof(u32));
-    //           if (common_fuzz_stuff(argv, tmp_buf, len)) break;
-    //         }
-    //         else if (((condition_info[id] & 8) != 0) && ((len - stage_cur)>=sizeof(u64))) {
-    //           //u64 value = condition_values[2*id+1];
-    //           //order
-    //           memcpy(tmp_buf, out_buf, len);
-    //           memcpy(tmp_buf + stage_cur, constant_buf, sizeof(u64));
-    //           //memcpy(tmp_buf + stage_cur, &value, sizeof(u64));
-    //           if (common_fuzz_stuff(argv, tmp_buf, len)) break;
-    //           //reverse
-    //           memcpy(tmp_buf, out_buf, len);
-    //           memcpy(tmp_buf + stage_cur, constant_buf + 8, sizeof(u64));
-    //           if (common_fuzz_stuff(argv, tmp_buf, len)) break;
-    //         }
-    //      }
-    //     }
-    //   }
-    // }
 
     update_distance(q);
 
@@ -7048,16 +6919,11 @@ bool sniff_mask(char **argv, struct queue_entry *q, u8 *in_buf, u8 **cb_mask_ptr
     DEBUG("%d bytes can be deleted\n", delete_count);
     DEBUG("%d bytes can be inserted\n", insert_count);
 
-    // fprintf(distance_score_log, "%f %f\n", q->distance, q->distance_cb);
     fprintf(mutation_log, "--------------------------------------\n");
     for (i = 0; i < q->critical_bbs[0]; i++) {
         fprintf(mutation_log, "%d ", q->critical_bbs[i + 1]);
     }
     fprintf(mutation_log, "\n");
-    // for (i = 0; i < q->critical_bbs[0]; i++) {
-    //   fprintf(mutation_log,"%lld ",q->critical_vals[i+1]);
-    // }
-    //  fprintf(mutation_log,"\n");
     if (!explore_status) {
         for (i = 0; i < len; i++) {
             fprintf(mutation_log, "%d ", cb_mask[i]);
@@ -7100,7 +6966,6 @@ static u32 get_random_modifiable_posn(u32 num_to_modify, u8 mod_type, u32 map_le
             if ((!in_0_block) && (prev_start_of_1_block != -1)) {
                 int num_bytes = MAX(num_to_modify / 8, 1);
                 for (int j = prev_start_of_1_block; j < i - num_bytes + 1; j++) {
-                    // I hate this ++ within operator stuff
                     position_map[position_map_len++] = j;
                 }
             }
@@ -7112,7 +6977,6 @@ static u32 get_random_modifiable_posn(u32 num_to_modify, u8 mod_type, u32 map_le
     if (!in_0_block) {
         u32 num_bytes = MAX(num_to_modify / 8, 1);
         for (u32 j = prev_start_of_1_block; j < map_len - num_bytes + 1; j++) {
-            // I hate this ++ within operator stuff
             position_map[position_map_len++] = j;
         }
     }
@@ -7122,7 +6986,7 @@ static u32 get_random_modifiable_posn(u32 num_to_modify, u8 mod_type, u32 map_le
             u32 random_pos = UR(position_map_len);
             if (num_to_modify >= 8) {
                 ret = position_map[random_pos];
-            } else {  // I think num_to_modify can only ever be 1 if it's less than 8. otherwise need trickier stuff.
+            } else {
                 ret = position_map[random_pos] + UR(8);
             }
         }
@@ -7326,7 +7190,6 @@ static u8 fuzz_one(char **argv) {
             cb_mask = ck_alloc(len + 1);
             memcpy(cb_mask, queue_cur->cb_mask, len + 1);
             memcpy(orig_cb_mask, queue_cur->cb_mask, len + 1);
-            // cb_mask = queue_cur->cb_mask;
         } else if (explore_status && queue_cur->conformance_mask) {
             orig_cb_mask = ck_alloc(len + 1);
             cb_mask = ck_alloc(len + 1);
@@ -7334,11 +7197,8 @@ static u8 fuzz_one(char **argv) {
             memcpy(orig_cb_mask, queue_cur->conformance_mask, len + 1);
         } else {
             skip_byte_flip = sniff_mask(argv, queue_cur, in_buf, &cb_mask, &eff_map, &eff_cnt);
-            // queue_cur->cb_mask = ck_alloc(len + 1);
             orig_cb_mask = ck_alloc(len + 1);
-            // memcpy (queue_cur->cb_mask, cb_mask, len + 1);
             memcpy(orig_cb_mask, cb_mask, len + 1);
-            // queue_cur->cb_mask = cb_mask;
         }
     } else {
         cb_mask = alloc_cb_mask(len + 1);
@@ -9076,7 +8936,6 @@ retry_splicing:
 abandon_entry:
 
     DEBUG("Hit %u rare critical bbs\n", period_critical_count);
-    // DEBUG("Critical count status:\n");
     DEBUG("Rare critical bbs [ ");
     if (queue_cur->critical_bbs) {
         for (int i = 0; i < queue_cur->critical_bbs[0]; i++) {
@@ -9086,10 +8945,6 @@ abandon_entry:
         }
     }
     DEBUG("]\n");
-    // for (int i=0; i<critical_ids[0];i++) {
-    //   if(critical_count[critical_ids[i+1]])
-    //     DEBUG("%d:%d\n",critical_ids[i+1],critical_count[critical_ids[i+1]]);
-    // }
     DEBUG("---------------------------------------------------------");
 
     splicing_with = -1;
@@ -10411,10 +10266,8 @@ void readDistanceAndTargets() {
     num_critical_bbs = atoi(buf);
 
     critical_ids = ck_alloc(sizeof(u32) * (num_critical_bbs + 1));
-    // critical_bb_id_map = ck_alloc(sizeof(u32) * (num_critical_bbs + 1));
 
     critical_ids[0] = num_critical_bbs;
-    // critical_bb_id_map[0] = num_critical_bbs;
 
     u32 i = 0;
     while (fgets(buf, sizeof(buf), distance_file) != NULL) {
@@ -10439,15 +10292,12 @@ void readDistanceAndTargets() {
             assert(critical_bb_id < num_critical_bbs);
 
             critical_ids[i] = bb_id;
-            // critical_bb_id_map[i] = critical_bb_id;
 
             cbb_id_map[bb_id] = critical_bb_id;
         }
     }
 
     fclose(distance_file);
-
-    // critical_count = ck_alloc(sizeof(u32)*count);
 
     FILE *targets_file = fopen("targets.txt", "r");
     if (targets_file == NULL) {
@@ -10484,13 +10334,11 @@ void readCondition() {
     if (condition_file == NULL) {
         FATAL("condition_info.txt not exist");
     }
-    // fgets(buf, sizeof(buf), condition_file);
-    // int num = atoi(buf);
+
     while (fgets(buf, sizeof(buf), condition_file) != NULL) {
         char *token;
         token = strtok(buf, " ");
         int id = atoi(token);
-        // u8* condition_ptr = (u8*)(condition_info+id);
         token = strtok(NULL, " ");
         if (strcmp(token, "none") != 0) {
             int critical_id = atoi(token);
@@ -10521,10 +10369,6 @@ void readCondition() {
         }
 
         cond_num++;
-        // if (strcmp(token,"none")==0) {}
-        //   *(condition_ptr) = 0;
-        // else
-        //   *(condition_ptr) = 1;
     }
 }
 
@@ -11052,15 +10896,19 @@ int main(int argc, char **argv) {
     u8 *tmp = alloc_printf("%s/mutation.log", out_dir);
     mutation_log = fopen(tmp, "w");
     ck_free(tmp);
+
     tmp = alloc_printf("%s/targets.log", out_dir);
     targets_log = fopen(tmp, "w");
     ck_free(tmp);
+
     tmp = alloc_printf("%s/crashes.log", out_dir);
     crashes_log = fopen(tmp, "w");
     ck_free(tmp);
+
     tmp = alloc_printf("%s/critical.log", out_dir);
     critical_log = fopen(tmp, "w");
     ck_free(tmp);
+
     tmp = alloc_printf("%s/distance.log", out_dir);
     distance_log = fopen(tmp, "w");
     ck_free(tmp);
@@ -11122,7 +10970,6 @@ int main(int argc, char **argv) {
             }
         }
 
-        // u64 tmp_time = get_cur_time() - start_time;
         if (!no_distance_favor_flag && !explore_status) {
             cb_cull_queue();
         } else {
