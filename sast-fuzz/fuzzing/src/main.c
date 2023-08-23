@@ -264,7 +264,7 @@ struct queue_entry {
     u8 *trace_mini;                       /* Trace bytes, if kept             */
     u32 tc_ref;                           /* Trace bytes ref count            */
 
-    double distance;                      /* Distance to targets              */
+    float distance;                       /* Distance to targets              */
 
     u8 is_target;
 
@@ -274,7 +274,7 @@ struct queue_entry {
 
     u32 fuzz_level;
 
-    // double distance_cb;                /* Critical bb distance to targets  */
+    // float distance_cb;                 /* Critical bb distance to targets  */
 
     u32 *critical_bbs;
     u64 *critical_vals;
@@ -312,9 +312,9 @@ static u32 extras_cnt;                    /* Total number of tokens read      */
 static struct extra_data *a_extras;       /* Automatically selected extras    */
 static u32 a_extras_cnt;                  /* Total number of tokens available */
 
-static double cur_distance = -1.0;        /* Distance of executed input       */
-static double max_distance = -1.0;        /* Maximal distance for any input   */
-static double min_distance = -1.0;        /* Minimal distance for any input   */
+static float cur_distance = -1.0f;        /* Distance of executed input       */
+static float max_distance = -1.0f;        /* Maximal distance for any input   */
+static float min_distance = -1.0f;        /* Minimal distance for any input   */
 static u32 t_x = 10;                      /* Time to exploitation (Default: 10 min) */
 
 static u32 active_count = 0;
@@ -1060,32 +1060,31 @@ static void mark_as_redundant(struct queue_entry *q, u8 state) {
     ck_free(fn);
 }
 
-double calculate_distance() {
-    double res;
+float calculate_distance() {
+    float res;
 
     /* Calculate distance of current input to targets */
     u64 *total_distance = (u64 *)(trace_bits + MAP_SIZE);
     u64 *total_count = (u64 *)(trace_bits + MAP_SIZE + 8);
 
     if (*total_count > 0) {
-        res = (double)(*total_distance) / (double)(*total_count);
+        res = ((float)(*total_distance) / (float)(*total_count));
     } else {
-        res = -1.0;
+        res = -1.0f;
     }
 
     return res;
 }
 
-double calculate_cb_distance() {
-    u32 i;
+float calculate_cb_distance() {
     u32 count = 0;
 
     float distance = 0;
-    double res = -1;
+    float res = -1;
 
     float vuln_factor = get_vuln_factor(trace_bits + MAP_SIZE + 16);
 
-    for (i = 0; i < MAP_SIZE; i++) {
+    for (u32 i = 0; i < MAP_SIZE; i++) {
         if (critical_bits[i] == 1) {
             int cbb_idx = lookup_cbb_id(i);
 
@@ -1105,7 +1104,7 @@ double calculate_cb_distance() {
 #endif
 
     if (count) {
-        res = (double)distance / count;
+        res = (distance / count);
     }
 
     return res;
@@ -1314,32 +1313,12 @@ static inline u8 has_new_bits(u8 *virgin_map) {
 
     u32 i = (MAP_SIZE >> 3);
 
-    /* Calculate distance of current input to targets */
-    // u64* total_distance = (u64*) (trace_bits + MAP_SIZE);
-    // u64* total_count = (u64*) (trace_bits + MAP_SIZE + 8);
-
-    // if (*total_count > 0) {
-    //   cur_distance = (double) (*total_distance) / (double) (*total_count);
-    // } else {
-    //   cur_distance = -1.0;
-    // }
-
 #else
 
     u32 *current = (u32 *)trace_bits;
     u32 *virgin = (u32 *)virgin_map;
 
     u32 i = (MAP_SIZE >> 2);
-
-    // /* Calculate distance of current input to targets */
-    // u32* total_distance = (u32*)(trace_bits + MAP_SIZE);
-    // u32* total_count = (u32*)(trace_bits + MAP_SIZE + 4);
-
-    // if (*total_count > 0) {
-    //   cur_distance = (double) (*total_distance) / (double) (*total_count);
-    // } else {
-    //   cur_distance = -1.0;
-    // }
 
 #endif /* ^__x86_64__ */
 
@@ -1696,7 +1675,7 @@ static void update_bitmap_score(struct queue_entry *q) {
 static void update_cb_bitmap_score(struct queue_entry *q) {
     u32 i;
     u64 fav_factor = q->exec_us * q->len;
-    double fav_distance = q->distance;
+    float fav_distance = q->distance;
 
     for (i = 0; i < q->critical_bbs[0]; i++) {
         u32 id = q->critical_bbs[i + 1];
@@ -6752,7 +6731,7 @@ void update_distance(struct queue_entry *q) {
     }
 
     if (q->critical_bbs[0]) {
-        q->distance = (double)distance / q->critical_bbs[0];
+        q->distance = (distance / (float)q->critical_bbs[0]);
     }
 }
 
