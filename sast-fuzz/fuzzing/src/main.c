@@ -553,9 +553,9 @@ void update_tbb_states() {
         } else {
 
             if ((n_tbbs_finished + n_tbbs_paused) == n_tbbs) {
-                explore_status = 1;  // coverage mode
+                explore_status = true;   // coverage mode
             } else {
-                explore_status = 0;  // directed mode
+                explore_status = false;  // directed mode
             }
         }
 
@@ -564,12 +564,12 @@ void update_tbb_states() {
         assert(n_tbbs_finished != n_tbbs);
 
         if (n_cbbs_hc_exceeded == n_cbbs) {
-            explore_status = 1;  // coverage mode
+            explore_status = true;  // coverage mode
         } else {
             if ((n_tbbs_finished + n_tbbs_paused) == n_tbbs) {
-                explore_status = 1;  // coverage mode
+                explore_status = true;   // coverage mode
             } else {
-                explore_status = 0;  // directed mode
+                explore_status = false;  // directed mode
             }
         }
     }
