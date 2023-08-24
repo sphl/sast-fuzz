@@ -384,6 +384,9 @@ float hc_reduct_factor = 0.0f;
 tbb_info_t **tbb_infos;
 
 float get_vuln_factor(const u8 *target_bits) {
+    assert(target_bits != NULL);
+    assert(tbb_infos != NULL);
+
     float vs_tbb_all = 0.0f;
     float vs_tbb_executed = 0.0f;
 
@@ -573,6 +576,9 @@ void update_tbb_states() {
 }
 
 void update_cbb_distances() {
+    assert(cbb_distances != NULL);
+    assert(tbb_infos != NULL);
+
     for (u32 c = 0; c < n_cbbs; c++) {
         // Harmonic critical-target-BB distance
         float cbb_distance = 0.0f;
@@ -10626,7 +10632,7 @@ int main(int argc, char **argv) {
     assert(dm_n_rows == n_cbbs);
     assert(dm_n_cols == n_tbbs);
 
-    cbb_distances = ck_alloc(sizeof(float) * n_cbbs);
+    cbb_distances = ck_alloc(n_cbbs * sizeof(float));
 
     update_cbb_distances();
 
