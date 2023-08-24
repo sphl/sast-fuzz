@@ -384,9 +384,6 @@ float hc_reduct_factor = 0.0f;
 tbb_info_t **tbb_infos;
 
 float get_vuln_factor(const u8 *target_bits) {
-    assert(target_bits != NULL);
-    assert(tbb_infos != NULL);
-
     float vs_tbb_all = 0.0f;
     float vs_tbb_executed = 0.0f;
 
@@ -516,6 +513,8 @@ void update_tbb_states() {
 
     u32 n_cbbs_solved = 0;
     u32 n_cbbs_hc_exceeded = 0;
+
+    assert(n_cbbs == critical_ids[0]);
 
     for (u32 i = 0; i < n_cbbs; i++) {
         u32 cbb_id = critical_ids[i + 1];
