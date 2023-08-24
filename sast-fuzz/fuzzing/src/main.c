@@ -319,7 +319,6 @@ static u8 cb_score_changed;
 
 static u8 *critical_bits;
 
-static u8 afl_flag;
 static u8 conformance_flag = 0;
 static u8 no_target_favor;
 static u8 target_fast;
@@ -6338,27 +6337,19 @@ static u32 calculate_score(struct queue_entry *q) {
 
     double power_factor = 1.0;
 
-    if (!afl_flag) {
-        u8 flag = 1;
+    if (!explore_status) {
+        if (q->distance > 0) {
+            double normalized_d = 0;
 
-        if (explore_status) {
-            flag = 0;
-        }
+            // When "max_distance == min_distance", we set the normalized_d to 0 so that we can sufficiently explore
+            // those testcases whose distance >= 0.
+            if (max_distance != min_distance) {
+                normalized_d = (q->distance - min_distance) / (max_distance - min_distance);
+            }
 
-        if (flag) {
-            if (q->distance > 0) {
-                double normalized_d = 0;
-
-                // When "max_distance == min_distance", we set the normalized_d to 0 so that we can sufficiently explore
-                // those testcases whose distance >= 0.
-                if (max_distance != min_distance) {
-                    normalized_d = (q->distance - min_distance) / (max_distance - min_distance);
-                }
-
-                if (normalized_d >= 0) {
-                    double p = (1.0 - normalized_d) * (1.0 - T) + 0.5 * T;
-                    power_factor = pow(2.0, 2.0 * (double)log2(MAX_FACTOR) * (p - 0.5));
-                }
+            if (normalized_d >= 0) {
+                double p = (1.0 - normalized_d) * (1.0 - T) + 0.5 * T;
+                power_factor = pow(2.0, 2.0 * (double)log2(MAX_FACTOR) * (p - 0.5));
             }
         }
     }
@@ -10306,7 +10297,7 @@ int main(int argc, char **argv) {
     gettimeofday(&tv, &tz);
     srandom(tv.tv_sec ^ tv.tv_usec ^ getpid());
 
-    while ((opt = getopt(argc, argv, "+i:o:f:m:t:T:E:dnCB:S:M:x:Qz:c:ealkjpusL:r:v:")) > 0) {
+    while ((opt = getopt(argc, argv, "+i:o:f:m:t:T:E:dnCB:S:M:x:Qz:c:jpusl:r:v:")) > 0) {
         switch (opt) {
         case 'i': /* input dir */
 
@@ -10566,13 +10557,6 @@ int main(int argc, char **argv) {
 
         break;
 
-        case 'l':
-            if (afl_flag) {
-                FATAL("Multiple -l options not supported");
-            }
-            afl_flag = 1;
-            break;
-
         case 'E':
             if (target_path2) {
                 FATAL("Multiple -E options not supported");
@@ -10608,7 +10592,7 @@ int main(int argc, char **argv) {
             no_dynamic_switch = 1;
             break;
 
-        case 'L': {
+        case 'l': {
             u64 length = atol(optarg);
 
             if (length >= 10000) {
