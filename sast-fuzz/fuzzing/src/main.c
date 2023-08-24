@@ -39,7 +39,6 @@
 #include <math.h>
 #include <sched.h>
 #include <signal.h>
-#include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -322,7 +321,6 @@ static u8 *critical_bits;
 static u8 conformance_flag = 0;
 static u8 no_target_favor;
 static u8 target_fast;
-// static u8 no_dynamic_switch;
 
 static u32 n_tbbs = 0;
 static u8 *targets_bits;
@@ -348,17 +346,7 @@ static u8 is_rare_target;
 
 static u32 period_critical_count;
 
-static FILE *critical_log;
-
-static FILE *distance_log;
-
-static FILE *mutation_log;
-
-static FILE *targets_log;
-
-static FILE *crashes_log;
-
-static u64 last_min_time, last_target_time = 0;
+// static FILE *distance_log;
 
 static u8 explore_status = 0;
 
@@ -550,8 +538,8 @@ void update_tbb_states() {
             memset(critical_count, 0, MAP_SIZE * sizeof(u32));
 
             for (int i = 0; i < n_tbbs; i++) {
+                // Reactivate all target BBs with a vulnerability score of at least 'vuln_score_thres'
                 if (tbb_infos[i]->vuln_score >= vuln_score_thres) {
-                    // Reset target BB infos
                     tbb_infos[i]->state = active;
                     tbb_infos[i]->cov_flag = false;
                     tbb_infos[i]->n_input_execs = 0;
@@ -563,9 +551,9 @@ void update_tbb_states() {
         } else {
 
             if ((n_tbbs_finished + n_tbbs_paused) == n_tbbs) {
-                explore_status = 1;
+                explore_status = 1;  // coverage mode
             } else {
-                explore_status = 0;
+                explore_status = 0;  // directed mode
             }
         }
 
@@ -574,12 +562,12 @@ void update_tbb_states() {
         assert(n_tbbs_finished != n_tbbs);
 
         if (n_cbbs_hc_exceeded == n_cbbs) {
-            explore_status = 1;
+            explore_status = 1;  // coverage mode
         } else {
             if ((n_tbbs_finished + n_tbbs_paused) == n_tbbs) {
-                explore_status = 1;
+                explore_status = 1;  // coverage mode
             } else {
-                explore_status = 0;
+                explore_status = 0;  // directed mode
             }
         }
     }
@@ -648,35 +636,6 @@ enum {
     /* 04 */ FAULT_NOINST,
     /* 05 */ FAULT_NOBITS
 };
-
-void DEBUG(char const *fmt, ...) {
-    static FILE *f = NULL;
-    if (f == NULL) {
-        u8 *fn = alloc_printf("%s/debug.log", out_dir);
-        f = fopen(fn, "w");
-        ck_free(fn);
-    }
-    va_list ap;
-    va_start(ap, fmt);
-    vfprintf(f, fmt, ap);
-    va_end(ap);
-}
-
-void log_solve_status() {
-    static FILE *f2 = NULL;
-    if (f2 == NULL) {
-        u8 *fn = alloc_printf("%s/solve.log", out_dir);
-        f2 = fopen(fn, "w");
-        ck_free(fn);
-    }
-
-    for (int i = 0; i < critical_ids[0]; i++) {
-        u32 id = critical_ids[i + 1];
-        if (critical_count[id] && !solved_cbbs[id] && critical_count[id] < BLOCK_TIMES) {
-            fprintf(f2, "%d:%d\n", id, critical_count[critical_ids[i + 1]]);
-        }
-    }
-}
 
 /* Get unix time in milliseconds */
 
@@ -1212,7 +1171,6 @@ static void add_to_queue(u8 *fname, u32 len, u8 passed_det) {
 
         if (cur_distance < min_distance) {
             min_distance = cur_distance;
-            last_min_time = get_cur_time();
         }
     }
 
@@ -3682,14 +3640,15 @@ static u8 calibrate_case(char **argv, struct queue_entry *q, u8 *use_mem, u32 ha
         is_target = 0;
         is_rare_target = 0;
 
-        u8 *tmp_targets = ck_alloc(n_tbbs);
+        u8 *tmp_targets_bits = ck_alloc(n_tbbs);
 
         for (i = 0; i < n_tbbs; i++) {
             u8 flag = *(trace_bits + MAP_SIZE + 16 + i);
 
             if (flag) {
                 is_target = 1;
-                tmp_targets[i] = 1;
+                targets_bits[i] = 1;
+                tmp_targets_bits[i] = 1;
 
                 if (target_count[i] < BIG_NUMBER) {
                     target_count[i]++;
@@ -3699,15 +3658,6 @@ static u8 calibrate_case(char **argv, struct queue_entry *q, u8 *use_mem, u32 ha
                     is_rare_target = 1;
                 }
             }
-
-            if (targets_bits[i] == 0) {
-                if (flag) {
-                    last_target_time = get_cur_time();
-                    fprintf(targets_log, "%d : %s --- %s --- %s\n", i, DTD(last_target_time, start_time),
-                            DI(queued_paths), DI(total_execs));
-                    targets_bits[i] = 1;
-                }
-            }
         }
 
         if (is_rare_target) {
@@ -3715,10 +3665,10 @@ static u8 calibrate_case(char **argv, struct queue_entry *q, u8 *use_mem, u32 ha
         }
 
         if (is_target) {
-            q->targets = tmp_targets;
+            q->targets = tmp_targets_bits;
             q->is_target = 1;
         } else {
-            ck_free(tmp_targets);
+            ck_free(tmp_targets_bits);
         }
 
         /* stop_soon is set by the handler for Ctrl+C. When it's pressed,
@@ -3755,7 +3705,6 @@ static u8 calibrate_case(char **argv, struct queue_entry *q, u8 *use_mem, u32 ha
                     max_distance = cur_distance;
                 }
                 if (cur_distance < min_distance) {
-                    last_min_time = get_cur_time();
                     min_distance = cur_distance;
                 }
             }
@@ -4622,10 +4571,9 @@ static u8 save_if_interesting(char **argv, void *mem, u32 len, u8 fault) {
 
         last_crash_time = get_cur_time();
         last_crash_execs = total_execs;
+
         if (is_target) {
             unique_crashes++;
-            fprintf(crashes_log, "%llu : %s --- %s\n", unique_crashes, DTD(last_crash_time, start_time),
-                    DI(last_crash_execs));
         }
 
         break;
@@ -4761,10 +4709,6 @@ static u8 save_if_crash(char **argv, void *mem, u32 len, u8 fault) {
 
         last_crash_time = get_cur_time();
         last_crash_execs = total_execs;
-        if (is_target) {
-            fprintf(crashes_log, "%llu : %s --- %s\n", unique_crashes, DTD(last_crash_time, start_time),
-                    DI(last_crash_execs));
-        }
 
         break;
 
@@ -6095,14 +6039,15 @@ EXP_ST u8 common_fuzz_stuff(char **argv, u8 *out_buf, u32 len) {
     is_target = 0;
     is_rare_target = 0;
 
-    u8 *tmp_targets = ck_alloc(n_tbbs);
+    u8 *tmp_targets_bits = ck_alloc(n_tbbs);
 
     for (i = 0; i < n_tbbs; i++) {
         u8 flag = *(trace_bits + MAP_SIZE + 16 + i);
 
         if (flag) {
             is_target = 1;
-            tmp_targets[i] = 1;
+            targets_bits[i] = 1;
+            tmp_targets_bits[i] = 1;
 
             if (target_count[i] < BIG_NUMBER) {
                 target_count[i]++;
@@ -6161,17 +6106,6 @@ EXP_ST u8 common_fuzz_stuff(char **argv, u8 *out_buf, u32 len) {
             sfz_stats_n++;
         }
 #endif
-
-        if (targets_bits[i] == 0) {
-            if (flag) {
-                last_target_time = get_cur_time();
-
-                fprintf(targets_log, "%d : %s --- %s --- %s\n", i, DTD(last_target_time, start_time), DI(queued_paths),
-                        DI(total_execs));
-
-                targets_bits[i] = 1;
-            }
-        }
     }
 
     /* This handles FAULT_ERROR for us: */
@@ -6184,9 +6118,9 @@ EXP_ST u8 common_fuzz_stuff(char **argv, u8 *out_buf, u32 len) {
     }
 
     if (is_saved) {
-        queue_top->targets = tmp_targets;
+        queue_top->targets = tmp_targets_bits;
     } else {
-        ck_free(tmp_targets);
+        ck_free(tmp_targets_bits);
     }
 
     if (is_target) {
@@ -6740,16 +6674,14 @@ bool sniff_mask(char **argv, struct queue_entry *q, u8 *in_buf, u8 **cb_mask_ptr
             q->conformance_mask = alloc_cb_mask(len + 1);
             *cb_mask_ptr = conformance_mask;
         }
-        DEBUG("Skip sniff\n");
+
         return false;
     }
-
-    DEBUG("Do sniff\n");
-    DEBUG("Sniff length: %d\n", len);
 
     u32 modify_count = 0;
     u32 insert_count = 0;
     u32 delete_count = 0;
+
     cb_mask = ck_alloc(len + 1);
     conformance_mask = ck_alloc(len + 1);
     u8 *out_buf = ck_alloc_nozero(len);
@@ -6873,8 +6805,6 @@ bool sniff_mask(char **argv, struct queue_entry *q, u8 *in_buf, u8 **cb_mask_ptr
         }
     }
 
-    u32 i;
-
     update_distance(q);
 
     q->cb_mask = ck_alloc(len + 1);
@@ -6885,26 +6815,6 @@ bool sniff_mask(char **argv, struct queue_entry *q, u8 *in_buf, u8 **cb_mask_ptr
 
     ck_free(tmp_buf);
     ck_free(out_buf);
-
-    DEBUG("%d bytes can be modefied\n", modify_count);
-    DEBUG("%d bytes can be deleted\n", delete_count);
-    DEBUG("%d bytes can be inserted\n", insert_count);
-
-    fprintf(mutation_log, "--------------------------------------\n");
-    for (i = 0; i < q->critical_bbs[0]; i++) {
-        fprintf(mutation_log, "%d ", q->critical_bbs[i + 1]);
-    }
-    fprintf(mutation_log, "\n");
-    if (!explore_status) {
-        for (i = 0; i < len; i++) {
-            fprintf(mutation_log, "%d ", cb_mask[i]);
-        }
-    } else {
-        for (i = 0; i < len; i++) {
-            fprintf(mutation_log, "%d ", conformance_mask[i]);
-        }
-    }
-    fprintf(mutation_log, "\n--------------------------------------\n");
 
     if (!explore_status) {
         *cb_mask_ptr = cb_mask;
@@ -7045,28 +6955,7 @@ static u8 fuzz_one(char **argv) {
     }
 
 #endif /* ^IGNORE_FINDS */
-    DEBUG("----------------------------------------------\n");
-    DEBUG("Trying to fuzz input %s: \n", queue_cur->fname);
-    DEBUG("Stage is %s\n", explore_status ? "explore" : "exploit");
-    DEBUG("Is favored : %d\n", queue_cur->favored);
-    DEBUG("Length is %d\n", queue_cur->len);
-    DEBUG("Hit rare target : %d\n", queue_cur->is_rare_target);
-    DEBUG("Critical bbs [ ");
-    if (queue_cur->critical_bbs) {
-        for (int i = 0; i < queue_cur->critical_bbs[0]; i++) {
-            DEBUG("%d:%d ", queue_cur->critical_bbs[i + 1], solved_cbbs[queue_cur->critical_bbs[i + 1]]);
-        }
-    }
-    DEBUG("]\n");
-    DEBUG("Rare critical bbs [ ");
-    if (queue_cur->critical_bbs) {
-        for (int i = 0; i < queue_cur->critical_bbs[0]; i++) {
-            if (critical_count[queue_cur->critical_bbs[i + 1]] < BLOCK_TIMES) {
-                DEBUG("%d : %d ", queue_cur->critical_bbs[i + 1], critical_count[queue_cur->critical_bbs[i + 1]]);
-            }
-        }
-    }
-    DEBUG("]\n");
+
     period_critical_count = 0;
 
     if (not_on_tty) {
@@ -8877,18 +8766,6 @@ retry_splicing:
     ret_val = 0;
 
 abandon_entry:
-
-    DEBUG("Hit %u rare critical bbs\n", period_critical_count);
-    DEBUG("Rare critical bbs [ ");
-    if (queue_cur->critical_bbs) {
-        for (int i = 0; i < queue_cur->critical_bbs[0]; i++) {
-            if (critical_count[queue_cur->critical_bbs[i + 1]] < BLOCK_TIMES) {
-                DEBUG("%d : %d ", queue_cur->critical_bbs[i + 1], critical_count[queue_cur->critical_bbs[i + 1]]);
-            }
-        }
-    }
-    DEBUG("]\n");
-    DEBUG("---------------------------------------------------------");
 
     splicing_with = -1;
 
@@ -10798,25 +10675,11 @@ int main(int argc, char **argv) {
         use_argv = argv + optind;
     }
 
-    u8 *tmp = alloc_printf("%s/mutation.log", out_dir);
-    mutation_log = fopen(tmp, "w");
-    ck_free(tmp);
+    char *tmp;
 
-    tmp = alloc_printf("%s/targets.log", out_dir);
-    targets_log = fopen(tmp, "w");
-    ck_free(tmp);
-
-    tmp = alloc_printf("%s/crashes.log", out_dir);
-    crashes_log = fopen(tmp, "w");
-    ck_free(tmp);
-
-    tmp = alloc_printf("%s/critical.log", out_dir);
-    critical_log = fopen(tmp, "w");
-    ck_free(tmp);
-
-    tmp = alloc_printf("%s/distance.log", out_dir);
-    distance_log = fopen(tmp, "w");
-    ck_free(tmp);
+    // tmp = alloc_printf("%s/distance.log", out_dir);
+    // distance_log = fopen(tmp, "w");
+    // ck_free(tmp);
 
 #ifdef SFZ_OUTPUT_STATS
     tmp = alloc_printf("%s/sfz_stats.csv", out_dir);
@@ -10968,7 +10831,6 @@ stop_fuzzing:
              doc_path);
     }
 
-    log_solve_status();
     fclose(plot_file);
     destroy_queue();
     destroy_extras();
@@ -10986,8 +10848,7 @@ stop_fuzzing:
     ck_free(cbb_distances);
     ck_free(critical_ids);
 
-    fclose(critical_log);
-    fclose(distance_log);
+    // fclose(distance_log);
 
 #ifdef SFZ_OUTPUT_STATS
     fclose(sfz_stats_fd)
