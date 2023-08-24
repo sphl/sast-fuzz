@@ -3,8 +3,8 @@
 extern "C" {
 #include <sfz/cycle_length.h>
 
-uint64_t init_cycle_length;
-uint64_t cycle_length;
+u64 init_cycle_length;
+u64 cycle_length;
 }
 
 class CycleLengthTestSuite : public ::testing::Test {
@@ -25,7 +25,7 @@ TEST_F(CycleLengthTestSuite, UpdateCycleLengthFix) {
 
 TEST_F(CycleLengthTestSuite, UpdateCycleLengthLin) {
     // Arrange
-    uint32_t inc = 50;
+    u32 inc = 50;
 
     // Act
     update_cycle_length_lin(inc);
@@ -36,7 +36,7 @@ TEST_F(CycleLengthTestSuite, UpdateCycleLengthLin) {
 
 TEST_F(CycleLengthTestSuite, UpdateCycleLengthLog) {
     // Arrange
-    uint32_t dur = 120;
+    u32 dur = 120;
 
     // Act
     update_cycle_length_log(dur);

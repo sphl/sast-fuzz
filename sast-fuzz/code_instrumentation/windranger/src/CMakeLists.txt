@@ -6,25 +6,27 @@ klee_get_llvm_libs(
     irreader
 )
 
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(CBI_COMPILE_OPTIONS -g -O0)
+else ()
+    set(CBI_COMPILE_OPTIONS -O3)
+endif ()
+
 add_library(libcbi STATIC container/target.cpp)
+
+if (CMAKE_BUILD_TYPE STREQUAL "Release")
+    # Disable asserts
+    target_compile_definitions(libcbi PUBLIC NDEBUG)
+endif ()
+
 target_include_directories(libcbi PUBLIC ${CBI_INCLUDE_DIR})
+target_compile_options(libcbi PUBLIC ${CBI_COMPILE_OPTIONS})
 set_target_properties(libcbi PROPERTIES PREFIX "")
 
 add_executable(cbi container/target.cpp main.cpp)
 
-if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    target_compile_options(
-        cbi
-        PRIVATE -fno-rtti
-                -fPIC
-                -g
-                -O0
-    )
-else ()
-    target_compile_options(cbi PRIVATE -fno-rtti -fPIC -O3)
-endif ()
-
 target_include_directories(cbi PRIVATE "${SVF_INCLUDE_DIR}")
+target_compile_options(cbi PRIVATE -fno-rtti -fPIC ${CBI_COMPILE_OPTIONS})
 target_link_libraries(
     cbi
     PRIVATE libcbi

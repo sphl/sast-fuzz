@@ -274,8 +274,6 @@ struct queue_entry {
 
     u32 fuzz_level;
 
-    // float distance_cb;                 /* Critical bb distance to targets  */
-
     u32 *critical_bbs;
     u64 *critical_vals;
     u32 *critical_difficulty;
@@ -324,10 +322,7 @@ static u8 cb_score_changed;
 
 static u8 *critical_bits;
 
-static u8 no_critical_flag = 0;
-static u8 no_distance_favor_flag = 0;
 static u8 afl_flag;
-static u8 no_cb_mutation_flag = 0;
 static u8 conformance_flag = 0;
 static u8 no_target_favor;
 static u8 target_fast;
@@ -1060,22 +1055,6 @@ static void mark_as_redundant(struct queue_entry *q, u8 state) {
     ck_free(fn);
 }
 
-float calculate_distance() {
-    float res;
-
-    /* Calculate distance of current input to targets */
-    u64 *total_distance = (u64 *)(trace_bits + MAP_SIZE);
-    u64 *total_count = (u64 *)(trace_bits + MAP_SIZE + 8);
-
-    if (*total_count > 0) {
-        res = ((float)(*total_distance) / (float)(*total_count));
-    } else {
-        res = -1.0f;
-    }
-
-    return res;
-}
-
 float calculate_cb_distance() {
     u32 count = 0;
 
@@ -1183,17 +1162,12 @@ static void add_to_queue(u8 *fname, u32 len, u8 passed_det) {
         q->is_target = 1;
     }
 
-    if (!no_critical_flag) {
-        cur_distance = calculate_cb_distance();
-        alloca_critical_bbs(q);
-    } else {
-        cur_distance = calculate_distance();
-    }
+    cur_distance = calculate_cb_distance();
+    alloca_critical_bbs(q);
 
     alloca_cond_bits(q);
 
     q->distance = cur_distance;
-    // q->distance_cb = calculate_cb_distance();
 
     if (cur_distance > 0) {
         if (max_distance <= 0) {
@@ -1698,17 +1672,18 @@ static void update_cb_bitmap_score(struct queue_entry *q) {
 }
 
 static bool hit_rare_targets(struct queue_entry *q) {
-    if (no_critical_flag || no_target_favor) {
+    if (no_target_favor) {
         return false;
     }
-    u32 i;
-    for (i = 0; i < num_target_bbs; i++) {
+
+    for (u32 i = 0; i < num_target_bbs; i++) {
         if (q->targets && q->targets[i]) {
             if (target_count[i] < TARGET_LIMIT) {
                 return true;
             }
         }
     }
+
     return false;
 }
 
@@ -1767,12 +1742,10 @@ static void cull_queue(void) {
         }
     }
 
-    if (!no_cb_mutation_flag) {
-        for (i = 1; i < cond_num; i++) {
-            if (top_conformance[i] && (solved_cond[i] < 3)) {
-                top_conformance[i]->favored = 1;
-                top_conformance[i]->is_dead = 0;
-            }
+    for (i = 1; i < cond_num; i++) {
+        if (top_conformance[i] && (solved_cond[i] < 3)) {
+            top_conformance[i]->favored = 1;
+            top_conformance[i]->is_dead = 0;
         }
     }
 
@@ -1829,12 +1802,10 @@ static void cb_cull_queue(void) {
         }
     }
 
-    if (!no_cb_mutation_flag) {
-        for (i = 1; i < cond_num; i++) {
-            if (top_conformance[i] && (solved_cond[i] < 3)) {
-                top_conformance[i]->favored = 1;
-                top_conformance[i]->is_dead = 0;
-            }
+    for (i = 1; i < cond_num; i++) {
+        if (top_conformance[i] && (solved_cond[i] < 3)) {
+            top_conformance[i]->favored = 1;
+            top_conformance[i]->is_dead = 0;
         }
     }
 
@@ -3704,7 +3675,7 @@ static u8 calibrate_case(char **argv, struct queue_entry *q, u8 *use_mem, u32 ha
             }
         }
 
-        if (is_rare_target && !no_critical_flag) {
+        if (is_rare_target) {
             q->is_rare_target = 1;
         }
 
@@ -3735,14 +3706,10 @@ static u8 calibrate_case(char **argv, struct queue_entry *q, u8 *use_mem, u32 ha
             /* This calculates cur_distance */
             has_new_bits(virgin_bits);
 
-            if (!no_critical_flag) {
-                cur_distance = calculate_cb_distance();
-                alloca_critical_bbs(q);
-            } else {
-                cur_distance = calculate_distance();
-            }
+            cur_distance = calculate_cb_distance();
+            alloca_critical_bbs(q);
+
             q->distance = cur_distance;
-            // q->distance_cb = calculate_cb_distance();
 
             if (cur_distance > 0) {
                 if (max_distance <= 0) {
@@ -3803,9 +3770,7 @@ static u8 calibrate_case(char **argv, struct queue_entry *q, u8 *use_mem, u32 ha
     total_bitmap_entries++;
 
     update_bitmap_score(q);
-    if (!no_distance_favor_flag) {
-        update_cb_bitmap_score(q);
-    }
+    update_cb_bitmap_score(q);
 
     /* If this case didn't result in new output from the instrumentation, tell
        parent. This is a non-critical problem, but something to warn the user
@@ -4445,12 +4410,11 @@ static u8 save_if_interesting(char **argv, void *mem, u32 len, u8 fault) {
 
         cb_count();
         bool hnc = false;
-        if (!no_cb_mutation_flag) {
-            if (conformance_flag) {
-                hnc = has_new_conformace();
-            } else {
-                hnc = has_new_critical_conformance();
-            }
+
+        if (conformance_flag) {
+            hnc = has_new_conformace();
+        } else {
+            hnc = has_new_critical_conformance();
         }
 
         if ((!(hnb = has_new_bits(virgin_bits))) && !hnc) {
@@ -6041,10 +6005,9 @@ static u8 trim_case(char **argv, struct queue_entry *q, u8 *in_buf) {
         close(fd);
 
         memcpy(trace_bits, clean_trace, MAP_SIZE);
+
         update_bitmap_score(q);
-        if (!no_distance_favor_flag) {
-            update_cb_bitmap_score(q);
-        }
+        update_cb_bitmap_score(q);
     }
 
 abort_trimming:
@@ -6183,7 +6146,7 @@ EXP_ST u8 common_fuzz_stuff(char **argv, u8 *out_buf, u32 len) {
     u8 is_saved = save_if_interesting(argv, out_buf, len, fault);
     queued_discovered += is_saved;
 
-    if (is_saved && is_rare_target && !no_critical_flag) {
+    if (is_saved && is_rare_target) {
         queue_top->is_rare_target = 1;
     }
 
@@ -6379,7 +6342,8 @@ static u32 calculate_score(struct queue_entry *q) {
 
     if (!afl_flag) {
         u8 flag = 1;
-        if (!no_critical_flag && explore_status) {
+
+        if (explore_status) {
             flag = 0;
         }
 
@@ -7166,25 +7130,20 @@ static u8 fuzz_one(char **argv) {
      * PERFORMANCE SCORE *
      *********************/
 
-    if (!no_cb_mutation_flag) {
-        if ((!explore_status) && queue_cur->cb_mask) {
-            orig_cb_mask = ck_alloc(len + 1);
-            cb_mask = ck_alloc(len + 1);
-            memcpy(cb_mask, queue_cur->cb_mask, len + 1);
-            memcpy(orig_cb_mask, queue_cur->cb_mask, len + 1);
-        } else if (explore_status && queue_cur->conformance_mask) {
-            orig_cb_mask = ck_alloc(len + 1);
-            cb_mask = ck_alloc(len + 1);
-            memcpy(cb_mask, queue_cur->conformance_mask, len + 1);
-            memcpy(orig_cb_mask, queue_cur->conformance_mask, len + 1);
-        } else {
-            skip_byte_flip = sniff_mask(argv, queue_cur, in_buf, &cb_mask, &eff_map, &eff_cnt);
-            orig_cb_mask = ck_alloc(len + 1);
-            memcpy(orig_cb_mask, cb_mask, len + 1);
-        }
+    if ((!explore_status) && queue_cur->cb_mask) {
+        orig_cb_mask = ck_alloc(len + 1);
+        cb_mask = ck_alloc(len + 1);
+        memcpy(cb_mask, queue_cur->cb_mask, len + 1);
+        memcpy(orig_cb_mask, queue_cur->cb_mask, len + 1);
+    } else if (explore_status && queue_cur->conformance_mask) {
+        orig_cb_mask = ck_alloc(len + 1);
+        cb_mask = ck_alloc(len + 1);
+        memcpy(cb_mask, queue_cur->conformance_mask, len + 1);
+        memcpy(orig_cb_mask, queue_cur->conformance_mask, len + 1);
     } else {
-        cb_mask = alloc_cb_mask(len + 1);
-        orig_cb_mask = alloc_cb_mask(len + 1);
+        skip_byte_flip = sniff_mask(argv, queue_cur, in_buf, &cb_mask, &eff_map, &eff_cnt);
+        orig_cb_mask = ck_alloc(len + 1);
+        memcpy(orig_cb_mask, cb_mask, len + 1);
     }
 
     position_map = ck_alloc(sizeof(u32) * (len + 1));
@@ -7325,10 +7284,9 @@ static u8 fuzz_one(char **argv) {
 
     for (stage_cur = 0; stage_cur < stage_max; stage_cur++) {
         stage_cur_byte = stage_cur >> 3;
-        if (!no_cb_mutation_flag) {
-            if (!(cb_mask[stage_cur_byte] & 1)) {
-                continue;
-            }
+
+        if (!(cb_mask[stage_cur_byte] & 1)) {
+            continue;
         }
 
         if ((stage_cur_byte != ((stage_cur + 1) >> 3)) && (!(cb_mask[stage_cur_byte + 1] & 1))) {
@@ -7362,14 +7320,12 @@ static u8 fuzz_one(char **argv) {
     for (stage_cur = 0; stage_cur < stage_max; stage_cur++) {
         stage_cur_byte = stage_cur >> 3;
 
-        if (!no_cb_mutation_flag) {
-            if (!(cb_mask[stage_cur_byte] & 1)) {
-                continue;
-            }
+        if (!(cb_mask[stage_cur_byte] & 1)) {
+            continue;
+        }
 
-            if ((stage_cur_byte != ((stage_cur + 3) >> 3)) && (!(cb_mask[stage_cur_byte + 1] & 1))) {
-                continue;
-            }
+        if ((stage_cur_byte != ((stage_cur + 3) >> 3)) && (!(cb_mask[stage_cur_byte + 1] & 1))) {
+            continue;
         }
 
         FLIP_BIT(out_buf, stage_cur);
@@ -7500,10 +7456,8 @@ static u8 fuzz_one(char **argv) {
             continue;
         }
 
-        if (!no_cb_mutation_flag) {
-            if (!(cb_mask[i] & 1) || !(cb_mask[i + 1] & 1)) {
-                continue;
-            }
+        if (!(cb_mask[i] & 1) || !(cb_mask[i + 1] & 1)) {
+            continue;
         }
 
         stage_cur_byte = i;
@@ -7544,10 +7498,8 @@ static u8 fuzz_one(char **argv) {
             continue;
         }
 
-        if (!no_cb_mutation_flag) {
-            if (!(cb_mask[i] & 1) || !(cb_mask[i + 1] & 1) || !(cb_mask[i + 2] & 1) || !(cb_mask[i + 3] & 1)) {
-                continue;
-            }
+        if (!(cb_mask[i] & 1) || !(cb_mask[i + 1] & 1) || !(cb_mask[i + 2] & 1) || !(cb_mask[i + 3] & 1)) {
+            continue;
         }
 
         stage_cur_byte = i;
@@ -7598,10 +7550,8 @@ skip_bitflip:
             continue;
         }
 
-        if (!no_cb_mutation_flag) {
-            if (!(cb_mask[i] & 1)) {
-                continue;
-            }
+        if (!(cb_mask[i] & 1)) {
+            continue;
         }
 
         stage_cur_byte = i;
@@ -7672,10 +7622,8 @@ skip_bitflip:
             continue;
         }
 
-        if (!no_cb_mutation_flag) {
-            if (!(cb_mask[i] & 1) || !(cb_mask[i + 1] & 1)) {
-                continue;
-            }
+        if (!(cb_mask[i] & 1) || !(cb_mask[i + 1] & 1)) {
+            continue;
         }
 
         stage_cur_byte = i;
@@ -7780,10 +7728,8 @@ skip_bitflip:
             continue;
         }
 
-        if (!no_cb_mutation_flag) {
-            if (!(cb_mask[i] & 1) || !(cb_mask[i + 1] & 1) || !(cb_mask[i + 2] & 1) || !(cb_mask[i + 3] & 1)) {
-                continue;
-            }
+        if (!(cb_mask[i] & 1) || !(cb_mask[i + 1] & 1) || !(cb_mask[i + 2] & 1) || !(cb_mask[i + 3] & 1)) {
+            continue;
         }
 
         stage_cur_byte = i;
@@ -7889,10 +7835,8 @@ skip_arith:
             continue;
         }
 
-        if (!no_cb_mutation_flag) {
-            if (!(cb_mask[i] & 1)) {
-                continue;
-            }
+        if (!(cb_mask[i] & 1)) {
+            continue;
         }
 
         stage_cur_byte = i;
@@ -7945,10 +7889,8 @@ skip_arith:
             continue;
         }
 
-        if (!no_cb_mutation_flag) {
-            if (!(cb_mask[i] & 1) || !(cb_mask[i + 1] & 1)) {
-                continue;
-            }
+        if (!(cb_mask[i] & 1) || !(cb_mask[i + 1] & 1)) {
+            continue;
         }
 
         stage_cur_byte = i;
@@ -8023,10 +7965,8 @@ skip_arith:
             continue;
         }
 
-        if (!no_cb_mutation_flag) {
-            if (!(cb_mask[i] & 1) || !(cb_mask[i + 1] & 1) || !(cb_mask[i + 2] & 1) || !(cb_mask[i + 3] & 1)) {
-                continue;
-            }
+        if (!(cb_mask[i] & 1) || !(cb_mask[i + 1] & 1) || !(cb_mask[i + 2] & 1) || !(cb_mask[i + 3] & 1)) {
+            continue;
         }
 
         stage_cur_byte = i;
@@ -8121,17 +8061,16 @@ skip_interest:
                 continue;
             }
 
-            if (!no_cb_mutation_flag) {
-                int bailing = 0;
-                for (int ii = 0; ii < extras[j].len; ii++) {
-                    if (!(cb_mask[i + ii] & 1)) {
-                        bailing = 1;
-                        break;
-                    }
+            int bailing = 0;
+            for (int ii = 0; ii < extras[j].len; ii++) {
+                if (!(cb_mask[i + ii] & 1)) {
+                    bailing = 1;
+                    break;
                 }
-                if (bailing) {
-                    continue;
-                }
+            }
+
+            if (bailing) {
+                continue;
             }
 
             last_len = extras[j].len;
@@ -8173,10 +8112,8 @@ skip_interest:
                 continue;
             }
 
-            if (!no_cb_mutation_flag) {
-                if (!(cb_mask[i] & 4)) {
-                    continue;
-                }
+            if (!(cb_mask[i] & 4)) {
+                continue;
             }
 
             /* Insert token */
@@ -8233,17 +8170,16 @@ skip_user_extras:
                 continue;
             }
 
-            if (!no_cb_mutation_flag) {
-                int bailing = 0;
-                for (int ii = 0; ii < a_extras[j].len; ii++) {
-                    if (!(cb_mask[i + ii] & 1)) {
-                        bailing = 1;
-                        break;
-                    }
+            int bailing = 0;
+            for (int ii = 0; ii < a_extras[j].len; ii++) {
+                if (!(cb_mask[i + ii] & 1)) {
+                    bailing = 1;
+                    break;
                 }
-                if (bailing) {
-                    continue;
-                }
+            }
+
+            if (bailing) {
+                continue;
             }
 
             last_len = a_extras[j].len;
@@ -9572,9 +9508,6 @@ static void usage(u8 *argv0) {
 
          "WindRanger flag:\n\n"
 
-         "  -e            - disable critical basic blocks\n"
-         "  -a            - disable cbb-based seed prioritization\n"
-         "  -k            - disable data-flow sensitive mutation\n"
          "  -s            - disable dynamic switch between explore and exploit stage\n\n"
 
          "SASTFuzz:\n\n"
@@ -10635,32 +10568,11 @@ int main(int argc, char **argv) {
 
         break;
 
-        case 'e':
-            if (no_critical_flag) {
-                FATAL("Multiple -e options not supported");
-            }
-            no_critical_flag = 1;
-            break;
-
-        case 'a':
-            if (no_distance_favor_flag) {
-                FATAL("Multiple -a options not supported");
-            }
-            no_distance_favor_flag = 1;
-            break;
-
         case 'l':
             if (afl_flag) {
                 FATAL("Multiple -l options not supported");
             }
             afl_flag = 1;
-            break;
-
-        case 'k':
-            if (no_cb_mutation_flag) {
-                FATAL("Multiple -k options not supported");
-            }
-            no_cb_mutation_flag = 1;
             break;
 
         case 'E':
@@ -10775,15 +10687,19 @@ int main(int argc, char **argv) {
     if (getenv("AFL_NO_FORKSRV")) {
         no_forkserver = 1;
     }
+
     if (getenv("AFL_NO_CPU_RED")) {
         no_cpu_meter_red = 1;
     }
+
     if (getenv("AFL_NO_ARITH")) {
         no_arith = 1;
     }
+
     if (getenv("AFL_SHUFFLE_QUEUE")) {
         shuffle_queue = 1;
     }
+
     if (getenv("AFL_FAST_CAL")) {
         fast_cal = 1;
     }
@@ -10937,22 +10853,20 @@ int main(int argc, char **argv) {
         u32 i;
         explore_status = 1;
 
-        if (!no_critical_flag) {
-            if (!no_dynamic_switch) {
-                for (i = 0; i < critical_ids[0]; i++) {
-                    if (critical_count[critical_ids[i + 1]] && !solved_cbbs[critical_ids[i + 1]] &&
-                        critical_count[critical_ids[i + 1]] < BLOCK_TIMES) {
-                        explore_status = 0;
-                    }
+        if (!no_dynamic_switch) {
+            for (i = 0; i < critical_ids[0]; i++) {
+                if (critical_count[critical_ids[i + 1]] && !solved_cbbs[critical_ids[i + 1]] &&
+                    critical_count[critical_ids[i + 1]] < BLOCK_TIMES) {
+                    explore_status = 0;
                 }
-            }
-
-            if (!pending_favored) {
-                explore_status = 1;
             }
         }
 
-        if (!no_distance_favor_flag && !explore_status) {
+        if (!pending_favored) {
+            explore_status = 1;
+        }
+
+        if (!explore_status) {
             cb_cull_queue();
         } else {
             cull_queue();

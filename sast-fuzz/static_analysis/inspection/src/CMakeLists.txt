@@ -29,6 +29,11 @@ add_library(
     utils/pretty_printer.cpp
 )
 
+if (CMAKE_BUILD_TYPE STREQUAL "Release")
+    # Disable asserts
+    target_compile_definitions(libsfi PUBLIC NDEBUG)
+endif ()
+
 target_compile_options(libsfi PRIVATE ${SFI_COMPILE_OPTIONS})
 target_include_directories(libsfi PUBLIC ${SVF_INCLUDE_DIR} ${SFI_INCLUDE_DIR})
 target_link_libraries(libsfi PRIVATE ${LLVM_LIBS} ${SVF_LIB})
