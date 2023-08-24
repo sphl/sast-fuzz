@@ -8202,7 +8202,6 @@ havoc_stage:
                 }
                 if (UR(2)) {
                     *(u16 *)(out_buf + posn) = interesting_16[UR(sizeof(interesting_16) >> 1)];
-
                 } else {
                     *(u16 *)(out_buf + posn) = SWAP16(interesting_16[UR(sizeof(interesting_16) >> 1)]);
                 }
@@ -8222,7 +8221,6 @@ havoc_stage:
                 }
                 if (UR(2)) {
                     *(u32 *)(out_buf + posn) = interesting_32[UR(sizeof(interesting_32) >> 2)];
-
                 } else {
                     *(u32 *)(out_buf + posn) = SWAP32(interesting_32[UR(sizeof(interesting_32) >> 2)]);
                 }
@@ -10673,6 +10671,10 @@ int main(int argc, char **argv) {
 #ifdef SFZ_OUTPUT_STATS
     tmp = alloc_printf("%s/sfz_stats.csv", out_dir);
     sfz_stats_fd = fopen(tmp, "w");
+
+    if (sfz_stats_fd == NULL) {
+        FATAL("Could not create the SASTFuzz stats file!");
+    }
 
     fprintf(sfz_stats_fd, "%s,%s,%s,%s,%s,%s,%s\n", "fuzz_duration", "init_cycle_length", "cur_cycle_length",
             "n_target_bbs", "n_target_bbs_hit", "n_target_bbs_finished", "n_unique_crashes");
