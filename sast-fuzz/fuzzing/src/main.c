@@ -36,7 +36,6 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <hash.h>
-#include <limits.h>
 #include <math.h>
 #include <sched.h>
 #include <signal.h>
@@ -52,9 +51,7 @@
 #include <sys/shm.h>
 #include <sys/stat.h>
 #include <sys/time.h>
-#include <sys/types.h>
 #include <sys/wait.h>
-#include <termios.h>
 #include <time.h>
 #include <types.h>
 #include <unistd.h>
@@ -330,10 +327,9 @@ static u8 no_dynamic_switch;
 
 static u32 num_target_bbs = 0;
 static u8 *targets_bits;
-static u8 targets_all = 0;
 
 static u8 solved_cbbs[MAP_SIZE];
-static u32 distance_val[MAP_SIZE];
+// static u32 distance_val[MAP_SIZE];
 
 EXP_ST u8 *distance_bits;
 
@@ -3650,22 +3646,26 @@ static u8 calibrate_case(char **argv, struct queue_entry *q, u8 *use_mem, u32 ha
         u32 i;
         is_target = 0;
         is_rare_target = 0;
-        targets_all = 1;
+
         u8 *tmp_targets = ck_alloc(num_target_bbs);
+
         for (i = 0; i < num_target_bbs; i++) {
             u8 flag = *(trace_bits + MAP_SIZE + 16 + i);
+
             if (flag) {
                 is_target = 1;
                 tmp_targets[i] = 1;
+
                 if (target_count[i] < BIG_NUMBER) {
                     target_count[i]++;
                 }
+
                 if (target_count[i] < TARGET_LIMIT) {
                     is_rare_target = 1;
                 }
             }
+
             if (targets_bits[i] == 0) {
-                targets_all = 0;
                 if (flag) {
                     last_target_time = get_cur_time();
                     fprintf(targets_log, "%d : %s --- %s --- %s\n", i, DTD(last_target_time, start_time),
@@ -6059,7 +6059,7 @@ EXP_ST u8 common_fuzz_stuff(char **argv, u8 *out_buf, u32 len) {
     u32 i;
     is_target = 0;
     is_rare_target = 0;
-    targets_all = 1;
+
     u8 *tmp_targets = ck_alloc(num_target_bbs);
 
     for (i = 0; i < num_target_bbs; i++) {
@@ -6128,8 +6128,6 @@ EXP_ST u8 common_fuzz_stuff(char **argv, u8 *out_buf, u32 len) {
 #endif
 
         if (targets_bits[i] == 0) {
-            targets_all = 0;
-
             if (flag) {
                 last_target_time = get_cur_time();
 
@@ -10194,10 +10192,10 @@ void readDistanceAndTargets() {
         token = strtok(NULL, " ");
         int critical_bb_id = atoi(token);
 
-        token = strtok(NULL, " ");
-        int bb_dist = atoi(token);
+        // token = strtok(NULL, " ");
+        // int bb_dist = atoi(token);
 
-        distance_val[bb_id] = bb_dist;
+        // distance_val[bb_id] = bb_dist;
 
         if (critical_bb_id == -1) {
             cbb_id_map[bb_id] = -1;
