@@ -5,7 +5,6 @@
 u32 **dm_create_from_file(const char *filename, u32 *n_rows, u32 *n_cols) {
     FILE *file = fopen(filename, "r");
     if (file == NULL) {
-        printf("ERROR: Could not open matrix file!\n");
         return 0;
     }
 

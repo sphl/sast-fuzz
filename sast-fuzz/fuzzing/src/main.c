@@ -10062,6 +10062,7 @@ int stricmp(char const *a, char const *b) {
 
 void readDistanceAndTargets() {
     FILE *distance_file = fopen("distance.txt", "r");
+
     if (distance_file == NULL) {
         FATAL("distance.txt not exist");
     }
@@ -10107,6 +10108,7 @@ void readDistanceAndTargets() {
     fclose(distance_file);
 
     FILE *targets_file = fopen("targets.txt", "r");
+
     if (targets_file == NULL) {
         FATAL("targets.txt not exist");
     }
@@ -10617,6 +10619,10 @@ int main(int argc, char **argv) {
 
     u32 dm_n_rows, dm_n_cols;
     distance_matrix = dm_create_from_file("./dm.csv", &dm_n_rows, &dm_n_cols);
+
+    if (distance_matrix == NULL) {
+        FATAL("Could not open matrix file!");
+    }
 
     assert(dm_n_rows == n_cbbs);
     assert(dm_n_cols == n_tbbs);
