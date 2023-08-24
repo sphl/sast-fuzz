@@ -324,7 +324,7 @@ static u8 no_target_favor;
 static u8 target_fast;
 static u8 no_dynamic_switch;
 
-static u32 num_target_bbs = 0;
+static u32 n_tbbs = 0;
 static u8 *targets_bits;
 
 static u8 solved_cbbs[MAP_SIZE];
@@ -402,7 +402,7 @@ float get_vuln_factor(const u8 *target_bits) {
     float vs_tbb_all = 0.0f;
     float vs_tbb_executed = 0.0f;
 
-    for (int i = 0; i < num_target_bbs; i++) {
+    for (int i = 0; i < n_tbbs; i++) {
         if (tbb_infos[i]->state == active) {
             vs_tbb_all += tbb_infos[i]->vuln_score;
 
@@ -418,7 +418,7 @@ float get_vuln_factor(const u8 *target_bits) {
     return (DEFAULT_VULN_FACTOR - value) + 1.0f;
 }
 
-static u32 num_critical_bbs;
+static u32 n_cbbs = 0;
 
 static int cbb_id_map[MAP_SIZE];
 static float *cbb_distances;
@@ -430,7 +430,7 @@ static inline int lookup_cbb_id(u32 bb_id) { return cbb_id_map[bb_id]; }
 void update_tbb_states() {
     float sum_vuln_score = 0.0f;
 
-    for (u32 i = 0; i < num_target_bbs; i++) {
+    for (u32 i = 0; i < n_tbbs; i++) {
         if (tbb_infos[i]->state == active || tbb_infos[i]->state == paused) {
             sum_vuln_score += tbb_infos[i]->vuln_score;
         }
@@ -439,7 +439,7 @@ void update_tbb_states() {
     u32 n_tbbs_paused = 0;
     u32 n_tbbs_finished = 0;
 
-    for (u32 i = 0; i < num_target_bbs; i++) {
+    for (u32 i = 0; i < n_tbbs; i++) {
         if (tbb_infos[i]->state == active || tbb_infos[i]->state == paused) {
 
             int64_t n_req_input_execs =
@@ -523,39 +523,75 @@ void update_tbb_states() {
 
 #ifdef SFZ_DEBUG
     printf("sast-fuzz: target BBs finished = %d, active = %d, paused = %d\n", n_tbbs_finished,
-           (num_target_bbs - (n_tbbs_finished + n_tbbs_paused)), n_tbbs_paused);
+           (n_tbbs - (n_tbbs_finished + n_tbbs_paused)), n_tbbs_paused);
 #endif
 
-    if (n_tbbs_finished == num_target_bbs) {
+    u32 n_cbbs_solved = 0;
+    u32 n_cbbs_hc_exceeded = 0;
 
-        // All target BBs have been finished, so focus on those with a vuln. score of at least 'vuln_score_thres'
-        for (int i = 0; i < num_target_bbs; i++) {
+    for (u32 i = 0; i < n_cbbs; i++) {
+        u32 cbb_id = critical_ids[i + 1];
 
-            if (tbb_infos[i]->vuln_score >= vuln_score_thres) {
-                // Reset target BB infos
-                tbb_infos[i]->state = active;
-                tbb_infos[i]->cov_flag = false;
-                tbb_infos[i]->n_input_execs = 0;
-                tbb_infos[i]->n_cycle_skips = 0;
-                tbb_infos[i]->n_prev_cycle_skips = 1;
+        if (solved_cbbs[cbb_id]) {
+            n_cbbs_solved++;
+        }
+
+        if (critical_count[cbb_id] > BLOCK_TIMES) {
+            n_cbbs_hc_exceeded++;
+        }
+    }
+
+    // Determine fuzzing strategy for the next cycle
+    if (n_cbbs_solved == n_cbbs) {
+
+        if (n_tbbs_finished == n_tbbs) {
+
+            memset(solved_cbbs, 0, MAP_SIZE);
+            memset(critical_count, 0, MAP_SIZE * sizeof(u32));
+
+            for (int i = 0; i < n_tbbs; i++) {
+                if (tbb_infos[i]->vuln_score >= vuln_score_thres) {
+                    // Reset target BB infos
+                    tbb_infos[i]->state = active;
+                    tbb_infos[i]->cov_flag = false;
+                    tbb_infos[i]->n_input_execs = 0;
+                    tbb_infos[i]->n_cycle_skips = 0;
+                    tbb_infos[i]->n_prev_cycle_skips = 1;
+                }
+            }
+
+        } else {
+
+            if ((n_tbbs_finished + n_tbbs_paused) == n_tbbs) {
+                explore_status = 1;
+            } else {
+                explore_status = 0;
             }
         }
+
     } else {
 
-        if ((n_tbbs_finished + n_tbbs_paused) == num_target_bbs) {
-            // Seems like we are stuck right now — go into "coverage mode" trying to discover new code regions
+        assert(n_tbbs_finished != n_tbbs);
+
+        if (n_cbbs_hc_exceeded == n_cbbs) {
             explore_status = 1;
+        } else {
+            if ((n_tbbs_finished + n_tbbs_paused) == n_tbbs) {
+                explore_status = 1;
+            } else {
+                explore_status = 0;
+            }
         }
     }
 }
 
 void update_cbb_distances() {
-    for (u32 c = 0; c < num_critical_bbs; c++) {
+    for (u32 c = 0; c < n_cbbs; c++) {
         // Harmonic critical-target-BB distance
         float cbb_distance = 0.0f;
 
         u32 n = 0;
-        for (u32 t = 0; t < num_target_bbs; t++) {
+        for (u32 t = 0; t < n_tbbs; t++) {
             // Only include the distance to ACTIVE target BBs
             if (tbb_infos[t]->state == active && distance_matrix[c][t] > 0) {
                 cbb_distance += (1.0f / (float)distance_matrix[c][t]);
@@ -1671,7 +1707,7 @@ static bool hit_rare_targets(struct queue_entry *q) {
         return false;
     }
 
-    for (u32 i = 0; i < num_target_bbs; i++) {
+    for (u32 i = 0; i < n_tbbs; i++) {
         if (q->targets && q->targets[i]) {
             if (target_count[i] < TARGET_LIMIT) {
                 return true;
@@ -1830,11 +1866,11 @@ EXP_ST void setup_shm(void) {
     memset(virgin_tmout, 255, MAP_SIZE);
     memset(virgin_crash, 255, MAP_SIZE);
 
-    targets_bits = ck_alloc(num_target_bbs);
-    target_count = ck_alloc(num_target_bbs * sizeof(u32));
+    targets_bits = ck_alloc(n_tbbs);
+    target_count = ck_alloc(n_tbbs * sizeof(u32));
 
     /* Allocate 24 byte more for distance info */
-    shm_id = shmget(IPC_PRIVATE, MAP_SIZE + 16 + num_target_bbs, IPC_CREAT | IPC_EXCL | 0600);
+    shm_id = shmget(IPC_PRIVATE, MAP_SIZE + 16 + n_tbbs, IPC_CREAT | IPC_EXCL | 0600);
 
     if (shm_id < 0) {
         PFATAL("shmget() failed");
@@ -3114,7 +3150,7 @@ static u8 run_target(char **argv, u32 timeout) {
        must prevent any earlier operations from venturing into that
        territory. */
 
-    memset(trace_bits, 0, MAP_SIZE + 16 + num_target_bbs);
+    memset(trace_bits, 0, MAP_SIZE + 16 + n_tbbs);
     memset(critical_bits, 0, MAP_SIZE);
     memset(distance_bits, 0, MAP_SIZE);
     memset(condition_bits, 0, sizeof(u64) * cond_num * 2);
@@ -3322,7 +3358,7 @@ static u8 run_target2(char **argv, u32 timeout) {
        must prevent any earlier operations from venturing into that
        territory. */
 
-    memset(trace_bits, 0, MAP_SIZE + 16 + num_target_bbs);
+    memset(trace_bits, 0, MAP_SIZE + 16 + n_tbbs);
     memset(critical_bits, 0, MAP_SIZE);
     memset(distance_bits, 0, MAP_SIZE);
     memset(condition_bits, 0, sizeof(u64) * cond_num * 2);
@@ -3646,9 +3682,9 @@ static u8 calibrate_case(char **argv, struct queue_entry *q, u8 *use_mem, u32 ha
         is_target = 0;
         is_rare_target = 0;
 
-        u8 *tmp_targets = ck_alloc(num_target_bbs);
+        u8 *tmp_targets = ck_alloc(n_tbbs);
 
-        for (i = 0; i < num_target_bbs; i++) {
+        for (i = 0; i < n_tbbs; i++) {
             u8 flag = *(trace_bits + MAP_SIZE + 16 + i);
 
             if (flag) {
@@ -6059,9 +6095,9 @@ EXP_ST u8 common_fuzz_stuff(char **argv, u8 *out_buf, u32 len) {
     is_target = 0;
     is_rare_target = 0;
 
-    u8 *tmp_targets = ck_alloc(num_target_bbs);
+    u8 *tmp_targets = ck_alloc(n_tbbs);
 
-    for (i = 0; i < num_target_bbs; i++) {
+    for (i = 0; i < n_tbbs; i++) {
         u8 flag = *(trace_bits + MAP_SIZE + 16 + i);
 
         if (flag) {
@@ -6107,7 +6143,7 @@ EXP_ST u8 common_fuzz_stuff(char **argv, u8 *out_buf, u32 len) {
             u32 n_tbbs_hit = 0;
             u32 n_tbbs_finished = 0;
 
-            for (int i = 0; i < num_target_bbs; i++) {
+            for (int i = 0; i < n_tbbs; i++) {
                 if (tbb_infos[i]->n_input_execs > 0) {
                     n_tbbs_hit++;
                 }
@@ -6117,7 +6153,7 @@ EXP_ST u8 common_fuzz_stuff(char **argv, u8 *out_buf, u32 len) {
             }
 
             fprintf(sfz_stats_fd, "%d,%llu,%llu,%d,%d,%d,%llu\n", fuzz_duration, init_cycle_length, cycle_length,
-                    num_target_bbs, n_tbbs_hit, n_tbbs_finished, unique_crashes);
+                    n_tbbs, n_tbbs_hit, n_tbbs_finished, unique_crashes);
 
             // Enforce file write operation ...
             fflush(sfz_stats_fd);
@@ -10167,11 +10203,11 @@ void readDistanceAndTargets() {
 
     // First line contains the number of critical BBs
     fgets(buf, sizeof(buf), distance_file);
-    num_critical_bbs = atoi(buf);
+    n_cbbs = atoi(buf);
 
-    critical_ids = ck_alloc(sizeof(u32) * (num_critical_bbs + 1));
+    critical_ids = ck_alloc(sizeof(u32) * (n_cbbs + 1));
 
-    critical_ids[0] = num_critical_bbs;
+    critical_ids[0] = n_cbbs;
 
     u32 i = 0;
     while (fgets(buf, sizeof(buf), distance_file) != NULL) {
@@ -10193,7 +10229,7 @@ void readDistanceAndTargets() {
         } else {
             i++;
 
-            assert(critical_bb_id < num_critical_bbs);
+            assert(critical_bb_id < n_cbbs);
 
             critical_ids[i] = bb_id;
 
@@ -10210,9 +10246,9 @@ void readDistanceAndTargets() {
 
     // First line contains the number of target BBs
     fgets(buf, sizeof(buf), targets_file);
-    num_target_bbs = atoi(buf);
+    n_tbbs = atoi(buf);
 
-    tbb_infos = ck_alloc(sizeof(tbb_info_t *) * num_target_bbs);
+    tbb_infos = ck_alloc(sizeof(tbb_info_t *) * n_tbbs);
 
     while (fgets(buf, sizeof(buf), targets_file) != NULL) {
         char *token;
@@ -10223,7 +10259,7 @@ void readDistanceAndTargets() {
         token = strtok(NULL, " ");
         float score = atof(token);
 
-        assert(target_bb_idx < num_target_bbs);
+        assert(target_bb_idx < n_tbbs);
 
         tbb_infos[target_bb_idx] = tbb_info_create(score);
     }
@@ -10729,10 +10765,10 @@ int main(int argc, char **argv) {
     u32 dm_n_rows, dm_n_cols;
     distance_matrix = dm_create_from_file("./dm.csv", &dm_n_rows, &dm_n_cols);
 
-    assert(dm_n_rows == num_critical_bbs);
-    assert(dm_n_cols == num_target_bbs);
+    assert(dm_n_rows == n_cbbs);
+    assert(dm_n_cols == n_tbbs);
 
-    cbb_distances = ck_alloc(sizeof(float) * num_critical_bbs);
+    cbb_distances = ck_alloc(sizeof(float) * n_cbbs);
 
     update_cbb_distances();
 
@@ -10831,18 +10867,6 @@ int main(int argc, char **argv) {
     // Main fuzzing routine ...
     while (1) {
         u8 skipped_fuzz;
-
-        u32 i;
-        explore_status = 1;
-
-        if (!no_dynamic_switch) {
-            for (i = 0; i < critical_ids[0]; i++) {
-                if (critical_count[critical_ids[i + 1]] && !solved_cbbs[critical_ids[i + 1]] &&
-                    critical_count[critical_ids[i + 1]] < BLOCK_TIMES) {
-                    explore_status = 0;
-                }
-            }
-        }
 
         if (!pending_favored) {
             explore_status = 1;
@@ -10963,7 +10987,7 @@ stop_fuzzing:
     ck_free(target_path2);
     ck_free(sync_id);
 
-    for (int i = 0; i < num_target_bbs; i++) {
+    for (int i = 0; i < n_tbbs; i++) {
         tbb_info_free(tbb_infos[i]);
     }
     ck_free(tbb_infos);
