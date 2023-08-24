@@ -10840,10 +10840,10 @@ stop_fuzzing:
     // fclose(distance_log);
 
 #ifdef SFZ_OUTPUT_STATS
-    fclose(sfz_stats_fd)
+    fclose(sfz_stats_fd);
 #endif
 
-            alloc_report();
+    alloc_report();
 
     OKF("We're done here. Have a nice day!\n");
 
