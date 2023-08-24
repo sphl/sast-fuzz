@@ -322,7 +322,7 @@ static u8 *critical_bits;
 static u8 conformance_flag = 0;
 static u8 no_target_favor;
 static u8 target_fast;
-static u8 no_dynamic_switch;
+// static u8 no_dynamic_switch;
 
 static u32 n_tbbs = 0;
 static u8 *targets_bits;
@@ -360,7 +360,7 @@ static FILE *crashes_log;
 
 static u64 last_min_time, last_target_time = 0;
 
-static u8 explore_status;
+static u8 explore_status = 0;
 
 static u32 target_exec = 0;
 
@@ -9531,10 +9531,6 @@ static void usage(u8 *argv0) {
          "  -M / -S id    - distributed mode (see parallel_fuzzing.txt)\n"
          "  -C            - crash exploration mode (the peruvian rabbit thing)\n\n"
 
-         "WindRanger flag:\n\n"
-
-         "  -s            - disable dynamic switch between explore and exploit stage\n\n"
-
          "SASTFuzz:\n\n"
 
          "  -L #inputs    - cycle length, i.e. number of fuzz inputs per cycle\n"
@@ -10326,14 +10322,14 @@ int main(int argc, char **argv) {
     struct timeval tv;
     struct timezone tz;
 
-    SAYF(cCYA "aflgo (yeah!) " cBRI VERSION cRST "\n");
+    SAYF(cCYA "SASTFuzz (yeah!) " cBRI VERSION cRST "\n");
 
     doc_path = access(DOC_PATH, F_OK) ? "docs" : DOC_PATH;
 
     gettimeofday(&tv, &tz);
     srandom(tv.tv_sec ^ tv.tv_usec ^ getpid());
 
-    while ((opt = getopt(argc, argv, "+i:o:f:m:t:T:E:dnCB:S:M:x:Qz:c:jpusl:r:v:")) > 0) {
+    while ((opt = getopt(argc, argv, "+i:o:f:m:t:T:E:dnCB:S:M:x:Qz:c:jpul:r:v:")) > 0) {
         switch (opt) {
         case 'i': /* input dir */
 
@@ -10619,13 +10615,6 @@ int main(int argc, char **argv) {
                 FATAL("Multiple -u options not supported");
             }
             target_fast = 1;
-            break;
-
-        case 's':
-            if (no_dynamic_switch) {
-                FATAL("Multiple -s options not supported");
-            }
-            no_dynamic_switch = 1;
             break;
 
         case 'l': {
