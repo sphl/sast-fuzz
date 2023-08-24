@@ -319,7 +319,7 @@ static u8 cb_score_changed;
 static u8 *critical_bits;
 
 static u8 conformance_flag = 0;
-static u8 no_target_favor;
+// static u8 no_target_favor;
 static u8 target_fast;
 
 static u32 n_tbbs = 0;
@@ -1661,10 +1661,6 @@ static void update_cb_bitmap_score(struct queue_entry *q) {
 }
 
 static bool hit_rare_targets(struct queue_entry *q) {
-    if (no_target_favor) {
-        return false;
-    }
-
     for (u32 i = 0; i < n_tbbs; i++) {
         if (q->targets && q->targets[i]) {
             if (target_count[i] < TARGET_LIMIT) {
@@ -10206,7 +10202,7 @@ int main(int argc, char **argv) {
     gettimeofday(&tv, &tz);
     srandom(tv.tv_sec ^ tv.tv_usec ^ getpid());
 
-    while ((opt = getopt(argc, argv, "+i:o:f:m:t:T:E:dnCB:S:M:x:Qz:c:jpul:r:v:")) > 0) {
+    while ((opt = getopt(argc, argv, "+i:o:f:m:t:T:E:dnCB:S:M:x:Qz:c:jul:r:v:")) > 0) {
         switch (opt) {
         case 'i': /* input dir */
 
@@ -10478,13 +10474,6 @@ int main(int argc, char **argv) {
                 FATAL("Multiple -j options not supported");
             }
             conformance_flag = 1;
-            break;
-
-        case 'p':
-            if (no_target_favor) {
-                FATAL("Multiple -p options not supported");
-            }
-            no_target_favor = 1;
             break;
 
         case 'u':
