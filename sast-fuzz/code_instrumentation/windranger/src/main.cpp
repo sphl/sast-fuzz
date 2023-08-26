@@ -62,11 +62,15 @@ std::map<BasicBlock *, std::map<BasicBlock *, uint32_t>> distanceMatrix;
  * @param distance
  */
 void addDistance(BasicBlock *from, BasicBlock *to, uint32_t distance) {
-    if (distanceMatrix.count(from) == 0 || distanceMatrix[from].count(to) == 0) {
+    if (distanceMatrix.count(from) == 0) {
         distanceMatrix.emplace(from, std::map<BasicBlock *, uint32_t>{{to, distance}});
     } else {
-        if (distanceMatrix[from][to] > distance) {
-            distanceMatrix[from][to] = distance;
+        if (distanceMatrix[from].count(to) == 0) {
+            distanceMatrix[from].emplace(to, distance);
+        } else {
+            if (distanceMatrix[from][to] > distance) {
+                distanceMatrix[from][to] = distance;
+            }
         }
     }
 }
@@ -142,6 +146,16 @@ void writeDistanceMatrix(const std::string &filepath) {
     std::vector<std::vector<uint32_t>> matrixArray(numCriticalBBs, std::vector<uint32_t>(numTargetBBs));
 
     for (auto &[criticalBB, criticalBBId] : criticalBBIndices) {
+        assert(!distanceMatrix.at(criticalBB).empty());
+
+#ifdef CBI_DEBUG
+        cout << criticalBBId << " (" << distanceMatrix[criticalBB].size() << "): ";
+        for (auto &[targetBB, targetDist] : distanceMatrix[criticalBB]) {
+            cout << targetDist << " ";
+        }
+        cout << endl;
+#endif
+
         for (auto &[targetBB, targetBBId] : targetBBIndices) {
             if (distanceMatrix.at(criticalBB).count(targetBB) == 0) {
                 matrixArray[criticalBBId][targetBBId] = 0;

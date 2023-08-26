@@ -14,9 +14,11 @@ endif ()
 
 add_library(libcbi STATIC container/target.cpp)
 
-if (CMAKE_BUILD_TYPE STREQUAL "Release")
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    target_compile_definitions(libcbi PUBLIC CBI_DEBUG)
+else ()
     # Disable asserts
-    target_compile_definitions(libcbi PUBLIC NDEBUG)
+    # target_compile_definitions(libcbi PUBLIC NDEBUG)
 endif ()
 
 target_include_directories(libcbi PUBLIC ${CBI_INCLUDE_DIR})
