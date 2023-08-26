@@ -82,14 +82,14 @@ void addDistance(BasicBlock *from, BasicBlock *to, uint32_t distance) {
  */
 void setBBIndices(const TargetInfos &targetInfos) {
     for (auto &[bb, dist] : dTb) {
-        allBBIndices[bb] = numAllBBs++;
+        allBBIndices.emplace(bb, numAllBBs++);
 
-        if (targetInfos.count(bb)) {
-            targetBBIndices[bb] = numTargetBBs++;
+        if (targetInfos.count(bb) == 1) {
+            targetBBIndices.emplace(bb, numTargetBBs++);
         }
 
-        if (criticalBBs.count(bb)) {
-            criticalBBIndices[bb] = numCriticalBBs++;
+        if (criticalBBs.count(bb) == 1) {
+            criticalBBIndices.emplace(bb, numCriticalBBs++);
         }
     }
 }
@@ -105,7 +105,7 @@ void setBBIndices(const TargetInfos &targetInfos) {
  * @param delimiter
  */
 void writeMatrix(const std::string &filepath,
-                 const std::vector<std::vector<uint32_t>> &matrix,
+                 const std::vector<std::vector<int32_t>> &matrix,
                  uint32_t nRows,
                  uint32_t nColumns,
                  bool writeDims = true,
@@ -143,7 +143,7 @@ void writeMatrix(const std::string &filepath,
  * @param filepath
  */
 void writeDistanceMatrix(const std::string &filepath) {
-    std::vector<std::vector<uint32_t>> matrixArray(numCriticalBBs, std::vector<uint32_t>(numTargetBBs));
+    std::vector<std::vector<int32_t>> matrixArray(numCriticalBBs, std::vector<int32_t>(numTargetBBs));
 
     for (auto &[criticalBB, criticalBBId] : criticalBBIndices) {
         assert(!distanceMatrix.at(criticalBB).empty());
@@ -158,7 +158,8 @@ void writeDistanceMatrix(const std::string &filepath) {
 
         for (auto &[targetBB, targetBBId] : targetBBIndices) {
             if (distanceMatrix.at(criticalBB).count(targetBB) == 0) {
-                matrixArray[criticalBBId][targetBBId] = 0;
+                // The target BB is unreachable from the current critical BB
+                matrixArray[criticalBBId][targetBBId] = -1;
             } else {
                 matrixArray[criticalBBId][targetBBId] = distanceMatrix[criticalBB][targetBB];
             }
@@ -958,6 +959,8 @@ int main(int argc, char **argv) {
     identifyCriticalBB();
 
     setBBIndices(targetInfos);
+    assert(targetBBIndices.size() == targetInfos.size());
+    assert(criticalBBIndices.size() == criticalBBs.size());
 
     instrument(targetInfos);
     analyzeCondition();
