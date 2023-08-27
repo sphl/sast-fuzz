@@ -580,7 +580,7 @@ void update_cbb_distances() {
     assert(tbb_infos != NULL);
 
     for (u32 c = 0; c < n_cbbs; c++) {
-        // Harmonic critical-target-BB distance
+        // Critical-target-BB distance (harmonic mean)
         float cbb_distance = 0.0f;
 
         u32 n = 0;
@@ -593,7 +593,7 @@ void update_cbb_distances() {
         }
 
         if (n == 0) {
-            cbb_distances[c] = 0.0f;
+            cbb_distances[c] = -1.0f;
         } else {
             cbb_distances[c] = ((float)n / cbb_distance);
         }
@@ -1051,22 +1051,24 @@ static void mark_as_redundant(struct queue_entry *q, u8 state) {
 }
 
 float calculate_cb_distance() {
-    u32 count = 0;
-
-    float distance = 0;
     float res = -1;
 
     float vuln_factor = get_vuln_factor(trace_bits + MAP_SIZE + 16);
 
+    u32 count = 0;
+    float distance = 0;
+
     for (u32 i = 0; i < MAP_SIZE; i++) {
         if (critical_bits[i] == 1) {
             int cbb_idx = lookup_cbb_id(i);
-
             assert(cbb_idx > -1);
 
-            distance += (cbb_distances[cbb_idx] * DEFAULT_DIFFICULTY * vuln_factor);
+            float cbb_dist = cbb_distances[cbb_idx];
 
-            count++;
+            if (cbb_dist >= 0) {
+                distance += (cbb_dist * DEFAULT_DIFFICULTY * vuln_factor);
+                count++;
+            }
 
         } else if (critical_bits[i] == 2) {
             solved_cbbs[i] = 1;
@@ -1077,8 +1079,8 @@ float calculate_cb_distance() {
     printf("sast-fuzz: distance = %.2f (vf = %.2f)\n", distance, vuln_factor);
 #endif
 
-    if (count) {
-        res = (distance / count);
+    if (count > 0) {
+        res = (distance / (float)count);
     }
 
     return res;
@@ -6630,32 +6632,37 @@ void update_distance(struct queue_entry *q) {
 
     float vuln_factor = get_vuln_factor(q->targets);
 
+    u32 count = 0;
     for (i = 0; i < q->critical_bbs[0]; i++) {
         int cbb_idx = lookup_cbb_id(q->critical_bbs[i + 1]);
-
         assert(cbb_idx > -1);
 
-        if (q->critical_difficulty[i] == 0) {
-            cbb_diff = DEFAULT_DIFFICULTY;
-        } else {
-            float quo = ((float)q->critical_difficulty[i] / DIFFICULTY_STEP) + 1;
+        float cbb_dist = cbb_distances[cbb_idx];
 
-            if (quo < DEFAULT_DIFFICULTY) {
-                cbb_diff = quo;
-            } else {
+        if (cbb_dist >= 0) {
+            if (q->critical_difficulty[i] == 0) {
                 cbb_diff = DEFAULT_DIFFICULTY;
-            }
-        }
+            } else {
+                float quo = ((float)q->critical_difficulty[i] / DIFFICULTY_STEP) + 1;
 
-        distance += (cbb_distances[cbb_idx] * cbb_diff * vuln_factor);
+                if (quo < DEFAULT_DIFFICULTY) {
+                    cbb_diff = quo;
+                } else {
+                    cbb_diff = DEFAULT_DIFFICULTY;
+                }
+            }
+
+            distance += (cbb_dist * cbb_diff * vuln_factor);
+            count++;
+        }
 
 #ifdef SFZ_DEBUG
         printf("sast-fuzz: distance = %.2f (vf = %.2f, df = %.2f)\n", distance, vuln_factor, cbb_diff);
 #endif
     }
 
-    if (q->critical_bbs[0]) {
-        q->distance = (distance / (float)q->critical_bbs[0]);
+    if (count > 0) {
+        q->distance = (distance / (float)count);
     }
 }
 
