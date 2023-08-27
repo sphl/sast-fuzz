@@ -2,7 +2,7 @@
 
 #include <sfz/distance_matrix.h>
 
-u32 **dm_create_from_file(const char *filename, u32 *n_rows, u32 *n_cols) {
+int32_t **dm_create_from_file(const char *filename, u32 *n_rows, u32 *n_cols) {
     FILE *file = fopen(filename, "r");
     if (file == NULL) {
         return 0;
@@ -12,9 +12,9 @@ u32 **dm_create_from_file(const char *filename, u32 *n_rows, u32 *n_cols) {
     fscanf(file, "%d:%d", n_rows, n_cols);
 
     // Allocate memory for the matrix
-    u32 **matrix = ck_alloc(*n_rows * sizeof(u32 *));
+    int32_t **matrix = ck_alloc(*n_rows * sizeof(int32_t *));
     for (int i = 0; i < *n_rows; i++) {
-        matrix[i] = ck_alloc(*n_cols * sizeof(u32));
+        matrix[i] = ck_alloc(*n_cols * sizeof(int32_t));
     }
 
     // Read the values from the file
@@ -29,7 +29,7 @@ u32 **dm_create_from_file(const char *filename, u32 *n_rows, u32 *n_cols) {
     return matrix;
 }
 
-void dm_free(u32 **matrix, u32 n_rows) {
+void dm_free(int32_t **matrix, u32 n_rows) {
     for (int i = 0; i < n_rows; i++) {
         ck_free(matrix[i]);
     }

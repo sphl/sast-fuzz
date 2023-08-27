@@ -411,7 +411,7 @@ static u32 n_cbbs = 0;
 static int cbb_id_map[MAP_SIZE];
 static float *cbb_distances;
 
-static u32 **distance_matrix;
+static int32_t **distance_matrix;
 
 static inline int lookup_cbb_id(u32 bb_id) { return cbb_id_map[bb_id]; }
 
