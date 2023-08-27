@@ -406,6 +406,13 @@ float get_vuln_factor(const u8 *target_bits) {
     return (DEFAULT_VULN_FACTOR - value) + 1.0f;
 }
 
+static inline float get_distance_factor(float diff_factor, float vuln_factor) {
+    float diff_weight = 0.5f;
+    float vuln_weight = 0.5f;
+
+    return ((diff_weight * diff_factor) + (vuln_weight * vuln_factor));
+}
+
 static u32 n_cbbs = 0;
 
 static int cbb_id_map[MAP_SIZE];
@@ -1053,7 +1060,10 @@ static void mark_as_redundant(struct queue_entry *q, u8 state) {
 float calculate_cb_distance() {
     float res = -1;
 
+    float diff_factor = DEFAULT_DIFFICULTY;
     float vuln_factor = get_vuln_factor(trace_bits + MAP_SIZE + 16);
+
+    float dist_factor = get_distance_factor(diff_factor, vuln_factor);
 
     u32 count = 0;
     float distance = 0;
@@ -1066,7 +1076,7 @@ float calculate_cb_distance() {
             float cbb_dist = cbb_distances[cbb_idx];
 
             if (cbb_dist >= 0) {
-                distance += (cbb_dist * DEFAULT_DIFFICULTY * vuln_factor);
+                distance += (cbb_dist * dist_factor);
                 count++;
             }
 
@@ -6625,15 +6635,13 @@ bool need_sniff(struct queue_entry *q) {
 }
 
 void update_distance(struct queue_entry *q) {
-    u32 i;
-
-    float cbb_diff = 0;
     float distance = 0;
 
+    float diff_factor = 0;
     float vuln_factor = get_vuln_factor(q->targets);
 
     u32 count = 0;
-    for (i = 0; i < q->critical_bbs[0]; i++) {
+    for (u32 i = 0; i < q->critical_bbs[0]; i++) {
         int cbb_idx = lookup_cbb_id(q->critical_bbs[i + 1]);
         assert(cbb_idx > -1);
 
@@ -6641,23 +6649,25 @@ void update_distance(struct queue_entry *q) {
 
         if (cbb_dist >= 0) {
             if (q->critical_difficulty[i] == 0) {
-                cbb_diff = DEFAULT_DIFFICULTY;
+                diff_factor = DEFAULT_DIFFICULTY;
             } else {
                 float quo = ((float)q->critical_difficulty[i] / DIFFICULTY_STEP) + 1;
 
                 if (quo < DEFAULT_DIFFICULTY) {
-                    cbb_diff = quo;
+                    diff_factor = quo;
                 } else {
-                    cbb_diff = DEFAULT_DIFFICULTY;
+                    diff_factor = DEFAULT_DIFFICULTY;
                 }
             }
 
-            distance += (cbb_dist * cbb_diff * vuln_factor);
+            float dist_factor = get_distance_factor(diff_factor, vuln_factor);
+
+            distance += (cbb_dist * dist_factor);
             count++;
         }
 
 #ifdef SFZ_DEBUG
-        printf("sast-fuzz: distance = %.2f (vf = %.2f, df = %.2f)\n", distance, vuln_factor, cbb_diff);
+        printf("sast-fuzz: distance = %.2f (vf = %.2f, df = %.2f)\n", distance, vuln_factor, diff_factor);
 #endif
     }
 
