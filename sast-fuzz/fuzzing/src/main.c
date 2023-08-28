@@ -9392,15 +9392,24 @@ static void usage(u8 *argv0) {
 
          "  -z schedule   - temperature-based power schedules\n"
          "                  {exp, log, lin, quad} (Default: exp)\n"
+         "  -l #inputs    - cycle length, i.e. number of fuzz inputs per cycle\n"
+         "                  (range: #inputs >= 10,000, default: 10,000,000)\n"
          "  -c min        - time from start when SA enters exploitation\n"
          "                  in secs (s), mins (m), hrs (h), or days (d)\n\n"
 
-         "Execution control settings:\n\n"
+         "General execution control settings:\n\n"
 
          "  -f file       - location read by the fuzzed program (stdin)\n"
          "  -t msec       - timeout for each run (auto-scaled, 50-%u ms)\n"
          "  -m megs       - memory limit for child process (%u MB)\n"
          "  -Q            - use binary-only instrumentation (QEMU mode)\n\n"
+
+         "Target location execution settings:\n\n"
+
+         "  -r factor     - factor for reducing the number of required BB hit-counts\n"
+         "                  (range: 0 <= factor <= 1, default: 0 [none])\n"
+         "  -v score      - minimum vuln. score a target BB must have for reactivation\n"
+         "                  (range: 0 <= score <= 1, default: 0.5)\n\n"
 
          "Fuzzing behavior settings:\n\n"
 
@@ -9413,17 +9422,6 @@ static void usage(u8 *argv0) {
          "  -T text       - text banner to show on the screen\n"
          "  -M / -S id    - distributed mode (see parallel_fuzzing.txt)\n"
          "  -C            - crash exploration mode (the peruvian rabbit thing)\n\n"
-
-         "SASTFuzz:\n\n"
-
-         "  -l #inputs    - cycle length, i.e. number of fuzz inputs per cycle\n"
-         "                  (range: #inputs >= 10,000, default: 10,000,000)\n"
-
-         "  -r factor     - factor for reducing the number of required BB hit-counts\n"
-         "                  (range: 0 <= factor <= 1, default: 0 [none])\n"
-
-         "  -v score      - minimum vuln. score a target BB must have for reactivation\n"
-         "                  (range: 0 <= score <= 1, default: 0.5)\n\n"
 
          "For additional tips, please consult %s/README.\n\n",
 
