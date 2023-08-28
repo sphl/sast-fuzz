@@ -321,7 +321,9 @@ static u8 *critical_bits;
 // static u8 conformance_flag = 0;
 static u8 target_fast;
 
+static u32 n_cbbs = 0;
 static u32 n_tbbs = 0;
+
 static u8 *targets_bits;
 
 static u8 solved_cbbs[MAP_SIZE];
@@ -360,10 +362,20 @@ static s8 interesting_8[] = {INTERESTING_8};
 static s16 interesting_16[] = {INTERESTING_8, INTERESTING_16};
 static s32 interesting_32[] = {INTERESTING_8, INTERESTING_16, INTERESTING_32};
 
-// ---------------------------------------------------------------------------------------------------------------------
 static inline float scale(float x, float min_x, float max_x, float min_y, float max_y) {
     return (x - min_x) * ((max_y - min_y) / (max_x - min_x)) + min_y;
 }
+
+// =====================================================================================================================
+// SASTFuzz variables:
+// ---------------------------------------------------------------------------------------------------------------------
+float vuln_score_thres = 0.5f;
+float hc_reduct_factor = 0.0f;
+
+u64 init_cycle_length = 10000000;
+u64 cycle_length;
+
+u64 n_cycle_inputs = 0;
 
 #ifdef SFZ_OUTPUT_STATS
 u64 sfz_stats_n = 1;
@@ -372,15 +384,13 @@ u64 sfz_stats_interval = (5 * 60);  // seconds
 FILE *sfz_stats_fd = NULL;
 #endif
 
-u64 init_cycle_length = 10000000;
-u64 cycle_length;
-
-u64 n_cycle_inputs = 0;
-
-float vuln_score_thres = 0.5f;
-float hc_reduct_factor = 0.0f;
+static int cbb_id_map[MAP_SIZE];
 
 tbb_info_t **tbb_infos;
+
+static int32_t **distance_matrix;
+static float *cbb_distances;
+// =====================================================================================================================
 
 float get_vuln_factor(const u8 *target_bits) {
     assert(target_bits != NULL);
@@ -411,15 +421,6 @@ static inline float get_distance_factor(float diff_factor, float vuln_factor) {
 
     return ((diff_weight * diff_factor) + (vuln_weight * vuln_factor));
 }
-
-static u32 n_cbbs = 0;
-
-static int cbb_id_map[MAP_SIZE];
-static float *cbb_distances;
-
-static int32_t **distance_matrix;
-
-static inline int lookup_cbb_id(u32 bb_id) { return cbb_id_map[bb_id]; }
 
 void update_tbb_states() {
     float sum_vuln_score = 0.0f;
@@ -605,7 +606,6 @@ void update_cbb_distances() {
         }
     }
 }
-// ---------------------------------------------------------------------------------------------------------------------
 
 /* Fuzzing stages */
 
@@ -1069,7 +1069,7 @@ float calculate_cb_distance() {
 
     for (u32 i = 0; i < MAP_SIZE; i++) {
         if (critical_bits[i] == 1) {
-            int cbb_idx = lookup_cbb_id(i);
+            int cbb_idx = cbb_id_map[i];
             assert(cbb_idx > -1);
 
             float cbb_dist = cbb_distances[cbb_idx];
@@ -6634,7 +6634,7 @@ void update_distance(struct queue_entry *q) {
 
     u32 count = 0;
     for (u32 i = 0; i < q->critical_bbs[0]; i++) {
-        int cbb_idx = lookup_cbb_id(q->critical_bbs[i + 1]);
+        int cbb_idx = cbb_id_map[q->critical_bbs[i + 1]];
         assert(cbb_idx > -1);
 
         float cbb_dist = cbb_distances[cbb_idx];
