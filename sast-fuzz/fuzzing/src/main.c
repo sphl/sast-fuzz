@@ -1084,12 +1084,11 @@ float calculate_cb_distance() {
         }
     }
 
-#ifdef SFZ_DEBUG
-    printf("sast-fuzz: distance = %.2f (vf = %.2f)\n", distance, vuln_factor);
-#endif
-
     if (count > 0) {
         res = (distance / (float)count);
+#ifdef SFZ_DEBUG
+        printf("sast-fuzz: distance = %.2f\n", res);
+#endif
     }
 
     return res;
@@ -6658,14 +6657,13 @@ void update_distance(struct queue_entry *q) {
             distance += (cbb_dist * dist_factor);
             count++;
         }
-
-#ifdef SFZ_DEBUG
-        printf("sast-fuzz: distance = %.2f (vf = %.2f, df = %.2f)\n", distance, vuln_factor, diff_factor);
-#endif
     }
 
     if (count > 0) {
         q->distance = (distance / (float)count);
+#ifdef SFZ_DEBUG
+        printf("sast-fuzz: distance = %.2f\n", q->distance);
+#endif
     }
 }
 
