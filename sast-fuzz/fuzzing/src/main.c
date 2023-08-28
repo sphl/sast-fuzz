@@ -392,36 +392,6 @@ static int32_t **distance_matrix = NULL;
 static float *cbb_distances = NULL;
 // =====================================================================================================================
 
-float get_vuln_factor(const u8 *target_bits) {
-    assert(target_bits != NULL);
-    assert(tbb_infos != NULL);
-
-    float vs_tbb_all = 0.0f;
-    float vs_tbb_executed = 0.0f;
-
-    for (int i = 0; i < n_tbbs; i++) {
-        if (tbb_infos[i]->state == active) {
-            vs_tbb_all += tbb_infos[i]->vuln_score;
-
-            if (target_bits[i] >= 1) {
-                vs_tbb_executed += tbb_infos[i]->vuln_score;
-            }
-        }
-    }
-
-    float value = scale(vs_tbb_executed, 0.0f, vs_tbb_all, 1.0f, DEFAULT_VULN_FACTOR);
-
-    // Use the reverse value to increase the distance for inputs that hit no/only few target BBs.
-    return (DEFAULT_VULN_FACTOR - value) + 1.0f;
-}
-
-static inline float get_distance_factor(float diff_factor, float vuln_factor) {
-    float diff_weight = 0.5f;
-    float vuln_weight = 0.5f;
-
-    return ((diff_weight * diff_factor) + (vuln_weight * vuln_factor));
-}
-
 void update_tbb_states() {
     float sum_vuln_score = 0.0f;
 
@@ -578,31 +548,6 @@ void update_tbb_states() {
             } else {
                 explore_status = false;  // directed mode
             }
-        }
-    }
-}
-
-void update_cbb_distances() {
-    assert(cbb_distances != NULL);
-    assert(tbb_infos != NULL);
-
-    for (u32 c = 0; c < n_cbbs; c++) {
-        // Critical-target-BB distance (harmonic mean)
-        float cbb_distance = 0.0f;
-
-        u32 n = 0;
-        for (u32 t = 0; t < n_tbbs; t++) {
-            // Only include the distance to ACTIVE target BBs
-            if (tbb_infos[t]->state == active && distance_matrix[c][t] > 0) {
-                cbb_distance += (1.0f / (float)distance_matrix[c][t]);
-                n++;
-            }
-        }
-
-        if (n == 0) {
-            cbb_distances[c] = -1.0f;
-        } else {
-            cbb_distances[c] = ((float)n / cbb_distance);
         }
     }
 }
@@ -1056,13 +1001,66 @@ static void mark_as_redundant(struct queue_entry *q, u8 state) {
     ck_free(fn);
 }
 
+float get_vuln_factor(const u8 *target_bits) {
+    assert(target_bits != NULL);
+    assert(tbb_infos != NULL);
+
+    float vs_tbb_all = 0.0f;
+    float vs_tbb_executed = 0.0f;
+
+    for (int i = 0; i < n_tbbs; i++) {
+        if (tbb_infos[i]->state == active) {
+            vs_tbb_all += tbb_infos[i]->vuln_score;
+            vs_tbb_executed += (target_bits[i] >= 1) ? tbb_infos[i]->vuln_score : 0.0f;
+        }
+    }
+
+    float factor = scale(vs_tbb_executed, 0.0f, vs_tbb_all, 1.0f, DEFAULT_VULN_FACTOR);
+    // Use the reverse value to increase the distance for inputs that hit no/only few target BBs.
+    factor = (DEFAULT_VULN_FACTOR - factor) + 1.0f;
+
+    return factor;
+}
+
+float get_dist_factor(float dflt_factor, float vuln_factor) {
+    float dflt_weight = 0.5f;
+    float vuln_weight = 0.5f;
+
+    return ((dflt_weight * dflt_factor) + (vuln_weight * vuln_factor));
+}
+
+void update_cbb_distances() {
+    assert(cbb_distances != NULL);
+    assert(tbb_infos != NULL);
+
+    for (u32 c = 0; c < n_cbbs; c++) {
+        // Critical-target-BB distance (harmonic mean)
+        float cbb_distance = 0.0f;
+
+        u32 n = 0;
+        for (u32 t = 0; t < n_tbbs; t++) {
+            // Only include the distance to ACTIVE target BBs
+            if (tbb_infos[t]->state == active && distance_matrix[c][t] > 0) {
+                cbb_distance += (1.0f / (float)distance_matrix[c][t]);
+                n++;
+            }
+        }
+
+        if (n == 0) {
+            cbb_distances[c] = -1.0f;
+        } else {
+            cbb_distances[c] = ((float)n / cbb_distance);
+        }
+    }
+}
+
 float calculate_cb_distance() {
     float res = -1;
 
     float diff_factor = DEFAULT_DIFFICULTY;
     float vuln_factor = get_vuln_factor(trace_bits + MAP_SIZE + 16);
 
-    float dist_factor = get_distance_factor(diff_factor, vuln_factor);
+    float dist_factor = get_dist_factor(diff_factor, vuln_factor);
 
     u32 count = 0;
     float distance = 0;
@@ -6652,7 +6650,7 @@ void update_distance(struct queue_entry *q) {
                 }
             }
 
-            float dist_factor = get_distance_factor(diff_factor, vuln_factor);
+            float dist_factor = get_dist_factor(diff_factor, vuln_factor);
 
             distance += (cbb_dist * dist_factor);
             count++;
