@@ -375,21 +375,21 @@ float hc_reduct_factor = 0.0f;
 u64 init_cycle_length = 10000000;
 u64 cycle_length;
 
-u64 n_cycle_inputs = 0;
+u64 cycle_input_count = 0;
 
 #ifdef SFZ_OUTPUT_STATS
-u64 sfz_stats_n = 1;
-u64 sfz_stats_interval = (5 * 60);  // seconds
+FILE *stats_fd = NULL;
 
-FILE *sfz_stats_fd = NULL;
+u64 stats_count = 1;
+u64 stats_interval = (5 * 60);  // seconds
 #endif
 
 static int cbb_id_map[MAP_SIZE];
 
-tbb_info_t **tbb_infos;
+tbb_info_t **tbb_infos = NULL;
 
-static int32_t **distance_matrix;
-static float *cbb_distances;
+static int32_t **distance_matrix = NULL;
+static float *cbb_distances = NULL;
 // =====================================================================================================================
 
 float get_vuln_factor(const u8 *target_bits) {
@@ -6068,10 +6068,10 @@ EXP_ST u8 common_fuzz_stuff(char **argv, u8 *out_buf, u32 len) {
             }
         }
 
-        n_cycle_inputs++;
+        cycle_input_count++;
 
-        if (n_cycle_inputs >= cycle_length) {
-            n_cycle_inputs = 0;
+        if (cycle_input_count >= cycle_length) {
+            cycle_input_count = 0;
 
             update_tbb_states();
             update_cbb_distances();
@@ -6089,7 +6089,7 @@ EXP_ST u8 common_fuzz_stuff(char **argv, u8 *out_buf, u32 len) {
 #ifdef SFZ_OUTPUT_STATS
         u32 fuzz_duration = (get_cur_time() - start_time) / 1000;
 
-        if (fuzz_duration >= (sfz_stats_n * sfz_stats_interval)) {
+        if (fuzz_duration >= (stats_count * stats_interval)) {
             u32 n_tbbs_hit = 0;
             u32 n_tbbs_finished = 0;
 
@@ -6102,13 +6102,13 @@ EXP_ST u8 common_fuzz_stuff(char **argv, u8 *out_buf, u32 len) {
                 }
             }
 
-            fprintf(sfz_stats_fd, "%d,%llu,%llu,%d,%d,%d,%llu\n", fuzz_duration, init_cycle_length, cycle_length,
-                    n_tbbs, n_tbbs_hit, n_tbbs_finished, unique_crashes);
+            fprintf(stats_fd, "%d,%llu,%llu,%d,%d,%d,%llu\n", fuzz_duration, init_cycle_length, cycle_length, n_tbbs,
+                    n_tbbs_hit, n_tbbs_finished, unique_crashes);
 
             // Enforce file write operation ...
-            fflush(sfz_stats_fd);
+            fflush(stats_fd);
 
-            sfz_stats_n++;
+            stats_count++;
         }
 #endif
     }
@@ -10689,13 +10689,13 @@ int main(int argc, char **argv) {
 
 #ifdef SFZ_OUTPUT_STATS
     tmp = alloc_printf("%s/sfz_stats.csv", out_dir);
-    sfz_stats_fd = fopen(tmp, "w");
+    stats_fd = fopen(tmp, "w");
 
-    if (sfz_stats_fd == NULL) {
+    if (stats_fd == NULL) {
         FATAL("Could not create the SASTFuzz stats file!");
     }
 
-    fprintf(sfz_stats_fd, "%s,%s,%s,%s,%s,%s,%s\n", "fuzz_duration", "init_cycle_length", "cur_cycle_length",
+    fprintf(stats_fd, "%s,%s,%s,%s,%s,%s,%s\n", "fuzz_duration", "init_cycle_length", "cur_cycle_length",
             "n_target_bbs", "n_target_bbs_hit", "n_target_bbs_finished", "n_unique_crashes");
 
     ck_free(tmp);
@@ -10861,7 +10861,7 @@ stop_fuzzing:
     // fclose(distance_log);
 
 #ifdef SFZ_OUTPUT_STATS
-    fclose(sfz_stats_fd);
+    fclose(stats_fd);
 #endif
 
     alloc_report();
