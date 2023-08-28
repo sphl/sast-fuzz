@@ -10,7 +10,7 @@ TEST(DMTestSuite, CompareWithGivenMatrix) {
     u32 expected[3][3] = {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
 
     // Act
-    u32 **matrix = dm_create_from_file("data/matrix.txt", &n_rows, &n_cols);
+    int32_t **matrix = dm_create_from_file("data/matrix.txt", &n_rows, &n_cols);
 
     // Assert
     ASSERT_NE(matrix, nullptr);
