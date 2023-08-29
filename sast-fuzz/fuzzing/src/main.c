@@ -6065,51 +6065,51 @@ EXP_ST u8 common_fuzz_stuff(char **argv, u8 *out_buf, u32 len) {
                 tbb_infos[i]->n_input_execs++;
             }
         }
+    }
 
-        cycle_input_count++;
+    cycle_input_count++;
 
-        if (cycle_input_count >= cycle_length) {
-            cycle_input_count = 0;
+    if (cycle_input_count >= cycle_length) {
+        cycle_input_count = 0;
 
-            update_tbb_states();
-            update_cbb_distances();
+        update_tbb_states();
+        update_cbb_distances();
 
-            // Minutes spent in the campaign up to this point
-            u32 duration = ((get_cur_time() - start_time) / 1000) / 60;
+        // Minutes spent in the campaign up to this point
+        u32 duration = ((get_cur_time() - start_time) / 1000) / 60;
 
-            update_cycle_length_log(duration);
+        update_cycle_length_log(duration);
 
 #ifdef SFZ_DEBUG
-            printf("sast-fuzz: cycle length = %llu (%dm)\n", cycle_length, duration);
-#endif
-        }
-
-#ifdef SFZ_OUTPUT_STATS
-        u32 fuzz_duration = (get_cur_time() - start_time) / 1000;
-
-        if (fuzz_duration >= (stats_count * stats_interval)) {
-            u32 n_tbbs_hit = 0;
-            u32 n_tbbs_finished = 0;
-
-            for (int i = 0; i < n_tbbs; i++) {
-                if (tbb_infos[i]->n_input_execs > 0) {
-                    n_tbbs_hit++;
-                }
-                if (tbb_infos[i]->state == finished) {
-                    n_tbbs_finished++;
-                }
-            }
-
-            fprintf(stats_fd, "%d,%llu,%llu,%d,%d,%d,%llu\n", fuzz_duration, init_cycle_length, cycle_length, n_tbbs,
-                    n_tbbs_hit, n_tbbs_finished, unique_crashes);
-
-            // Enforce file write operation ...
-            fflush(stats_fd);
-
-            stats_count++;
-        }
+        printf("sast-fuzz: cycle length = %llu (%dm)\n", cycle_length, duration);
 #endif
     }
+
+#ifdef SFZ_OUTPUT_STATS
+    u32 fuzz_duration = (get_cur_time() - start_time) / 1000;
+
+    if (fuzz_duration >= (stats_count * stats_interval)) {
+        u32 n_tbbs_hit = 0;
+        u32 n_tbbs_finished = 0;
+
+        for (int i = 0; i < n_tbbs; i++) {
+            if (tbb_infos[i]->n_input_execs > 0) {
+                n_tbbs_hit++;
+            }
+            if (tbb_infos[i]->state == finished) {
+                n_tbbs_finished++;
+            }
+        }
+
+        fprintf(stats_fd, "%d,%llu,%llu,%d,%d,%d,%llu\n", fuzz_duration, init_cycle_length, cycle_length, n_tbbs,
+                n_tbbs_hit, n_tbbs_finished, unique_crashes);
+
+        // Enforce file write operation ...
+        fflush(stats_fd);
+
+        stats_count++;
+    }
+#endif
 
     /* This handles FAULT_ERROR for us: */
 
