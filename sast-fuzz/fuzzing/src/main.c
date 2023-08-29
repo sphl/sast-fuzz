@@ -6094,7 +6094,7 @@ EXP_ST u8 common_fuzz_stuff(char **argv, u8 *out_buf, u32 len) {
         cycle_input_count = 0;
 
 #ifdef SFZ_DEBUG
-        printf("sast-fuzz: cycle interval = %u (%u: %ds)\n", cycle_interval, cycle_count, fuzz_dur);
+        printf("sast-fuzz: cycle interval = %u [%u] -- %ds\n", cycle_interval, cycle_count, fuzz_dur);
 #endif
     }
 
