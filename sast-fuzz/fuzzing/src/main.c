@@ -318,7 +318,6 @@ static u8 cb_score_changed;
 
 static u8 *critical_bits;
 
-// static u8 conformance_flag = 0;
 static u8 target_fast;
 
 static u32 n_cbbs = 0;
@@ -4126,25 +4125,6 @@ static u32 num_equal_bits(u64 l, u64 r) {
     return count;
 }
 
-// static bool has_new_conformace() {
-//     for (u32 i = 1; i < cond_num; i++) {
-//         if (unlikely(cond_bits[i]) && (solved_cond[i] < 3)) {
-//             u64 conformance = 0;
-//
-//             if (condition_info[i] & 1) {  // Constant
-//                 conformance = num_equal_bits(condition_bits[2 * i], condition_values[2 * i + 1]);
-//             } else {                      // Variable
-//                 conformance = num_equal_bits(condition_bits[2 * i], condition_bits[2 * i + 1]);
-//             }
-//
-//             if (conformance > condition_values[2 * i]) {
-//                 return true;
-//             }
-//         }
-//     }
-//     return false;
-// }
-
 static bool has_new_critical_conformance() {
     for (u32 i = 0; i < critical_ids[0]; i++) {
         if (unlikely(critical_condition[critical_ids[i + 1]]) && (!solved_cbbs[critical_ids[i + 1]])) {
@@ -4164,31 +4144,6 @@ static bool has_new_critical_conformance() {
     }
     return false;
 }
-
-// static void update_conformance() {
-//     for (u32 i = 1; i < cond_num; i++) {
-//         if (unlikely(cond_bits[i]) && (solved_cond[i] < 3)) {
-//             u64 conformance = 0;
-//
-//             if (condition_info[i] & 1) {  // Constant
-//                 conformance = num_equal_bits(condition_bits[2 * i], condition_values[2 * i + 1]);
-//             } else {                      // Variable
-//                 conformance = num_equal_bits(condition_bits[2 * i], condition_bits[2 * i + 1]);
-//             }
-//
-//             if (conformance > condition_values[2 * i]) {
-//                 condition_values[2 * i] = conformance;
-//
-//                 if (top_conformance[i]) {
-//                     top_conformance[i]->is_dead = 1;
-//                 }
-//
-//                 top_conformance[i] = queue_top;
-//                 score_changed = 1;
-//             }
-//         }
-//     }
-// }
 
 static void update_critical_conformance() {
     for (u32 i = 0; i < critical_ids[0]; i++) {
@@ -4243,11 +4198,7 @@ static u8 save_if_interesting(char **argv, void *mem, u32 len, u8 fault) {
         cb_count();
         bool hnc = false;
 
-        // if (conformance_flag) {
-        //     hnc = has_new_conformace();
-        // } else {
         hnc = has_new_critical_conformance();
-        // }
 
         if ((!(hnb = has_new_bits(virgin_bits))) && !hnc) {
             if (crash_mode) {
@@ -4279,11 +4230,7 @@ static u8 save_if_interesting(char **argv, void *mem, u32 len, u8 fault) {
         queue_top->exec_cksum = cksum;
 
         if (hnc) {
-            // if (conformance_flag) {
-            //     update_conformance();
-            // } else {
             update_critical_conformance();
-            // }
         }
 
         /* Try to calibrate inline; this also calls update_bitmap_score() when
@@ -10489,13 +10436,6 @@ int main(int argc, char **argv) {
             }
             target_path2 = optarg;
             break;
-
-            // case 'j':
-            //     if (conformance_flag) {
-            //         FATAL("Multiple -j options not supported");
-            //     }
-            //     conformance_flag = 1;
-            //     break;
 
         case 'u':
             if (target_fast) {
