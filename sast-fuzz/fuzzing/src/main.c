@@ -5857,7 +5857,7 @@ void update_tbb_states() {
             int64_t n_req_input_execs =
                     (int64_t)roundf((float)cycle_input_count * (tbb_infos[i]->vuln_score / sum_vuln_score));
 
-            if (hc_reduct_factor == 1.0f) {
+            if (n_req_input_execs == 0 || hc_reduct_factor == 1.0f) {
                 n_req_input_execs = 1;
             } else {
                 n_req_input_execs -= (int64_t)((float)n_req_input_execs * hc_reduct_factor);
