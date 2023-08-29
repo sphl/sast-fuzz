@@ -6039,13 +6039,12 @@ EXP_ST u8 common_fuzz_stuff(char **argv, u8 *out_buf, u32 len) {
         return 1;
     }
 
-    u32 i;
     is_target = 0;
     is_rare_target = 0;
 
     u8 *tmp_targets_bits = ck_alloc(n_tbbs);
 
-    for (i = 0; i < n_tbbs; i++) {
+    for (u32 i = 0; i < n_tbbs; i++) {
         u8 flag = *(trace_bits + MAP_SIZE + 16 + i);
 
         if (flag) {
