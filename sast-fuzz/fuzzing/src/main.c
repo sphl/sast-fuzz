@@ -366,9 +366,10 @@ static s32 interesting_32[] = {INTERESTING_8, INTERESTING_16, INTERESTING_32};
 float vuln_score_thres = 0.5f;            //< Minimum vulnerability score a target BB must have for reactivation
 float hc_reduct_factor = 0.0f;            //< Factor for reducing the number of required BB hit-counts
 
-u64 init_cycle_length = 10000000;         //< Initial cycle length, i.e. number of fuzz inputs per cycle
-u64 cycle_length;                         //< Current cycle length (may increase over time)
+u64 init_cycle_interval = 1800;           //< Initial cycle interval (in seconds)
+u64 cycle_interval;                       //< Current cycle interval (may increase over time)
 
+u64 cycle_count = 1;                      //< Number of performed cycles
 u64 cycle_input_count = 0;                //< Current number of fuzz inputs generated within the cycle
 
 #ifdef SFZ_OUTPUT_STATS
@@ -5854,7 +5855,7 @@ void update_tbb_states() {
         if (tbb_infos[i]->state == active || tbb_infos[i]->state == paused) {
 
             int64_t n_req_input_execs =
-                    (int64_t)roundf((float)cycle_length * (tbb_infos[i]->vuln_score / sum_vuln_score));
+                    (int64_t)roundf((float)cycle_input_count * (tbb_infos[i]->vuln_score / sum_vuln_score));
 
             if (hc_reduct_factor == 1.0f) {
                 n_req_input_execs = 1;
@@ -6069,30 +6070,29 @@ EXP_ST u8 common_fuzz_stuff(char **argv, u8 *out_buf, u32 len) {
 
     cycle_input_count++;
 
-    if (cycle_input_count >= cycle_length) {
-        cycle_input_count = 0;
+    u32 fuzz_dur = (get_cur_time() - start_time) / 1000;
+
+    if (fuzz_dur >= (cycle_count * cycle_interval)) {
 
         update_tbb_states();
         update_cbb_distances();
 
-        // Minutes spent in the campaign up to this point
-        u32 duration = ((get_cur_time() - start_time) / 1000) / 60;
-
-        update_cycle_length_log(duration);
+        update_cycle_interval_log(fuzz_dur);
 
 #ifdef SFZ_DEBUG
-        printf("sast-fuzz: cycle length = %llu (%dm)\n", cycle_length, duration);
+        printf("sast-fuzz: cycle interval = %llu (%dm)\n", cycle_interval, fuzz_dur);
 #endif
+
+        cycle_count++;
+        cycle_input_count = 0;
     }
 
 #ifdef SFZ_OUTPUT_STATS
-    u32 fuzz_duration = (get_cur_time() - start_time) / 1000;
-
-    if (fuzz_duration >= (stats_count * stats_interval)) {
+    if (fuzz_dur >= (stats_count * stats_interval)) {
         u32 n_tbbs_hit = 0;
         u32 n_tbbs_finished = 0;
 
-        for (int i = 0; i < n_tbbs; i++) {
+        for (u32 i = 0; i < n_tbbs; i++) {
             if (tbb_infos[i]->n_input_execs > 0) {
                 n_tbbs_hit++;
             }
@@ -6101,8 +6101,8 @@ EXP_ST u8 common_fuzz_stuff(char **argv, u8 *out_buf, u32 len) {
             }
         }
 
-        fprintf(stats_fd, "%d,%llu,%llu,%d,%d,%d,%llu\n", fuzz_duration, init_cycle_length, cycle_length, n_tbbs,
-                n_tbbs_hit, n_tbbs_finished, unique_crashes);
+        fprintf(stats_fd, "%d,%llu,%llu,%llu,%d,%d,%d,%llu\n", fuzz_dur, cycle_count, init_cycle_interval,
+                cycle_interval, n_tbbs, n_tbbs_hit, n_tbbs_finished, unique_crashes);
 
         // Enforce file write operation ...
         fflush(stats_fd);
@@ -9392,8 +9392,8 @@ static void usage(u8 *argv0) {
 
          "  -z schedule   - temperature-based power schedules\n"
          "                  {exp, log, lin, quad} (Default: exp)\n"
-         "  -l #inputs    - cycle length, i.e. number of fuzz inputs per cycle\n"
-         "                  (range: #inputs >= 10,000, default: 10,000,000)\n"
+         "  -l secs       - cycle interval\n"
+         "                  (range: secs >= 60, default: 1800)\n"
          "  -c min        - time from start when SA enters exploitation\n"
          "                  in secs (s), mins (m), hrs (h), or days (d)\n\n"
 
@@ -10494,12 +10494,12 @@ int main(int argc, char **argv) {
             break;
 
         case 'l': {
-            u64 length = atol(optarg);
+            u64 interval = atol(optarg);
 
-            if (length >= 10000) {
-                init_cycle_length = length;
+            if (interval >= 60) {
+                init_cycle_interval = interval;
             } else {
-                FATAL("Cycle length must be at least 10,000 inputs");
+                FATAL("Cycle interval must be at least 60 seconds");
             }
 
             break;
@@ -10622,7 +10622,7 @@ int main(int argc, char **argv) {
     check_crash_handling();
     check_cpu_governor();
 
-    cycle_length = init_cycle_length;
+    cycle_interval = init_cycle_interval;
 
     readDistanceAndTargets();
     readCondition();
@@ -10692,8 +10692,8 @@ int main(int argc, char **argv) {
         FATAL("Could not create the SASTFuzz stats file!");
     }
 
-    fprintf(stats_fd, "%s,%s,%s,%s,%s,%s,%s\n", "fuzz_duration", "init_cycle_length", "cur_cycle_length",
-            "n_target_bbs", "n_target_bbs_hit", "n_target_bbs_finished", "n_unique_crashes");
+    fprintf(stats_fd, "%s,%s,%s,%s,%s,%s,%s,%s\n", "fuzz_duration", "cycle_count", "init_cycle_length",
+            "cur_cycle_length", "n_target_bbs", "n_target_bbs_hit", "n_target_bbs_finished", "n_unique_crashes");
 
     ck_free(tmp);
 #endif
