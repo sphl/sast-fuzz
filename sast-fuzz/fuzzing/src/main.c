@@ -366,10 +366,14 @@ static s32 interesting_32[] = {INTERESTING_8, INTERESTING_16, INTERESTING_32};
 float vuln_score_thres = 0.5f;            //< Minimum vulnerability score a target BB must have for reactivation
 float hc_reduct_factor = 0.0f;            //< Factor for reducing the number of required BB hit-counts
 
-u64 init_cycle_interval = 1800;           //< Initial cycle interval (in seconds)
-u64 cycle_thres;                          //< Current cycle threshold (increases over time)
+u32 init_cycle_interval = 1800;           //< Initial cycle interval (in seconds)
+u32 cycle_thres;                          //< Current cycle threshold (increases over time)
 
-u64 cycle_count = 1;                      //< Number of performed cycles
+#if defined(SFZ_DEBUG) || defined(SFZ_OUTPUT_STATS)
+u32 cycle_interval;                       //< Current cycle interval
+#endif
+
+u32 cycle_count = 1;                      //< Number of performed cycles
 u64 cycle_input_count = 0;                //< Current number of fuzz inputs generated within the cycle
 
 #ifdef SFZ_OUTPUT_STATS
@@ -6076,14 +6080,22 @@ EXP_ST u8 common_fuzz_stuff(char **argv, u8 *out_buf, u32 len) {
         update_tbb_states();
         update_cbb_distances();
 
+#if defined(SFZ_DEBUG) || defined(SFZ_OUTPUT_STATS)
+        u32 old_cycle_thres = cycle_thres;
+#endif
+
         cycle_thres += log_cycle_interval(init_cycle_interval, fuzz_dur);
 
-#ifdef SFZ_DEBUG
-        printf("sast-fuzz: cycle interval = %llu (%dm)\n", cycle_thres, fuzz_dur);
+#if defined(SFZ_DEBUG) || defined(SFZ_OUTPUT_STATS)
+        cycle_interval = (cycle_thres - old_cycle_thres);
 #endif
 
         cycle_count++;
         cycle_input_count = 0;
+
+#ifdef SFZ_DEBUG
+        printf("sast-fuzz: cycle interval = %u (%u: %ds)\n", cycle_interval, cycle_count, fuzz_dur);
+#endif
     }
 
 #ifdef SFZ_OUTPUT_STATS
@@ -6100,7 +6112,8 @@ EXP_ST u8 common_fuzz_stuff(char **argv, u8 *out_buf, u32 len) {
             }
         }
 
-        fprintf(stats_fd, "%d,%llu,%llu,%d,%d,%d,%llu\n", fuzz_dur, cycle_count, init_cycle_interval, n_tbbs, n_tbbs_hit, n_tbbs_finished, unique_crashes);
+        fprintf(stats_fd, "%d,%u,%u,%u,%d,%d,%d,%llu\n", fuzz_dur, cycle_count, init_cycle_interval, cycle_interval,
+                n_tbbs, n_tbbs_hit, n_tbbs_finished, unique_crashes);
 
         // Enforce file write operation ...
         fflush(stats_fd);
@@ -10620,7 +10633,8 @@ int main(int argc, char **argv) {
     check_crash_handling();
     check_cpu_governor();
 
-    cycle_thres = init_cycle_interval;
+    cycle_interval = init_cycle_interval;
+    cycle_thres = cycle_interval;
 
     readDistanceAndTargets();
     readCondition();
@@ -10690,7 +10704,8 @@ int main(int argc, char **argv) {
         FATAL("Could not create the SASTFuzz stats file!");
     }
 
-    fprintf(stats_fd, "%s,%s,%s,%s,%s,%s,%s\n", "fuzz_duration", "cycle_count", "init_cycle_length", "n_target_bbs", "n_target_bbs_hit", "n_target_bbs_finished", "n_unique_crashes");
+    fprintf(stats_fd, "%s,%s,%s,%s,%s,%s,%s,%s\n", "fuzz_duration", "cycle_count", "init_cycle_length",
+            "cycle_interval", "n_target_bbs", "n_target_bbs_hit", "n_target_bbs_finished", "n_unique_crashes");
 
     ck_free(tmp);
 #endif
