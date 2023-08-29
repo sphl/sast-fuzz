@@ -3,26 +3,20 @@
 
 #include <types.h>
 
-extern u64 init_cycle_interval;
-extern u64 cycle_interval;
-
 /**
- * Constant cycle interval.
- */
-extern void update_cycle_interval_fix();
-
-/**
- * Update cycle interval linearly.
+ * Get linear cycle interval increase.
  *
- * @param inc Number of fuzz inputs.
+ * @param init_interval Initial cycle interval
+ * @param increase Seconds
  */
-extern void update_cycle_interval_lin(u32 inc);
+extern u32 lin_cycle_interval(u32 init_interval, u32 increase);
 
 /**
- * Update cycle interval logarithmically (log2)
+ * Get logarithmic (log2) cycle interval increase.
  *
- * @param dur Number of minutes spent in the campaign.
+ * @param init_interval Initial cycle interval
+ * @param duration Seconds in the campaign.
  */
-extern void update_cycle_interval_log(u32 dur);
+extern u32 log_cycle_interval(u32 init_interval, u32 duration);
 
 #endif  // SFZ_CYCLE_LENGTH_H
