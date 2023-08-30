@@ -13,7 +13,7 @@ using namespace SVF;
 using namespace llvm;
 using namespace std;
 
-#define MAP_SIZE_POW2 16
+#define MAP_SIZE_POW2 18
 #define MAP_SIZE (1 << MAP_SIZE_POW2)
 
 using TargetInfos = std::map<BasicBlock *, std::pair<NodeID, cbi::Target>>;
