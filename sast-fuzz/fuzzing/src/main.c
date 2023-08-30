@@ -274,8 +274,8 @@ struct queue_entry {
     u64 *critical_vals;
     u32 *critical_difficulty;
 
-    u32 *cond_bits;
-    u64 *cond_vals;
+    u32 *cnd_bits;
+    u64 *cnd_vals;
 
     u8 *cb_mask;
     u8 *conformance_mask;
@@ -332,7 +332,7 @@ EXP_ST u8 *distance_bits;
 
 static u64* condition_bits;               //< value of condition variables
 static u8* cond_bits;                     //< status of conditions
-static u32 cond_num = 1;                  //< number of monitored conditions
+static u32 n_cnds = 1;                    //< number of monitored conditions
 static u8 solved_cond[MAP_SIZE];
 static u8 condition_info[MAP_SIZE];
 static u32 critical_condition[MAP_SIZE];
@@ -966,32 +966,32 @@ void alloca_critical_bbs(struct queue_entry *q) {
     q->critical_difficulty = ck_alloc(sizeof(u32) * count);
 }
 
-void alloca_cond_bits(struct queue_entry *q) {
+void alloca_cnd_bits(struct queue_entry *q) {
     u32 i;
     u32 count = 0;
 
-    if (q->cond_bits) {
-        ck_free(q->cond_bits);
-        ck_free(q->cond_vals);
+    if (q->cnd_bits) {
+        ck_free(q->cnd_bits);
+        ck_free(q->cnd_vals);
     }
 
-    q->cond_bits = ck_alloc(sizeof(u32) * 100);
-    q->cond_vals = ck_alloc(sizeof(u64) * 200);
+    q->cnd_bits = ck_alloc(sizeof(u32) * 100);
+    q->cnd_vals = ck_alloc(sizeof(u64) * 200);
 
-    for (i = 1; i < cond_num; i++) {
+    for (i = 1; i < n_cnds; i++) {
         if (cond_bits[i]) {
             count++;
             if (count % 100 == 0) {
-                q->cond_bits = ck_realloc(q->cond_bits, sizeof(u32) * (count + 100));
-                q->cond_vals = ck_realloc(q->cond_vals, sizeof(u64) * (2 * count + 200));
+                q->cnd_bits = ck_realloc(q->cnd_bits, sizeof(u32) * (count + 100));
+                q->cnd_vals = ck_realloc(q->cnd_vals, sizeof(u64) * (2 * count + 200));
             }
 
-            q->cond_bits[count] = i;
-            q->cond_vals[2 * count] = condition_bits[2 * i];
-            q->cond_vals[2 * count + 1] = condition_bits[2 * i + 1];
+            q->cnd_bits[count] = i;
+            q->cnd_vals[2 * count] = condition_bits[2 * i];
+            q->cnd_vals[2 * count + 1] = condition_bits[2 * i + 1];
         }
     }
-    q->cond_bits[0] = count;
+    q->cnd_bits[0] = count;
 }
 
 /* Append new test case to the queue. */
@@ -1012,7 +1012,7 @@ static void add_to_queue(u8 *fname, u32 len, u8 passed_det) {
     cur_distance = calculate_cb_distance();
     alloca_critical_bbs(q);
 
-    alloca_cond_bits(q);
+    alloca_cnd_bits(q);
 
     q->distance = cur_distance;
 
@@ -1066,8 +1066,8 @@ EXP_ST void destroy_queue(void) {
         ck_free(q->trace_mini);
         ck_free(q->critical_bbs);
         ck_free(q->critical_vals);
-        ck_free(q->cond_bits);
-        ck_free(q->cond_vals);
+        ck_free(q->cnd_bits);
+        ck_free(q->cnd_vals);
         ck_free(q->cb_mask);
         ck_free(q->conformance_mask);
         ck_free(q->critical_difficulty);
@@ -1584,7 +1584,7 @@ static void cull_queue(void) {
         }
     }
 
-    for (i = 1; i < cond_num; i++) {
+    for (i = 1; i < n_cnds; i++) {
         if (top_conformance[i] && (solved_cond[i] < 3)) {
             top_conformance[i]->favored = 1;
             top_conformance[i]->is_dead = 0;
@@ -1644,7 +1644,7 @@ static void cb_cull_queue(void) {
         }
     }
 
-    for (i = 1; i < cond_num; i++) {
+    for (i = 1; i < n_cnds; i++) {
         if (top_conformance[i] && (solved_cond[i] < 3)) {
             top_conformance[i]->favored = 1;
             top_conformance[i]->is_dead = 0;
@@ -1755,7 +1755,7 @@ EXP_ST void setup_shm(void) {
 
     // condition trace
 
-    s32 shm_id4 = shmget(IPC_PRIVATE, sizeof(u64) * cond_num * 2, IPC_CREAT | IPC_EXCL | 0600);
+    s32 shm_id4 = shmget(IPC_PRIVATE, sizeof(u64) * n_cnds * 2, IPC_CREAT | IPC_EXCL | 0600);
 
     if (shm_id4 < 0) {
         PFATAL("shmget() failed");
@@ -1777,7 +1777,7 @@ EXP_ST void setup_shm(void) {
         PFATAL("shmat() failed");
     }
 
-    s32 shm_id5 = shmget(IPC_PRIVATE, cond_num, IPC_CREAT | IPC_EXCL | 0600);
+    s32 shm_id5 = shmget(IPC_PRIVATE, n_cnds, IPC_CREAT | IPC_EXCL | 0600);
 
     if (shm_id5 < 0) {
         PFATAL("shmget() failed");
@@ -2964,8 +2964,8 @@ static u8 run_target(char **argv, u32 timeout) {
     memset(trace_bits, 0, MAP_SIZE + 16 + n_tbbs);
     memset(critical_bits, 0, MAP_SIZE);
     memset(distance_bits, 0, MAP_SIZE);
-    memset(condition_bits, 0, sizeof(u64) * cond_num * 2);
-    memset(cond_bits, 0, cond_num);
+    memset(condition_bits, 0, sizeof(u64) * n_cnds * 2);
+    memset(cond_bits, 0, n_cnds);
 
     MEM_BARRIER();
 
@@ -3172,8 +3172,8 @@ static u8 run_target2(char **argv, u32 timeout) {
     memset(trace_bits, 0, MAP_SIZE + 16 + n_tbbs);
     memset(critical_bits, 0, MAP_SIZE);
     memset(distance_bits, 0, MAP_SIZE);
-    memset(condition_bits, 0, sizeof(u64) * cond_num * 2);
-    memset(cond_bits, 0, cond_num);
+    memset(condition_bits, 0, sizeof(u64) * n_cnds * 2);
+    memset(cond_bits, 0, n_cnds);
 
     MEM_BARRIER();
 
@@ -3563,7 +3563,7 @@ static u8 calibrate_case(char **argv, struct queue_entry *q, u8 *use_mem, u32 ha
             }
         }
 
-        alloca_cond_bits(q);
+        alloca_cnd_bits(q);
 
         if (q->exec_cksum != cksum) {
             u8 hnb = has_new_bits(virgin_bits);
@@ -4106,9 +4106,9 @@ static void cb_count(void) {
     }
 }
 
-static void cond_stat(void) {
+static void cnd_stat(void) {
     u32 i;
-    for (i = 1; i < cond_num; i++) {
+    for (i = 1; i < n_cnds; i++) {
         if (cond_bits[i]) {
             solved_cond[i] |= cond_bits[i];
         }
@@ -4127,17 +4127,19 @@ static u32 num_equal_bits(u64 l, u64 r) {
 
 static bool has_new_critical_conformance() {
     for (u32 i = 0; i < critical_ids[0]; i++) {
-        if (unlikely(critical_condition[critical_ids[i + 1]]) && (!solved_cbbs[critical_ids[i + 1]])) {
-            u64 conformance = 0;
-            u32 id = critical_ids[i + 1];
+        u32 cbb_id = critical_ids[i + 1];
+        u32 cnd_id = critical_condition[cbb_id];
 
-            if (condition_info[id] & 1) {  // Constant
-                conformance = num_equal_bits(condition_bits[2 * id], condition_values[2 * id + 1]);
-            } else {                       // Variable
-                conformance = num_equal_bits(condition_bits[2 * id], condition_bits[2 * id + 1]);
+        if (unlikely(cnd_id) && (!solved_cbbs[cbb_id])) {
+            u64 conformance = 0;
+
+            if (condition_info[cnd_id] & 1) {  // Constant
+                conformance = num_equal_bits(condition_bits[2 * cnd_id], condition_values[2 * cnd_id + 1]);
+            } else {                           // Variable
+                conformance = num_equal_bits(condition_bits[2 * cnd_id], condition_bits[2 * cnd_id + 1]);
             }
 
-            if (conformance > condition_values[2 * id]) {
+            if (conformance > condition_values[2 * cnd_id]) {
                 return true;
             }
         }
@@ -4147,24 +4149,26 @@ static bool has_new_critical_conformance() {
 
 static void update_critical_conformance() {
     for (u32 i = 0; i < critical_ids[0]; i++) {
-        if (unlikely(critical_condition[critical_ids[i + 1]]) && (!solved_cbbs[critical_ids[i + 1]])) {
-            u64 conformance = 0;
-            u32 id = critical_ids[i + 1];
+        u32 cbb_id = critical_ids[i + 1];
+        u32 cnd_id = critical_condition[cbb_id];
 
-            if (condition_info[id] & 1) {  // Constant
-                conformance = num_equal_bits(condition_bits[2 * id], condition_values[2 * id + 1]);
-            } else {                       // Variable
-                conformance = num_equal_bits(condition_bits[2 * id], condition_bits[2 * id + 1]);
+        if (unlikely(cnd_id) && (!solved_cbbs[cbb_id])) {
+            u64 conformance = 0;
+
+            if (condition_info[cnd_id] & 1) {  // Constant
+                conformance = num_equal_bits(condition_bits[2 * cnd_id], condition_values[2 * cnd_id + 1]);
+            } else {                           // Variable
+                conformance = num_equal_bits(condition_bits[2 * cnd_id], condition_bits[2 * cnd_id + 1]);
             }
 
-            if (conformance > condition_values[2 * id]) {
-                condition_values[2 * id] = conformance;
+            if (conformance > condition_values[2 * cnd_id]) {
+                condition_values[2 * cnd_id] = conformance;
 
-                if (top_conformance[id]) {
-                    top_conformance[id]->is_dead = 1;
+                if (top_conformance[cnd_id]) {
+                    top_conformance[cnd_id]->is_dead = 1;
                 }
 
-                top_conformance[id] = queue_top;
+                top_conformance[cnd_id] = queue_top;
                 score_changed = 1;
             }
         }
@@ -4207,7 +4211,7 @@ static u8 save_if_interesting(char **argv, void *mem, u32 len, u8 fault) {
             return 0;
         }
 
-        cond_stat();
+        cnd_stat();
 #ifndef SIMPLE_FILES
 
         fn = alloc_printf("%s/queue/id:%06u,%llu,%s", out_dir, queued_paths, get_cur_time() - start_time,
@@ -6509,23 +6513,25 @@ u8 hit_critical(struct queue_entry *q) {
     if (!explore_status) {
         for (i = 0; i < q->critical_bbs[0]; i++) {
             if (critical_bits[q->critical_bbs[i + 1]] == 1 && !solved_cbbs[q->critical_bbs[i + 1]]) {
-                u8 cond_id = critical_condition[q->critical_bbs[i + 1]];
-                if (!cond_id) {
+                u8 cnd_id = critical_condition[q->critical_bbs[i + 1]];
+
+                if (!cnd_id) {
                     continue;
                 }
-                if ((condition_bits[2 * (cond_id)] != q->critical_vals[2 * (i + 1)]) ||
-                    (condition_bits[2 * (cond_id) + 1] != q->critical_vals[2 * (i + 1) + 1])) {
+
+                if ((condition_bits[2 * (cnd_id)] != q->critical_vals[2 * (i + 1)]) ||
+                    (condition_bits[2 * (cnd_id) + 1] != q->critical_vals[2 * (i + 1) + 1])) {
                     flag = 1;
                     q->critical_difficulty[i]++;
                 }
             }
         }
     } else {
-        for (i = 0; i < q->cond_bits[0]; i++) {
-            if (solved_cond[q->cond_bits[i + 1]] < 3) {
-                u32 id = q->cond_bits[i + 1];
-                if ((condition_bits[2 * id] != q->cond_vals[2 * (i + 1)]) ||
-                    (condition_bits[2 * id + 1] != q->cond_vals[2 * (i + 1) + 1])) {
+        for (i = 0; i < q->cnd_bits[0]; i++) {
+            if (solved_cond[q->cnd_bits[i + 1]] < 3) {
+                u32 id = q->cnd_bits[i + 1];
+                if ((condition_bits[2 * id] != q->cnd_vals[2 * (i + 1)]) ||
+                    (condition_bits[2 * id + 1] != q->cnd_vals[2 * (i + 1) + 1])) {
                     flag = 2;
                 }
             }
@@ -6573,8 +6579,8 @@ bool need_sniff(struct queue_entry *q) {
             }
         }
     } else {
-        for (i = 0; i < q->cond_bits[0]; i++) {
-            if (solved_cond[q->cond_bits[i + 1]] < 3) {
+        for (i = 0; i < q->cnd_bits[0]; i++) {
+            if (solved_cond[q->cnd_bits[i + 1]] < 3) {
                 return true;
             }
         }
@@ -10145,7 +10151,7 @@ void readCondition() {
             condition_values[2 * id + 1] = value;
         }
 
-        cond_num++;
+        n_cnds++;
     }
 }
 
