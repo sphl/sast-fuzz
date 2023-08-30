@@ -10,7 +10,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_compile_definitions(libsfz PUBLIC SFZ_DEBUG)
 else ()
     # Disable asserts
-    target_compile_definitions(libsfz PUBLIC NDEBUG)
+    # target_compile_definitions(libsfz PUBLIC NDEBUG)
 endif ()
 
 add_executable(sast-fuzz main.c)
