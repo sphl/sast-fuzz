@@ -275,7 +275,7 @@ struct queue_entry {
     u32 *critical_difficulty;
 
     u32 *cnd_bits;
-    u64 *cnd_vals;
+    u64 *cnd_vars;
 
     u8 *cb_mask;
     u8 *conformance_mask;
@@ -962,7 +962,7 @@ void alloca_critical_bbs(struct queue_entry *q) {
             }
 
             q->critical_bbs[count] = i;
-            q->critical_vals[2 * count] = cnd_id_map[i] ? condition_vars[2 * cnd_id_map[i]] : 0;
+            q->critical_vals[2 * count + 0] = cnd_id_map[i] ? condition_vars[2 * cnd_id_map[i] + 0] : 0;
             q->critical_vals[2 * count + 1] = cnd_id_map[i] ? condition_vars[2 * cnd_id_map[i] + 1] : 0;
         }
     }
@@ -977,23 +977,23 @@ void alloca_cnd_bits(struct queue_entry *q) {
 
     if (q->cnd_bits) {
         ck_free(q->cnd_bits);
-        ck_free(q->cnd_vals);
+        ck_free(q->cnd_vars);
     }
 
     q->cnd_bits = ck_alloc(sizeof(u32) * 100);
-    q->cnd_vals = ck_alloc(sizeof(u64) * 200);
+    q->cnd_vars = ck_alloc(sizeof(u64) * 200);
 
     for (i = 1; i < n_cnds; i++) {
         if (condition_bits[i]) {
             count++;
             if (count % 100 == 0) {
                 q->cnd_bits = ck_realloc(q->cnd_bits, sizeof(u32) * (count + 100));
-                q->cnd_vals = ck_realloc(q->cnd_vals, sizeof(u64) * (2 * count + 200));
+                q->cnd_vars = ck_realloc(q->cnd_vars, sizeof(u64) * (2 * count + 200));
             }
 
             q->cnd_bits[count] = i;
-            q->cnd_vals[2 * count] = condition_vars[2 * i];
-            q->cnd_vals[2 * count + 1] = condition_vars[2 * i + 1];
+            q->cnd_vars[2 * count + 0] = condition_vars[2 * i + 0];
+            q->cnd_vars[2 * count + 1] = condition_vars[2 * i + 1];
         }
     }
     q->cnd_bits[0] = count;
@@ -1072,7 +1072,7 @@ EXP_ST void destroy_queue(void) {
         ck_free(q->critical_bbs);
         ck_free(q->critical_vals);
         ck_free(q->cnd_bits);
-        ck_free(q->cnd_vals);
+        ck_free(q->cnd_vars);
         ck_free(q->cb_mask);
         ck_free(q->conformance_mask);
         ck_free(q->critical_difficulty);
@@ -4139,9 +4139,9 @@ static bool has_new_critical_conformance() {
             u64 conformance = 0;
 
             if (condition_info[cnd_id] & 1) {  // Constant
-                conformance = num_equal_bits(condition_vars[2 * cnd_id], condition_vals[2 * cnd_id + 1]);
+                conformance = num_equal_bits(condition_vars[2 * cnd_id + 0], condition_vals[2 * cnd_id + 1]);
             } else {                           // Variable
-                conformance = num_equal_bits(condition_vars[2 * cnd_id], condition_vars[2 * cnd_id + 1]);
+                conformance = num_equal_bits(condition_vars[2 * cnd_id + 0], condition_vars[2 * cnd_id + 1]);
             }
 
             if (conformance > condition_vals[2 * cnd_id]) {
@@ -4161,9 +4161,9 @@ static void update_critical_conformance() {
             u64 conformance = 0;
 
             if (condition_info[cnd_id] & 1) {  // Constant
-                conformance = num_equal_bits(condition_vars[2 * cnd_id], condition_vals[2 * cnd_id + 1]);
+                conformance = num_equal_bits(condition_vars[2 * cnd_id + 0], condition_vals[2 * cnd_id + 1]);
             } else {                           // Variable
-                conformance = num_equal_bits(condition_vars[2 * cnd_id], condition_vars[2 * cnd_id + 1]);
+                conformance = num_equal_bits(condition_vars[2 * cnd_id + 0], condition_vars[2 * cnd_id + 1]);
             }
 
             if (conformance > condition_vals[2 * cnd_id]) {
@@ -6524,8 +6524,8 @@ u8 hit_critical(struct queue_entry *q) {
                     continue;
                 }
 
-                if ((condition_vars[2 * (cnd_id)] != q->critical_vals[2 * (i + 1)]) ||
-                    (condition_vars[2 * (cnd_id) + 1] != q->critical_vals[2 * (i + 1) + 1])) {
+                if ((condition_vars[2 * cnd_id + 0] != q->critical_vals[2 * (i + 1) + 0]) ||
+                    (condition_vars[2 * cnd_id + 1] != q->critical_vals[2 * (i + 1) + 1])) {
                     flag = 1;
                     q->critical_difficulty[i]++;
                 }
@@ -6535,8 +6535,8 @@ u8 hit_critical(struct queue_entry *q) {
         for (i = 0; i < q->cnd_bits[0]; i++) {
             if (solved_cnds[q->cnd_bits[i + 1]] < 3) {
                 u32 id = q->cnd_bits[i + 1];
-                if ((condition_vars[2 * id] != q->cnd_vals[2 * (i + 1)]) ||
-                    (condition_vars[2 * id + 1] != q->cnd_vals[2 * (i + 1) + 1])) {
+                if ((condition_vars[2 * id + 0] != q->cnd_vars[2 * (i + 1) + 0]) ||
+                    (condition_vars[2 * id + 1] != q->cnd_vars[2 * (i + 1) + 1])) {
                     flag = 2;
                 }
             }
