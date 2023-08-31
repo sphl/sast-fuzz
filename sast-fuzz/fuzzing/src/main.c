@@ -330,6 +330,7 @@ static u8 solved_cbbs[MAP_SIZE];
 
 EXP_ST u8 *distance_bits;
 
+// Note: Condition IDs start at 1
 static u32 n_cnds = 1;
 
 static u8   condition_info[MAP_SIZE];     //< Condition var/const infos
@@ -942,7 +943,6 @@ float calculate_cb_distance() {
 }
 
 void alloca_critical_bbs(struct queue_entry *q) {
-    u32 i;
     u32 count = 0;
 
     if (q->critical_bbs) {
@@ -953,26 +953,30 @@ void alloca_critical_bbs(struct queue_entry *q) {
     q->critical_bbs = ck_alloc(sizeof(u32) * 100);
     q->critical_vals = ck_alloc(sizeof(u64) * 200);
 
-    for (i = 0; i < MAP_SIZE; i++) {
+    for (u32 i = 0; i < MAP_SIZE; i++) {
         if (critical_bits[i] == 1) {
+
             count++;
+
             if (count % 100 == 0) {
                 q->critical_bbs = ck_realloc(q->critical_bbs, sizeof(u32) * (count + 100));
                 q->critical_vals = ck_realloc(q->critical_vals, sizeof(u64) * (2 * count + 200));
             }
 
+            u32 cnd_id = cnd_id_map[i];
+
             q->critical_bbs[count] = i;
-            q->critical_vals[2 * count + 0] = cnd_id_map[i] ? condition_vars[2 * cnd_id_map[i] + 0] : 0;
-            q->critical_vals[2 * count + 1] = cnd_id_map[i] ? condition_vars[2 * cnd_id_map[i] + 1] : 0;
+            q->critical_vals[2 * count + 0] = cnd_id ? condition_vars[2 * cnd_id + 0] : 0;
+            q->critical_vals[2 * count + 1] = cnd_id ? condition_vars[2 * cnd_id + 1] : 0;
         }
     }
+
     q->critical_bbs[0] = count;
 
     q->critical_difficulty = ck_alloc(sizeof(u32) * count);
 }
 
 void alloca_cnd_bits(struct queue_entry *q) {
-    u32 i;
     u32 count = 0;
 
     if (q->cnd_bits) {
@@ -983,9 +987,11 @@ void alloca_cnd_bits(struct queue_entry *q) {
     q->cnd_bits = ck_alloc(sizeof(u32) * 100);
     q->cnd_vars = ck_alloc(sizeof(u64) * 200);
 
-    for (i = 1; i < n_cnds; i++) {
+    for (u32 i = 1; i < n_cnds; i++) {
         if (condition_bits[i]) {
+
             count++;
+
             if (count % 100 == 0) {
                 q->cnd_bits = ck_realloc(q->cnd_bits, sizeof(u32) * (count + 100));
                 q->cnd_vars = ck_realloc(q->cnd_vars, sizeof(u64) * (2 * count + 200));
@@ -6518,7 +6524,7 @@ u8 hit_critical(struct queue_entry *q) {
     if (!explore_status) {
         for (i = 0; i < q->critical_bbs[0]; i++) {
             if (critical_bits[q->critical_bbs[i + 1]] == 1 && !solved_cbbs[q->critical_bbs[i + 1]]) {
-                u8 cnd_id = cnd_id_map[q->critical_bbs[i + 1]];
+                u32 cnd_id = cnd_id_map[q->critical_bbs[i + 1]];
 
                 if (!cnd_id) {
                     continue;
@@ -6526,17 +6532,18 @@ u8 hit_critical(struct queue_entry *q) {
 
                 if ((condition_vars[2 * cnd_id + 0] != q->critical_vals[2 * (i + 1) + 0]) ||
                     (condition_vars[2 * cnd_id + 1] != q->critical_vals[2 * (i + 1) + 1])) {
-                    flag = 1;
                     q->critical_difficulty[i]++;
+                    flag = 1;
                 }
             }
         }
     } else {
         for (i = 0; i < q->cnd_bits[0]; i++) {
-            if (solved_cnds[q->cnd_bits[i + 1]] < 3) {
-                u32 id = q->cnd_bits[i + 1];
-                if ((condition_vars[2 * id + 0] != q->cnd_vars[2 * (i + 1) + 0]) ||
-                    (condition_vars[2 * id + 1] != q->cnd_vars[2 * (i + 1) + 1])) {
+            u32 cnd_id = q->cnd_bits[i + 1];
+
+            if (solved_cnds[cnd_id] < 3) {
+                if ((condition_vars[2 * cnd_id + 0] != q->cnd_vars[2 * (i + 1) + 0]) ||
+                    (condition_vars[2 * cnd_id + 1] != q->cnd_vars[2 * (i + 1) + 1])) {
                     flag = 2;
                 }
             }
@@ -6576,20 +6583,20 @@ bool need_sniff(struct queue_entry *q) {
         return true;
     }
 
-    u32 i;
     if (!explore_status) {
-        for (i = 0; i < q->critical_bbs[0]; i++) {
+        for (u32 i = 0; i < q->critical_bbs[0]; i++) {
             if (cnd_id_map[q->critical_bbs[i + 1]] && !solved_cbbs[q->critical_bbs[i + 1]]) {
                 return true;
             }
         }
     } else {
-        for (i = 0; i < q->cnd_bits[0]; i++) {
+        for (u32 i = 0; i < q->cnd_bits[0]; i++) {
             if (solved_cnds[q->cnd_bits[i + 1]] < 3) {
                 return true;
             }
         }
     }
+
     return false;
 }
 
@@ -10149,7 +10156,7 @@ void readCondition() {
             // Record the value of constant 1
             condition_info[cnd_id] |= 2;
             u64 value = strtoul(token, 0, 10);
-            condition_vals[2 * cnd_id] = value;
+            condition_vals[2 * cnd_id + 0] = value;
         }
         token = strtok(NULL, " ");  // 6th item
         if (strcmp(token, "var") != 0) {
