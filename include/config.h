@@ -274,7 +274,6 @@
 
 #define CRITICAL_BB       "__CRITICAL_BB_ID"
 
-/* @CDGF condition var SHM*/
 #define CONDITION_VAR      "__CONDITION_VAR_SHM_ID"
 
 /* Environment variable used to pass SHM ID to the called program. */

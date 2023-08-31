@@ -710,7 +710,6 @@ void analyzeCondition() {
                                             op1_val = "var";
                                             op2_ty = "str_const";
                                             if (str_val->isString()) {
-                                                // op2_val = str_val->getAsCString().str();
                                                 op2_val = str_val->getAsString().str();
                                                 op1 = arg1;
                                                 op2 = arg2;
@@ -769,24 +768,27 @@ void analyzeCondition() {
  * @param idx The index of the instrumented condition.
  */
 void instrumentBB(llvm::BasicBlock *bb, llvm::Value *var, uint8_t idx) {
-    // llvm::Instruction* I = &(bb->back());
     auto *term_inst = dyn_cast<Instruction>(bb->getTerminator());
     if (term_inst == nullptr) {
         return;
     }
+
     llvm::IRBuilder<> IRB(term_inst);
     auto *branch = dyn_cast<BranchInst>(term_inst);
     Value *branch_val = IRB.CreateZExt(branch->getCondition(), IRB.getInt8Ty());
+
     llvm::LoadInst *c_map_ptr = IRB.CreateLoad(cond_map_ptr);
     llvm::Value *cond_map_ptr_idx =
             IRB.CreateGEP(c_map_ptr, ConstantInt::get(IntegerType::getInt32Ty(*C), condition_ids[bb]));
     branch_val = IRB.CreateAdd(branch_val, ConstantInt::get(IntegerType::getInt8Ty(*C), 1));
     IRB.CreateStore(branch_val, cond_map_ptr_idx);
+
     llvm::LoadInst *map_ptr = IRB.CreateLoad(cvar_map_ptr);
     ConstantInt *cur_id = llvm::ConstantInt::get(IntegerType::getInt32Ty(*C), 2 * condition_ids[bb] + idx);
     llvm::Value *map_ptr_idx = IRB.CreateGEP(map_ptr, cur_id);
     Value *var_64 = IRB.CreateIntCast(var, IntegerType::getInt64Ty(*C), true);
     IRB.CreateStore(var_64, map_ptr_idx);
+
     cond_instrument_num++;
 }
 
@@ -797,27 +799,28 @@ void instrumentBB(llvm::BasicBlock *bb, llvm::Value *var, uint8_t idx) {
  * @param var The string variable to instrument.
  */
 void instrumentString(llvm::BasicBlock *bb, llvm::Value *var) {
-    // llvm::Instruction* I = &(bb->back());
     auto *term_inst = dyn_cast<Instruction>(bb->getTerminator());
     if (term_inst == nullptr) {
         return;
     }
+
     llvm::IRBuilder<> IRB(term_inst);
     auto *branch = dyn_cast<BranchInst>(term_inst);
     Value *branch_val = IRB.CreateZExt(branch->getCondition(), IRB.getInt8Ty());
+
     llvm::LoadInst *c_map_ptr = IRB.CreateLoad(cond_map_ptr);
     llvm::Value *cond_map_ptr_idx =
             IRB.CreateGEP(c_map_ptr, ConstantInt::get(IntegerType::getInt32Ty(*C), condition_ids[bb]));
     branch_val = IRB.CreateAdd(branch_val, ConstantInt::get(IntegerType::getInt8Ty(*C), 1));
     IRB.CreateStore(branch_val, cond_map_ptr_idx);
 
-    // llvm::IRBuilder<> IRB(I);
     llvm::LoadInst *map_ptr = IRB.CreateLoad(cvar_map_ptr);
     ConstantInt *cur_id = llvm::ConstantInt::get(IntegerType::getInt32Ty(*C), 2 * condition_ids[bb]);
     llvm::Value *map_ptr_idx = IRB.CreateGEP(map_ptr, cur_id);
     llvm::Value *ptr_64 = IRB.CreatePointerCast(var, PointerType::get(IntegerType::getInt64Ty(*C), 0));
     llvm::Value *var_64 = IRB.CreateLoad(ptr_64);
     IRB.CreateStore(var_64, map_ptr_idx);
+
     cond_instrument_num++;
 }
 
@@ -835,16 +838,12 @@ void instrumentCondition() {
                                false, GlobalValue::ExternalLinkage, 0, "__cond_map_ptr");
 
     for (auto info : condition_infos) {
-        // if ((info.second[0] == "int32" || info.second[0] == "int64") && (info.second[2] == "var")) {
         if ((info.second[0].find("int") != std::string::npos) && (info.second[2] == "var")) {
-            // instrument here
-            instrumentBB(info.first, condition_vals[info.first][0], 0);
+            instrumentBB(info.first, condition_vals[info.first][0], 0);  // Left operand
         }
 
-        // if ((info.second[1] == "int32" || info.second[1] == "int64") && (info.second[3] == "var")) {
         if ((info.second[1].find("int") != std::string::npos) && (info.second[3] == "var")) {
-            // instrument here
-            instrumentBB(info.first, condition_vals[info.first][1], 1);
+            instrumentBB(info.first, condition_vals[info.first][1], 1);  // Right operand
         }
 
         if (info.second[1] == "str_const") {
@@ -905,7 +904,6 @@ TargetInfos loadTargets(const std::string &filename) {
                 uint32_t line_num = 0;
                 Instruction *inst = &it;
                 std::string str = SVFUtil::getSourceLoc(inst);
-                // if (str != "{  }" && str.find("ln: 0  cl: 0") == str.npos) {
 
                 if (SVFUtil::isa<AllocaInst>(inst)) {
                     for (llvm::DbgInfoIntrinsic *DII : FindDbgAddrUses(const_cast<Instruction *>(inst))) {
