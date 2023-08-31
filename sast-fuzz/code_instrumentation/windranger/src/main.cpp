@@ -477,7 +477,7 @@ void identifyCriticalBB() {
  */
 void instrument(const TargetInfos &targetInfos) {
     ofstream distanceFile("distance.txt", std::ios::out);
-    ofstream outfile2("functions.txt", std::ios::out);
+    ofstream functionFile("functions.txt", std::ios::out);
     ofstream targetBBFile("targets.txt", std::ios::out);
 
     uint32_t func_id = 0;
@@ -501,7 +501,6 @@ void instrument(const TargetInfos &targetInfos) {
                                           GlobalValue::ExternalLinkage, nullptr, "__critical_bb_ptr");
             });
 
-    // TODO: Check if this variable is needed?
     GlobalVariable *DBMapPtr = (GlobalVariable *)M->getOrInsertGlobal(
             "__distance_bb_ptr", PointerType::get(IntegerType::getInt8Ty(*C), 0), []() -> GlobalVariable * {
                 return new GlobalVariable(*M, PointerType::get(IntegerType::getInt8Ty(M->getContext()), 0), false,
@@ -587,13 +586,12 @@ void instrument(const TargetInfos &targetInfos) {
                         LoadInst *CBPtr = IRB2.CreateLoad(CBMapPtr);
                         CBPtr->setMetadata(M->getMDKindID("nosanitize"), MDNode::get(*C, None));
 
-                        // If a critical BB was executed, the (coverage) flag is set to 1 (even if the BB was exercised
-                        // multiple times), otherwise the flag is 0.
                         ConstantInt *CBIdx = ConstantInt::get(Int32Ty, bbId);
                         ConstantInt *CBOne = ConstantInt::get(Int8Ty, 1);
                         Value *CBIdxPtr = IRB2.CreateGEP(CBPtr, CBIdx);
                         IRB2.CreateStore(CBOne, CBIdxPtr)
                                 ->setMetadata(M->getMDKindID("nosanitize"), MDNode::get(*C, None));
+
                         c_instrument_num++;
                     }
 
@@ -630,13 +628,13 @@ void instrument(const TargetInfos &targetInfos) {
         }
 
         if (flag) {
-            outfile2 << func_id << " " << SVFUtil::getSourceLocOfFunction(svffun->getLLVMFun()) << std::endl;
+            functionFile << func_id << " " << SVFUtil::getSourceLocOfFunction(svffun->getLLVMFun()) << std::endl;
             func_id++;
         }
     }
 
     distanceFile.close();
-    outfile2.close();
+    functionFile.close();
     targetBBFile.close();
 }
 
@@ -665,7 +663,7 @@ void analyzeCondition() {
                     std::string op1_val = "none";
                     std::string op2_val = "none";
                     bool need_record = false;
-                    // if (llvm::LoadInst::classof(op1)) {
+
                     if (op1->getType()->isIntegerTy()) {
                         auto *int_ty = dyn_cast<IntegerType>(op1->getType());
                         op1_ty = "";
@@ -698,6 +696,7 @@ void analyzeCondition() {
                             op2_val = std::to_string(constantint->getSExtValue());
                         }
                     }
+
                     if (auto *CB = dyn_cast<CallBase>(op1)) {
                         if (CB->getCalledFunction()) {
                             if (CB->getCalledFunction()->getName().str() == "strcmp") {
@@ -723,6 +722,7 @@ void analyzeCondition() {
                             }
                         }
                     }
+
                     if (need_record) {
                         condition_val.push_back(op1);
                         condition_val.push_back(op2);
@@ -861,7 +861,7 @@ void instrumentCondition() {
 TargetInfos loadTargets(const std::string &filename) {
     ifstream inFile(filename);
     if (!inFile) {
-        std::cerr << "can't open target file!" << std::endl;
+        std::cerr << "Can't open target file!" << std::endl;
         exit(1);
     }
 
