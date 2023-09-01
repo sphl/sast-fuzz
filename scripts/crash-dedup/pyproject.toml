@@ -1,0 +1,34 @@
+[tool.poetry]
+name = "crash-dedup"
+version = "0.1.0"
+description = "Deduplication of program crashes enforced by sanitizes"
+authors = ["Stephan Lipp <stephan.lipp@tum.de>"]
+# readme = "README.md"
+packages = [{include = "cdd", from = "src"}]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+typer = "^0.9.0"
+
+[tool.poetry.group.dev.dependencies]
+isort = "^5.12.0"
+black = "^23.7.0"
+
+[tool.pytest.ini_options]
+addopts = "-ra -q"
+testpaths = ["tests"]
+
+[tool.coverage.run]
+branch = true
+command_line = "-m pytest"
+
+[tool.coverage.report]
+show_missing = true
+# fail_under = 80
+
+[tool.poetry.scripts]
+cdd = "cdd.main:app"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
