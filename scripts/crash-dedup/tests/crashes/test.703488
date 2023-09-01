@@ -1,0 +1,16 @@
+==703488==WARNING: AddressSanitizer failed to allocate 0xffffffff8980722f bytes
+=================================================================
+==703488==ERROR: AddressSanitizer: SEGV on unknown address 0x00000000000c (pc 0x00000050424a bp 0x7fffc9787490 sp 0x7fffc9787220 T0)
+==703488==The signal is caused by a READ memory access.
+==703488==Hint: address points to the zero page.
+    #0 0x50424a in outputSWF_TEXT_RECORD /home/ubuntu/benchmark/libming/build/util/../../util/outputscript.c:1429:13
+    #1 0x5038e8 in outputSWF_DEFINETEXT /home/ubuntu/benchmark/libming/build/util/../../util/outputscript.c:1471:6
+    #2 0x50344e in outputBlock /home/ubuntu/benchmark/libming/build/util/../../util/outputscript.c:2079:4
+    #3 0x50a4ff in readMovie /home/ubuntu/benchmark/libming/build/util/../../util/main.c:277:4
+    #4 0x509604 in main /home/ubuntu/benchmark/libming/build/util/../../util/main.c:350:2
+    #5 0x7fd2245a0082 in __libc_start_main /build/glibc-SzIz7B/glibc-2.31/csu/../csu/libc-start.c:308:16
+    #6 0x41c3bd in _start (/home/ubuntu/benchmark/libming/build/util/swftophp+0x41c3bd)
+
+AddressSanitizer can not provide additional info.
+SUMMARY: AddressSanitizer: SEGV /home/ubuntu/benchmark/libming/build/util/../../util/outputscript.c:1429:13 in outputSWF_TEXT_RECORD
+==703488==ABORTING

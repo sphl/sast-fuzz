@@ -1,0 +1,19 @@
+=================================================================
+==703504==ERROR: AddressSanitizer: SEGV on unknown address 0x000000000000 (pc 0x00000050c01c bp 0x7ffec4993230 sp 0x7ffec4993190 T0)
+==703504==The signal is caused by a READ memory access.
+==703504==Hint: address points to the zero page.
+    #0 0x50c01c in stackswap /home/ubuntu/benchmark/libming/build/util/../../util/decompile.c:629:29
+    #1 0x50d6d1 in decompileSTACKSWAP /home/ubuntu/benchmark/libming/build/util/../../util/decompile.c:1344:2
+    #2 0x50c432 in decompileAction /home/ubuntu/benchmark/libming/build/util/../../util/decompile.c:3159:3
+    #3 0x518fa5 in decompileActions /home/ubuntu/benchmark/libming/build/util/../../util/decompile.c:3401:6
+    #4 0x518e17 in decompile5Action /home/ubuntu/benchmark/libming/build/util/../../util/decompile.c:3423:2
+    #5 0x5052ad in outputSWF_DOACTION /home/ubuntu/benchmark/libming/build/util/../../util/outputscript.c:1548:29
+    #6 0x50344e in outputBlock /home/ubuntu/benchmark/libming/build/util/../../util/outputscript.c:2079:4
+    #7 0x50a4ff in readMovie /home/ubuntu/benchmark/libming/build/util/../../util/main.c:277:4
+    #8 0x509604 in main /home/ubuntu/benchmark/libming/build/util/../../util/main.c:350:2
+    #9 0x7f4053a91082 in __libc_start_main /build/glibc-SzIz7B/glibc-2.31/csu/../csu/libc-start.c:308:16
+    #10 0x41c3bd in _start (/home/ubuntu/benchmark/libming/build/util/swftophp+0x41c3bd)
+
+AddressSanitizer can not provide additional info.
+SUMMARY: AddressSanitizer: SEGV /home/ubuntu/benchmark/libming/build/util/../../util/decompile.c:629:29 in stackswap
+==703504==ABORTING

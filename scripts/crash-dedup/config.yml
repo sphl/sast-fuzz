@@ -1,0 +1,5 @@
+---
+crash_inputs:
+  blacklist:
+    - 'readme.txt'
+...

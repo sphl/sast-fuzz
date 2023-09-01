@@ -1,0 +1,71 @@
+=================================================================
+==703510==ERROR: AddressSanitizer: heap-buffer-overflow on address 0x7f648c67a800 at pc 0x00000043520b bp 0x7fff2013d430 sp 0x7fff2013cbe0
+WRITE of size 45 at 0x7f648c67a800 thread T0
+    #0 0x43520a in strcat /opt/llvm-12.0.0/compiler-rt/lib/asan/asan_interceptors.cpp:375:7
+    #1 0x50ae5f in dcputs /home/ubuntu/benchmark/libming/build/util/../../util/decompile.c:104:2
+    #2 0x5183ac in decompileIMPLEMENTS /home/ubuntu/benchmark/libming/build/util/../../util/decompile.c:3094:3
+    #3 0x50ca44 in decompileAction /home/ubuntu/benchmark/libming/build/util/../../util/decompile.c:3375:10
+    #4 0x518fa5 in decompileActions /home/ubuntu/benchmark/libming/build/util/../../util/decompile.c:3401:6
+    #5 0x518285 in decompileSETTARGET /home/ubuntu/benchmark/libming/build/util/../../util/decompile.c:3076:3
+    #6 0x50ca2d in decompileAction /home/ubuntu/benchmark/libming/build/util/../../util/decompile.c:3372:10
+    #7 0x518fa5 in decompileActions /home/ubuntu/benchmark/libming/build/util/../../util/decompile.c:3401:6
+    #8 0x518e17 in decompile5Action /home/ubuntu/benchmark/libming/build/util/../../util/decompile.c:3423:2
+    #9 0x5052ad in outputSWF_DOACTION /home/ubuntu/benchmark/libming/build/util/../../util/outputscript.c:1548:29
+    #10 0x50344e in outputBlock /home/ubuntu/benchmark/libming/build/util/../../util/outputscript.c:2079:4
+    #11 0x50a4ff in readMovie /home/ubuntu/benchmark/libming/build/util/../../util/main.c:277:4
+    #12 0x509604 in main /home/ubuntu/benchmark/libming/build/util/../../util/main.c:350:2
+    #13 0x7f648f371082 in __libc_start_main /build/glibc-SzIz7B/glibc-2.31/csu/../csu/libc-start.c:308:16
+    #14 0x41c3bd in _start (/home/ubuntu/benchmark/libming/build/util/swftophp+0x41c3bd)
+
+0x7f648c67a800 is located 0 bytes to the right of 204800-byte region [0x7f648c648800,0x7f648c67a800)
+allocated by thread T0 here:
+    #0 0x4c2808 in realloc /opt/llvm-12.0.0/compiler-rt/lib/asan/asan_malloc_linux.cpp:164:3
+    #1 0x50ade9 in dcchkstr /home/ubuntu/benchmark/libming/build/util/../../util/decompile.c:92:9
+    #2 0x50ae4f in dcputs /home/ubuntu/benchmark/libming/build/util/../../util/decompile.c:103:2
+    #3 0x5183ac in decompileIMPLEMENTS /home/ubuntu/benchmark/libming/build/util/../../util/decompile.c:3094:3
+    #4 0x50ca44 in decompileAction /home/ubuntu/benchmark/libming/build/util/../../util/decompile.c:3375:10
+    #5 0x518fa5 in decompileActions /home/ubuntu/benchmark/libming/build/util/../../util/decompile.c:3401:6
+    #6 0x518285 in decompileSETTARGET /home/ubuntu/benchmark/libming/build/util/../../util/decompile.c:3076:3
+    #7 0x50ca2d in decompileAction /home/ubuntu/benchmark/libming/build/util/../../util/decompile.c:3372:10
+    #8 0x518fa5 in decompileActions /home/ubuntu/benchmark/libming/build/util/../../util/decompile.c:3401:6
+    #9 0x518e17 in decompile5Action /home/ubuntu/benchmark/libming/build/util/../../util/decompile.c:3423:2
+    #10 0x5052ad in outputSWF_DOACTION /home/ubuntu/benchmark/libming/build/util/../../util/outputscript.c:1548:29
+    #11 0x50344e in outputBlock /home/ubuntu/benchmark/libming/build/util/../../util/outputscript.c:2079:4
+    #12 0x50a4ff in readMovie /home/ubuntu/benchmark/libming/build/util/../../util/main.c:277:4
+    #13 0x509604 in main /home/ubuntu/benchmark/libming/build/util/../../util/main.c:350:2
+    #14 0x7f648f371082 in __libc_start_main /build/glibc-SzIz7B/glibc-2.31/csu/../csu/libc-start.c:308:16
+
+SUMMARY: AddressSanitizer: heap-buffer-overflow /opt/llvm-12.0.0/compiler-rt/lib/asan/asan_interceptors.cpp:375:7 in strcat
+Shadow bytes around the buggy address:
+  0x0fed118c74b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x0fed118c74c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x0fed118c74d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x0fed118c74e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x0fed118c74f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+=>0x0fed118c7500:[fa]fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+  0x0fed118c7510: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+  0x0fed118c7520: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+  0x0fed118c7530: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+  0x0fed118c7540: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+  0x0fed118c7550: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+Shadow byte legend (one shadow byte represents 8 application bytes):
+  Addressable:           00
+  Partially addressable: 01 02 03 04 05 06 07 
+  Heap left redzone:       fa
+  Freed heap region:       fd
+  Stack left redzone:      f1
+  Stack mid redzone:       f2
+  Stack right redzone:     f3
+  Stack after return:      f5
+  Stack use after scope:   f8
+  Global redzone:          f9
+  Global init order:       f6
+  Poisoned by user:        f7
+  Container overflow:      fc
+  Array cookie:            ac
+  Intra object redzone:    bb
+  ASan internal:           fe
+  Left alloca redzone:     ca
+  Right alloca redzone:    cb
+  Shadow gap:              cc
+==703510==ABORTING
