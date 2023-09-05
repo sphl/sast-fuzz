@@ -21,22 +21,29 @@ def main(
     sanitizer_dirs: Optional[List[Path]] = None,
     n_frames: Optional[int] = None,
 ):
+    sanitizer_dirs = (sanitizer_dirs or [])
+
     if not shell_cmd is None:
+        sanitizer_dir = (output_dir / "sanitizer")
+        sanitizer_dir.mkdir(exist_ok=True)
+
         run_with_multiproc(
-            run_program_with_sanitizer, [(shell_cmd, input_file, output_dir) for input_file in find_files(input_dirs)]
+            run_program_with_sanitizer, [(shell_cmd, input_file, sanitizer_dir) for input_file in find_files(input_dirs)]
         )
 
-    san_output_files = find_files(sanitizer_dirs + [output_dir])
+        sanitizer_dirs.append(sanitizer_dir)
 
-    san_outputs = []
-    for file in san_output_files:
+    sanitizer_files = find_files(sanitizer_dirs)
+
+    sanitizer_outputs = []
+    for file in sanitizer_files:
         try:
-            san_outputs.append(SanitizerOutput.from_file(file))
+            sanitizer_outputs.append(SanitizerOutput.from_file(file))
 
         except Exception as ex:
             logging.error(ex)
 
-    group_by(san_outputs, n_frames).to_csv(output_dir / "summary.csv")
+    group_by(sanitizer_outputs, n_frames).to_csv(output_dir / "summary.csv")
 
 
 if __name__ == "__main__":

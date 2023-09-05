@@ -33,18 +33,18 @@ def run_shell_command(
     return proc_info.stdout
 
 
-def run_program_with_sanitizer(shell_cmd: str, input_file: Path, output_dir: Path) -> None:
+def run_program_with_sanitizer(shell_cmd: str, input_file: Path, sanitizer_dir: Path) -> None:
     """
     Run a program/command and store the sanitizer output in the output directory.
 
     :param shell_cmd:
     :param input_file:
-    :param output_dir:
+    :param sanitizer_dir:
     :return:
     """
     env = {
         **os.environ.copy(),
-        **{"ASAN_OPTIONS": f"allocator_may_return_null=1:log_path={output_dir}/{input_file.name}"},
+        **{"ASAN_OPTIONS": f"allocator_may_return_null=1:log_path={sanitizer_dir}/{input_file.name}"},
     }
 
     run_shell_command(shell_cmd.replace("@@", str(input_file)), env=env)
