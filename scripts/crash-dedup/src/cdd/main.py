@@ -51,6 +51,6 @@ if __name__ == "__main__":
         Path("/tmp/san_test"),
         None,
         None,
-        [Path("/Users/sphl/Projects/sast-fuzz/scripts/crash-dedup/tests/data/crashes")],
+        [Path("/Users/sphl/Projects/sast-fuzz/scripts/crash-dedup/tests/data/sanitizer")],
         5,
     )
