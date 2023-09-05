@@ -15,4 +15,7 @@ def group_by(san_outputs: List[SanitizerOutput], n_frames: Optional[int] = None)
     """
     keyfunc = lambda s: s.sorting_key(n_frames)
 
-    return DedupSummary([DedupEntry(i, k, list(g)) for i, (k, g) in enumerate(groupby(sorted(san_outputs, key=keyfunc), key=keyfunc))])
+    return DedupSummary(
+        n_frames,
+        [DedupEntry(i, k, list(g)) for i, (k, g) in enumerate(groupby(sorted(san_outputs, key=keyfunc), key=keyfunc))],
+    )

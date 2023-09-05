@@ -2,7 +2,7 @@ import re
 from collections import namedtuple
 from enum import Enum, auto
 from pathlib import Path
-from typing import List, Tuple, Optional
+from typing import List, Optional, Tuple
 
 # Stack frame information
 StackFrame = namedtuple("StackFrame", ["id", "file", "function", "line"])
@@ -56,9 +56,9 @@ class SanitizerOutput:
     """
 
     def __init__(self, input_id: str, vtype: str, stack_trace: StackTrace) -> None:
-        self._input_id = input_id
-        self._vtype = vtype
-        self._stack_trace = stack_trace
+        self.input_id = input_id
+        self.vtype = vtype
+        self.stack_trace = stack_trace
 
     def sorting_key(self, n_frames: Optional[int] = None) -> Tuple:
         """
@@ -67,13 +67,13 @@ class SanitizerOutput:
         :param n_frames:
         :return:
         """
-        return self._vtype, self._stack_trace if n_frames is None else self._stack_trace[:n_frames]
+        return self.vtype, self.stack_trace if n_frames is None else self.stack_trace[:n_frames]
 
     def __eq__(self, o: object) -> bool:
         if not isinstance(o, SanitizerOutput):
             return False
 
-        return self._vtype == o._vtype and self._stack_trace == o._stack_trace
+        return self.vtype == o.vtype and self.stack_trace == o.stack_trace
 
     @classmethod
     def from_file(cls, file: Path) -> "SanitizerOutput":
@@ -111,4 +111,4 @@ class SanitizerOutput:
         if state != ParseState.VALID:
             raise Exception(f"Invalid sanitizer output in '{file}'!")
 
-        return SanitizerOutput(file.name, vtype, stack_trace)
+        return SanitizerOutput(file, vtype, stack_trace)
