@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import List, Optional, Set
 
 
-def find_files(root_dirs: List[Path], exts: Optional[List[str]] = None, rec: bool = True) -> Set[Path]:
+def find_files(root_dirs: List[Path], exts: Optional[List[str]] = None, rec: bool = False) -> Set[Path]:
     """
     Search for files in various directories.
 
