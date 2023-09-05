@@ -67,6 +67,12 @@ class SanitizerOutput:
 
     @classmethod
     def from_file(cls, file: Path) -> "SanitizerOutput":
+        """
+        Create a SanitizerOutput object from the sanitizer output file.
+
+        :param file:
+        :return:
+        """
         vtype = "-"
         stack_trace = []
 
