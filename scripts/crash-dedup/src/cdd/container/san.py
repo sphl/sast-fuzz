@@ -2,7 +2,7 @@ import re
 from collections import namedtuple
 from enum import Enum, auto
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Tuple, Optional
 
 # Stack frame information
 StackFrame = namedtuple("StackFrame", ["id", "file", "function", "line"])
