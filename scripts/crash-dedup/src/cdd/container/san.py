@@ -55,7 +55,8 @@ class SanitizerOutput:
     Sanitizer output container.
     """
 
-    def __init__(self, vtype: str, stack_trace: StackTrace) -> None:
+    def __init__(self, input_id: str, vtype: str, stack_trace: StackTrace) -> None:
+        self._input_id = input_id
         self._vtype = vtype
         self._stack_trace = stack_trace
 
@@ -110,4 +111,4 @@ class SanitizerOutput:
         if state != ParseState.VALID:
             raise Exception(f"Invalid sanitizer output in '{file}'!")
 
-        return SanitizerOutput(vtype, stack_trace)
+        return SanitizerOutput(file.name, vtype, stack_trace)
