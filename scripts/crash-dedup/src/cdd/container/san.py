@@ -11,13 +11,27 @@ StackFrame = namedtuple("StackFrame", ["id", "file", "function", "line"])
 StackTrace = List[StackFrame]
 
 
-def find_vtype(line: str) -> Optional[str]:
+def find_input(line: str) -> Optional[str]:
     """
-    Find the vuln.-type in a sanitizer output line.
+    Find the original input filepath in a sanitizer output line.
+
     :param line:
     :return:
     """
-    if m := re.search(r"[Ee][Rr][Rr][Oo][Rr]:\s[^:]+:\s([a-zA-Z-_]+)", line):
+    if m := re.search(r"INPUT_FILE:\s(.+)", line):
+        return str(m.group(1))
+    else:
+        return None
+
+
+def find_vtype(line: str) -> Optional[str]:
+    """
+    Find the vuln.-type in a sanitizer output line.
+
+    :param line:
+    :return:
+    """
+    if m := re.search(r"ERROR:\s[^:]+:\s([a-zA-Z-_]+)", line):
         return str(m.group(1)).lower()
     else:
         return None
@@ -76,21 +90,24 @@ class SanitizerOutput:
         return self.vtype == o.vtype and self.stack_trace == o.stack_trace
 
     @classmethod
-    def from_file(cls, file: Path) -> "SanitizerOutput":
+    def from_file(cls, sanitizer_file: Path) -> "SanitizerOutput":
         """
         Create a SanitizerOutput object from the sanitizer output file.
 
-        :param file:
+        :param sanitizer_file:
         :return:
         """
+        input_id = ""
         vtype = "-"
         stack_trace = []
 
         state = ParseState.VTYPE
 
-        for line in [l.strip() for l in file.read_text().splitlines()]:
+        for line in [l.strip() for l in sanitizer_file.read_text().splitlines()]:
             if state == ParseState.VTYPE:
-                if v := find_vtype(line):
+                if i := find_input(line):
+                    input_id = i
+                elif v := find_vtype(line):
                     vtype = v
                     state = ParseState.FRAME
 
@@ -109,6 +126,6 @@ class SanitizerOutput:
                     break
 
         if state != ParseState.VALID:
-            raise Exception(f"Invalid sanitizer output in '{file}'!")
+            raise Exception(f"Invalid sanitizer output in '{sanitizer_file}'!")
 
-        return SanitizerOutput(file, vtype, stack_trace)
+        return SanitizerOutput(input_id, vtype, stack_trace)

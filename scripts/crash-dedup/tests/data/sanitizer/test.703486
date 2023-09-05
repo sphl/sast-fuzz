@@ -1,3 +1,4 @@
+INPUT_FILE: /path/to/file
 ==703486==WARNING: AddressSanitizer failed to allocate 0xffffffff9ea95c94 bytes
 =================================================================
 ==703486==ERROR: AddressSanitizer: SEGV on unknown address 0x613fffffffa0 (pc 0x000000519e0c bp 0x7ffe1cb237f0 sp 0x7ffe1cb237c0 T0)

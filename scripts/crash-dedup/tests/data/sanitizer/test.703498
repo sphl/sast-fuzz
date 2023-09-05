@@ -1,3 +1,4 @@
+INPUT_FILE: /path/to/file
 =================================================================
 ==703498==ERROR: AddressSanitizer: heap-buffer-overflow on address 0x7ff5048b7800 at pc 0x00000043520b bp 0x7fffe1a77e90 sp 0x7fffe1a77640
 WRITE of size 45 at 0x7ff5048b7800 thread T0

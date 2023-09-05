@@ -1,3 +1,4 @@
+INPUT_FILE: /path/to/file
 =================================================================
 ==703512==ERROR: AddressSanitizer: SEGV on unknown address 0x613fffffffa0 (pc 0x000000519e0c bp 0x7ffdb777b790 sp 0x7ffdb777b760 T0)
 ==703512==The signal is caused by a READ memory access.

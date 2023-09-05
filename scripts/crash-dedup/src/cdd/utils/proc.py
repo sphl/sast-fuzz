@@ -42,12 +42,14 @@ def run_program_with_sanitizer(shell_cmd: str, input_file: Path, sanitizer_dir: 
     :param sanitizer_dir:
     :return:
     """
-    env = {
-        **os.environ.copy(),
-        **{"ASAN_OPTIONS": f"allocator_may_return_null=1:log_path={sanitizer_dir}/{input_file.name}"},
-    }
+    sanitizer_file = sanitizer_dir / input_file.name
+
+    env = {**os.environ.copy(), **{"ASAN_OPTIONS": f"allocator_may_return_null=1:log_path={sanitizer_file}"}}
 
     run_shell_command(shell_cmd.replace("@@", str(input_file)), env=env)
+
+    # Prepend input file to sanitizer output
+    sanitizer_file.write_text(f"INPUT_FILE: {input_file}" + os.linesep + sanitizer_file.read_text())
 
 
 def run_with_multiproc(func: Callable, items: List, n_jobs: int = mp.cpu_count() - 1) -> List:

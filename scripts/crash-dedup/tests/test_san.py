@@ -8,13 +8,14 @@ class TestSanitizerOutput(unittest.TestCase):
     def test_from_file(self) -> None:
         # Arrange
         test_files = [
-            Path(__file__).parent / "data" / "crashes" / "test.703472",
-            Path(__file__).parent / "data" / "crashes" / "test.703478",
-            Path(__file__).parent / "data" / "crashes" / "test.703498",
+            Path(__file__).parent / "data" / "sanitizer" / "test.703472",
+            Path(__file__).parent / "data" / "sanitizer" / "test.703478",
+            Path(__file__).parent / "data" / "sanitizer" / "test.703498",
         ]
 
         expected = [
             SanitizerOutput(
+                "/path/to/file",
                 "segv",
                 [
                     StackFrame(0, "outputscript.c", "outputSWF_TEXT_RECORD", 1429),
@@ -27,6 +28,7 @@ class TestSanitizerOutput(unittest.TestCase):
                 ],
             ),
             SanitizerOutput(
+                "/path/to/file",
                 "segv",
                 [
                     StackFrame(0, "decompile.c", "OpCode", 868),
@@ -43,6 +45,7 @@ class TestSanitizerOutput(unittest.TestCase):
                 ],
             ),
             SanitizerOutput(
+                "/path/to/file",
                 "heap-buffer-overflow",
                 [
                     StackFrame(0, "asan_interceptors.cpp", "strcat", 375),
