@@ -1,4 +1,4 @@
-INPUT_FILE: /path/to/file
+INPUT_FILE: /path/to/file20
 =================================================================
 ==703510==ERROR: AddressSanitizer: heap-buffer-overflow on address 0x7f648c67a800 at pc 0x00000043520b bp 0x7fff2013d430 sp 0x7fff2013cbe0
 WRITE of size 45 at 0x7f648c67a800 thread T0
