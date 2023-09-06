@@ -10,7 +10,7 @@ from cdd import AppConfig
 from cdd.container.san import SanitizerOutput
 from cdd.grouping import group_by
 from cdd.utils.fs import find_files
-from cdd.utils.proc import run_program_with_sanitizer, run_with_multiproc
+from cdd.utils.proc import get_cpu_count, run_program_with_sanitizer, run_with_multiproc
 
 logging.basicConfig(
     format="%(asctime)s crash-dedup[%(levelname)s]: %(message)s", level=logging.DEBUG, stream=sys.stdout
@@ -87,6 +87,9 @@ def main(
             help="Path to the YAML configuration file.",
         ),
     ] = DEFAULT_CONFIG_FILE,
+    parallel: Annotated[
+        bool, typer.Option("--parallel", is_flag=True, help="Run the deduplication in parallel.")
+    ] = False,
 ) -> None:
     app_config = AppConfig.from_yaml(config_file)
 
@@ -99,12 +102,15 @@ def main(
         sanitizer_dir = output_dir / "sanitizer"
         sanitizer_dir.mkdir(exist_ok=True)
 
+        n_jobs = 1 if not parallel else (get_cpu_count() - 1)
+
         run_with_multiproc(
             run_program_with_sanitizer,
             [
                 (shell_command, input_file, sanitizer_dir)
                 for input_file in find_files(input_dirs, blacklist=app_config.inputConfig.blacklist)
             ],
+            n_jobs,
         )
 
         sanitizer_dirs.append(sanitizer_dir)

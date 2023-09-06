@@ -6,6 +6,15 @@ from pathlib import Path
 from typing import Callable, Dict, List, Optional, Union
 
 
+def get_cpu_count() -> int:
+    """
+    Get the number of CPUs.
+
+    :return:
+    """
+    return mp.cpu_count()
+
+
 def run_shell_command(
     cmd: Union[str, List[str]], cwd: Optional[Path] = None, env: Optional[Dict[str, str]] = None
 ) -> str:
@@ -53,7 +62,7 @@ def run_program_with_sanitizer(shell_cmd: str, input_file: Path, sanitizer_dir: 
         sanitizer_file.write_text(f"INPUT_FILE: {input_file}" + os.linesep + sanitizer_file.read_text())
 
 
-def run_with_multiproc(func: Callable, items: List, n_jobs: int = mp.cpu_count() - 1) -> List:
+def run_with_multiproc(func: Callable, items: List, n_jobs: int = get_cpu_count() - 1) -> List:
     """
     Run a function for each element in an iterable with multi-processing.
 
