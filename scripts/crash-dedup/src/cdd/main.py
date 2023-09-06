@@ -16,11 +16,57 @@ app = typer.Typer()
 
 @app.command()
 def main(
-    output_dir: Path,
-    shell_cmd: Optional[str] = None,
-    input_dirs: Optional[List[Path]] = None,
-    sanitizer_dirs: Optional[List[Path]] = None,
-    n_frames: Optional[int] = None,
+    output_dir: Annotated[
+        Path,
+        typer.Option(
+            "--output",
+            writable=True,
+            exists=True,
+            file_okay=False,
+            dir_okay=True,
+            resolve_path=True,
+            help="Path to the output directory.",
+        ),
+    ],
+    shell_cmd: Annotated[
+        Optional[str],
+        typer.Option(
+            "--command",
+            help="Shell command to run the sanitizer-instrumented program under test. Note: Use '@@' (w/o the quotes) as placeholder for input files.",
+        ),
+    ] = None,
+    input_dirs: Annotated[
+        Optional[List[Path]],
+        typer.Option(
+            "--input",
+            writable=False,
+            exists=True,
+            file_okay=False,
+            dir_okay=True,
+            resolve_path=True,
+            help="Path to the directory(s) containing the input files for program execution.",
+        ),
+    ] = None,
+    sanitizer_dirs: Annotated[
+        Optional[List[Path]],
+        typer.Option(
+            "--sanitizer-dir",
+            writable=False,
+            exists=True,
+            file_okay=False,
+            dir_okay=True,
+            resolve_path=True,
+            help="Path to directory(s) with already existing sanitizer output files.",
+        ),
+    ] = None,
+    n_frames: Annotated[
+        Optional[int],
+        typer.Option(
+            "--frames",
+            min=1,
+            help="Number of stack frames to be included in deduplication. Note: If not specified, all frames are considered.",
+        ),
+    ] = None,
 ):
     sanitizer_dirs = sanitizer_dirs or []
 
@@ -45,14 +91,7 @@ def main(
         except Exception as ex:
             logging.error(ex)
 
-    group_by(sanitizer_infos, n_frames).to_csv(output_dir / "summary.csv")
+    summary_file = output_dir / "summary.csv"
 
-
-if __name__ == "__main__":
-    main(
-        Path("/tmp/san_test"),
-        None,
-        None,
-        [Path("/Users/sphl/Projects/sast-fuzz/scripts/crash-dedup/tests/data/sanitizer")],
-        5,
-    )
+    summary = group_by(sanitizer_infos, n_frames)
+    summary.to_csv(summary_file)
