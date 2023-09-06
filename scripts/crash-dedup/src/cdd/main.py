@@ -28,7 +28,7 @@ def main(
         Optional[str],
         typer.Option(
             "--command",
-            help="Shell command to run the sanitizer-instrumented program under test. Note: Use '@@' (w/o the quotes) as placeholder for input files (--input).",
+            help="Shell command to run the sanitizer-instrumented program under test. Note: Use @@ as placeholder for input files (--input).",
         ),
     ] = None,
     input_dirs: Annotated[
@@ -110,6 +110,10 @@ def main(
         sanitizer_dirs.append(sanitizer_dir)
 
     sanitizer_files = find_files(sanitizer_dirs)
+
+    if len(sanitizer_files) == 0:
+        logging.info("No sanitizer output files found.")
+        exit(0)
 
     sanitizer_infos = []
     for sanitizer_file in sanitizer_files:
