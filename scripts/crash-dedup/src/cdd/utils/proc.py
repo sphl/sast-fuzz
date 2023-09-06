@@ -48,8 +48,9 @@ def run_program_with_sanitizer(shell_cmd: str, input_file: Path, sanitizer_dir: 
 
     run_shell_command(shell_cmd.replace("@@", str(input_file)), env=env)
 
-    # Prepend input file to sanitizer output
-    sanitizer_file.write_text(f"INPUT_FILE: {input_file}" + os.linesep + sanitizer_file.read_text())
+    if sanitizer_file.exists():
+        # Prepend input file to sanitizer output
+        sanitizer_file.write_text(f"INPUT_FILE: {input_file}" + os.linesep + sanitizer_file.read_text())
 
 
 def run_with_multiproc(func: Callable, items: List, n_jobs: int = mp.cpu_count() - 1) -> List:

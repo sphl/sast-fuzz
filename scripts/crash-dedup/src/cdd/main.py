@@ -12,7 +12,9 @@ from cdd.grouping import group_by
 from cdd.utils.fs import find_files
 from cdd.utils.proc import run_program_with_sanitizer, run_with_multiproc
 
-logging.basicConfig(format="%(asctime)s SFA[%(levelname)s]: %(message)s", level=logging.DEBUG, stream=sys.stdout)
+logging.basicConfig(
+    format="%(asctime)s crash-dedup[%(levelname)s]: %(message)s", level=logging.DEBUG, stream=sys.stdout
+)
 
 # Path of the default config file.
 DEFAULT_CONFIG_FILE = Path.cwd() / "config.yml"
@@ -22,11 +24,11 @@ app = typer.Typer()
 
 @app.command()
 def main(
-    shell_cmd: Annotated[
+    shell_command: Annotated[
         Optional[str],
         typer.Option(
             "--command",
-            help="Shell command to run the sanitizer-instrumented program under test. Note: Use '@@' (w/o the quotes) as placeholder for input files.",
+            help="Shell command to run the sanitizer-instrumented program under test. Note: Use '@@' (w/o the quotes) as placeholder for input files (--input).",
         ),
     ] = None,
     input_dirs: Annotated[
@@ -85,19 +87,22 @@ def main(
             help="Path to the YAML configuration file.",
         ),
     ] = DEFAULT_CONFIG_FILE,
-):
+) -> None:
     app_config = AppConfig.from_yaml(config_file)
 
     sanitizer_dirs = sanitizer_dirs or []
 
-    if not shell_cmd is None:
+    if shell_command is not None:
+        if input_dirs is None:
+            raise typer.BadParameter("Input directory(s) are not specified.", param_hint="--input")
+
         sanitizer_dir = output_dir / "sanitizer"
         sanitizer_dir.mkdir(exist_ok=True)
 
         run_with_multiproc(
             run_program_with_sanitizer,
             [
-                (shell_cmd, input_file, sanitizer_dir)
+                (shell_command, input_file, sanitizer_dir)
                 for input_file in find_files(input_dirs, blacklist=app_config.inputConfig.blacklist)
             ],
         )
