@@ -39,3 +39,9 @@ class DedupSummary:
                     )
 
                     csv_file.write(line + os.linesep)
+
+    def __eq__(self, o: object) -> bool:
+        if not isinstance(o, DedupSummary):
+            return False
+
+        return self.n_frames == o.n_frames and self.summary == o.summary

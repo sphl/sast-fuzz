@@ -5,11 +5,11 @@ from cdd.container.san import SanitizerOutput
 from cdd.container.summary import DedupEntry, DedupSummary
 
 
-def group_by(san_outputs: List[SanitizerOutput], n_frames: Optional[int] = None) -> DedupSummary:
+def group_by(sanitizer_infos: List[SanitizerOutput], n_frames: Optional[int] = None) -> DedupSummary:
     """
     Group/deduplicate sanitizer outputs.
 
-    :param san_outputs:
+    :param sanitizer_infos:
     :param n_frames:
     :return:
     """
@@ -17,5 +17,8 @@ def group_by(san_outputs: List[SanitizerOutput], n_frames: Optional[int] = None)
 
     return DedupSummary(
         n_frames,
-        [DedupEntry(i, k, list(g)) for i, (k, g) in enumerate(groupby(sorted(san_outputs, key=keyfunc), key=keyfunc))],
+        [
+            DedupEntry(i, k, list(g))
+            for i, (k, g) in enumerate(groupby(sorted(sanitizer_infos, key=keyfunc), key=keyfunc))
+        ],
     )

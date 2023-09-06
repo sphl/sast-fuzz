@@ -1,13 +1,13 @@
 import unittest
-
 from pathlib import Path
-from cdd.container.san import StackFrame, SanitizerOutput
+
+from cdd.container.san import SanitizerOutput, StackFrame
 
 
 class TestSanitizerOutput(unittest.TestCase):
     def test_from_file(self) -> None:
         # Arrange
-        test_files = [
+        sanitizer_files = [
             Path(__file__).parent / "data" / "sanitizer" / "test.703472",
             Path(__file__).parent / "data" / "sanitizer" / "test.703478",
             Path(__file__).parent / "data" / "sanitizer" / "test.703498",
@@ -15,7 +15,7 @@ class TestSanitizerOutput(unittest.TestCase):
 
         expected = [
             SanitizerOutput(
-                "/path/to/file",
+                "/path/to/file01",
                 "segv",
                 [
                     StackFrame(0, "outputscript.c", "outputSWF_TEXT_RECORD", 1429),
@@ -28,7 +28,7 @@ class TestSanitizerOutput(unittest.TestCase):
                 ],
             ),
             SanitizerOutput(
-                "/path/to/file",
+                "/path/to/file04",
                 "segv",
                 [
                     StackFrame(0, "decompile.c", "OpCode", 868),
@@ -45,7 +45,7 @@ class TestSanitizerOutput(unittest.TestCase):
                 ],
             ),
             SanitizerOutput(
-                "/path/to/file",
+                "/path/to/file14",
                 "heap-buffer-overflow",
                 [
                     StackFrame(0, "asan_interceptors.cpp", "strcat", 375),
@@ -65,7 +65,7 @@ class TestSanitizerOutput(unittest.TestCase):
         ]
 
         # Act
-        actual = [SanitizerOutput.from_file(file) for file in test_files]
+        actual = [SanitizerOutput.from_file(f) for f in sanitizer_files]
 
         # Assert
         for i in range(len(expected)):
