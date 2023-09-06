@@ -1,5 +1,5 @@
 ---
-crash_inputs:
+input_files:
   blacklist:
     - 'readme.txt'
 ...
