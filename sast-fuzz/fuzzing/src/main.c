@@ -1530,9 +1530,11 @@ static void update_cb_bitmap_score(struct queue_entry *q) {
 
 static bool hit_rare_targets(struct queue_entry *q) {
     for (u32 i = 0; i < n_tbbs; i++) {
-        if (q->targets && q->targets[i]) {
-            if (target_count[i] < TARGET_LIMIT) {
-                return true;
+        if (tbb_infos[i]->state == active) {
+            if (q->targets && q->targets[i]) {
+                if (target_count[i] < TARGET_LIMIT) {
+                    return true;
+                }
             }
         }
     }
