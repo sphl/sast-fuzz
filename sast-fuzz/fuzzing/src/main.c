@@ -5967,6 +5967,48 @@ void update_tbb_states() {
     }
 }
 
+void update_distance(struct queue_entry *q) {
+    float distance = 0.0f;
+
+    float vuln_factor = get_vuln_factor(q->targets);
+
+    u32 count = 0;
+    for (u32 i = 0; i < q->critical_bbs[0]; i++) {
+
+        int cbb_id = cbb_id_map[q->critical_bbs[i + 1]];
+        assert(cbb_id > -1);
+
+        float cbb_dist = cbb_distances[cbb_id];
+
+        if (cbb_dist >= 0) {
+
+            float dflt_factor = DEFAULT_DIFFICULTY;
+
+            if (q->critical_difficulty[i] > 0) {
+                float quo = ((float)q->critical_difficulty[i] / DIFFICULTY_STEP) + 1;
+
+                if (quo < DEFAULT_DIFFICULTY) {
+                    dflt_factor = quo;
+                } else {
+                    dflt_factor = DEFAULT_DIFFICULTY;
+                }
+            }
+
+            float dist_factor = get_dist_factor(dflt_factor, vuln_factor);
+
+            distance += (cbb_dist * dist_factor);
+            count++;
+        }
+    }
+
+    if (count > 0) {
+#ifdef SFZ_DEBUG
+        printf("sast-fuzz: distance = %.2f\n", (distance / (float)count));
+#endif
+        q->distance = (distance / (float)count);
+    }
+}
+
 /* Write a modified test case, run program, process results. Handle
    error conditions, returning 1 if it's time to bail out. This is
    a helper function for fuzz_one(). */
@@ -6043,6 +6085,14 @@ EXP_ST u8 common_fuzz_stuff(char **argv, u8 *out_buf, u32 len) {
 
         update_tbb_states();
         update_cbb_distances();
+
+        if (!explore_status) {
+            struct queue_entry *q = queue;
+            while (q) {
+                update_distance(q);
+                q = q->next;
+            }
+        }
 
 #if defined(SFZ_DEBUG) || defined(SFZ_OUTPUT_STATS)
         u32 old_cycle_thres = cycle_thres;
@@ -6600,48 +6650,6 @@ bool need_sniff(struct queue_entry *q) {
     }
 
     return false;
-}
-
-void update_distance(struct queue_entry *q) {
-    float distance = 0.0f;
-
-    float vuln_factor = get_vuln_factor(q->targets);
-
-    u32 count = 0;
-    for (u32 i = 0; i < q->critical_bbs[0]; i++) {
-
-        int cbb_id = cbb_id_map[q->critical_bbs[i + 1]];
-        assert(cbb_id > -1);
-
-        float cbb_dist = cbb_distances[cbb_id];
-
-        if (cbb_dist >= 0) {
-
-            float dflt_factor = DEFAULT_DIFFICULTY;
-
-            if (q->critical_difficulty[i] > 0) {
-                float quo = ((float)q->critical_difficulty[i] / DIFFICULTY_STEP) + 1;
-
-                if (quo < DEFAULT_DIFFICULTY) {
-                    dflt_factor = quo;
-                } else {
-                    dflt_factor = DEFAULT_DIFFICULTY;
-                }
-            }
-
-            float dist_factor = get_dist_factor(dflt_factor, vuln_factor);
-
-            distance += (cbb_dist * dist_factor);
-            count++;
-        }
-    }
-
-    if (count > 0) {
-#ifdef SFZ_DEBUG
-        printf("sast-fuzz: distance = %.2f\n", (distance / (float)count));
-#endif
-        q->distance = (distance / (float)count);
-    }
 }
 
 bool sniff_mask(char **argv, struct queue_entry *q, u8 *in_buf, u8 **cb_mask_ptr, u8 **eff_map_ptr, u32 *eff_cnt) {
