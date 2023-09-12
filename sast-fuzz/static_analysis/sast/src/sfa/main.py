@@ -19,16 +19,13 @@ from sfa.analysis.factory import (
 from sfa.analysis.tool_runner import BUILD_SCRIPT_NAME, SASTToolRunner
 from sfa.utils.proc import run_with_multiproc
 
-logging.basicConfig(format="%(asctime)s SFA[%(levelname)s]: %(message)s", level=logging.DEBUG, stream=sys.stdout)
+logging.basicConfig(format="%(asctime)s SFA[%(levelname)s]: %(message)s", level=logging.ERROR, stream=sys.stdout)
 
 # Path of the default config file.
 DEFAULT_CONFIG_FILE = Path.cwd() / "config.yml"
 
 # Path of the default output file.
 DEFAULT_OUTPUT_FILE = Path.cwd() / "output.csv"
-
-# Default grouping mode for SAST flags.
-DEFAULT_FLAG_GROUPING = SASTFlagGroupingMode.BASIC_BLOCK_V2
 
 app = typer.Typer()
 
@@ -176,7 +173,7 @@ def main(
             "--grouping",
             help="Grouping to be applied on the SAST flags. Note: To apply the grouping, the SFI file must be specified (--inspection).",
         ),
-    ] = DEFAULT_FLAG_GROUPING,
+    ] = None,
 ) -> None:
     if tools:
         if subject_dir is None:
