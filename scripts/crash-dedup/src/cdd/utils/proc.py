@@ -5,6 +5,8 @@ import subprocess  # nosec
 from pathlib import Path
 from typing import Callable, Dict, List, Optional, Union
 
+from cdd.utils.fs import find_files
+
 
 def get_cpu_count() -> int:
     """
@@ -51,15 +53,19 @@ def run_program_with_sanitizer(shell_cmd: str, input_file: Path, sanitizer_dir: 
     :param sanitizer_dir:
     :return:
     """
+    def find_output(o: Path) -> Optional[Path]:
+        l = [f for f in find_files([o.parent]) if f.name.startswith(o.name)]
+        return l[0] if len(l) > 0 else None
+
     sanitizer_file = sanitizer_dir / input_file.name
 
     env = {**os.environ.copy(), **{"ASAN_OPTIONS": f"allocator_may_return_null=1:log_path={sanitizer_file}"}}
 
     run_shell_command(shell_cmd.replace("@@", str(input_file)), env=env)
 
-    if sanitizer_file.exists():
+    if output := find_output(sanitizer_file):
         # Prepend input file to sanitizer output
-        sanitizer_file.write_text(f"INPUT_FILE: {input_file}" + os.linesep + sanitizer_file.read_text())
+        output.write_text(f"INPUT_FILE: {input_file}" + os.linesep + output.read_text())
 
 
 def run_with_multiproc(func: Callable, items: List, n_jobs: int = get_cpu_count() - 1) -> List:
