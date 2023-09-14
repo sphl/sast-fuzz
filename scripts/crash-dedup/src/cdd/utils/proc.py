@@ -1,3 +1,4 @@
+import uuid
 import logging
 import multiprocessing as mp
 import os
@@ -57,7 +58,7 @@ def run_program_with_sanitizer(shell_cmd: str, input_file: Path, sanitizer_dir: 
         l = [f for f in find_files([o.parent]) if f.name.startswith(o.name)]
         return l[0] if len(l) > 0 else None
 
-    sanitizer_file = sanitizer_dir / input_file.name
+    sanitizer_file = sanitizer_dir / str(uuid.uuid4())
 
     env = {**os.environ.copy(), **{"ASAN_OPTIONS": f"allocator_may_return_null=1:log_path={sanitizer_file}"}}
 
