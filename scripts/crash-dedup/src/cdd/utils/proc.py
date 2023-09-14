@@ -1,8 +1,8 @@
-import uuid
 import logging
 import multiprocessing as mp
 import os
 import subprocess  # nosec
+import uuid
 from pathlib import Path
 from typing import Callable, Dict, List, Optional, Union
 
@@ -54,6 +54,7 @@ def run_program_with_sanitizer(shell_cmd: str, input_file: Path, sanitizer_dir: 
     :param sanitizer_dir:
     :return:
     """
+
     def find_output(o: Path) -> Optional[Path]:
         l = [f for f in find_files([o.parent]) if f.name.startswith(o.name)]
         return l[0] if len(l) > 0 else None

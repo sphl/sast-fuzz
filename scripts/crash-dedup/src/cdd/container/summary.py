@@ -35,7 +35,13 @@ class DedupSummary:
                         [f"#{frame.id}:{frame.file}:{frame.function}:{frame.line}" for frame in san_output.stack_trace]
                     )
                     line = CSV_SEP.join(
-                        (str(entry.bug_id), frame_str, str(san_output.input_id), san_output.vtype, stack_trace)
+                        (
+                            str(entry.bug_id),
+                            frame_str,
+                            str(san_output.input_id).replace(",", "-"),
+                            san_output.vtype,
+                            stack_trace,
+                        )
                     )
 
                     csv_file.write(line + os.linesep)
