@@ -6126,8 +6126,8 @@ EXP_ST u8 common_fuzz_stuff(char **argv, u8 *out_buf, u32 len) {
             }
         }
 
-        fprintf(stats_fd, "%d,%u,%u,%u,%d,%d,%d,%llu\n", fuzz_dur, cycle_count, init_cycle_interval, cycle_interval,
-                n_tbbs, n_tbbs_hit, n_tbbs_finished, unique_crashes);
+        fprintf(stats_fd, "%d,%u,%u,%u,%.2f,%d,%d,%d,%llu\n", fuzz_dur, cycle_count, init_cycle_interval,
+                cycle_interval, hc_reduct_factor, n_tbbs, n_tbbs_hit, n_tbbs_finished, unique_crashes);
 
         // Enforce file write operation ...
         fflush(stats_fd);
@@ -10675,8 +10675,9 @@ int main(int argc, char **argv) {
         FATAL("Could not create the SASTFuzz stats file!");
     }
 
-    fprintf(stats_fd, "%s,%s,%s,%s,%s,%s,%s,%s\n", "fuzz_duration", "cycle_count", "init_cycle_length",
-            "cycle_interval", "n_target_bbs", "n_target_bbs_hit", "n_target_bbs_finished", "n_unique_crashes");
+    fprintf(stats_fd, "%s,%s,%s,%s,%s,%s,%s,%s,%s\n", "fuzz_duration", "cycle_count", "init_cycle_length",
+            "cycle_interval", "hc_reduct_factor", "n_target_bbs", "n_target_bbs_hit", "n_target_bbs_finished",
+            "n_unique_crashes");
 
     ck_free(tmp);
 #endif
