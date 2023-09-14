@@ -38,7 +38,7 @@ class DedupSummary:
                         (
                             str(entry.bug_id),
                             frame_str,
-                            str(san_output.input_id).replace(",", "-"),
+                            str(san_output.input_id).replace(CSV_SEP, "-"),
                             san_output.vtype,
                             stack_trace,
                         )
