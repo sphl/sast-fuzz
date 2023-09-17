@@ -62,6 +62,7 @@ RUN apt-get update -qq \
         ssh \
         sudo \
         tar \
+        time \
         tzdata \
         vim \
         wget \
