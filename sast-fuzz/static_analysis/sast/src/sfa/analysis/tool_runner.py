@@ -181,7 +181,7 @@ class InferRunner(SASTToolRunner):
         result_dir = temp_dir / "infer_res"
 
         if self._is_cmake_project:
-            setup_cmd = f'./{BUILD_SCRIPT_NAME} "{self._config.path} capture --results-dir {result_dir} --compilation-database {self._subject_dir / COMPILATION_DATABASE_NAME}"'
+            setup_cmd = f'./{BUILD_SCRIPT_NAME} "{self._config.path} capture --results-dir {result_dir} --compilation-database {COMPILATION_DATABASE_NAME}"'
         else:
             setup_cmd = f'./{BUILD_SCRIPT_NAME} "{self._config.path} capture --results-dir {result_dir} -- make"'
 
