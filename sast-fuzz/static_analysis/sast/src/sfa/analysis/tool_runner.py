@@ -257,7 +257,7 @@ class ClangScanRunner(SASTToolRunner):
         run_shell_command(
             f"./{BUILD_SCRIPT_NAME} \"{self._config.path} -o {result_dir} --keep-empty -sarif {' '.join(self._config.checks)} make\"",
             cwd=copy_dir(self._subject_dir, temp_dir),
-            env=SAST_SETUP_ENV,
+            env={**SAST_SETUP_ENV, **{"CLANG_SCAN": self._config.path}},
         )
 
         return result_dir
