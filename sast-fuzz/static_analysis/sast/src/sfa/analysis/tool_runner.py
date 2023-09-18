@@ -34,6 +34,9 @@ def convert_sarif(string: str) -> SASTFlags:
     :param string:
     :return:
     """
+    if len(string.strip()) == 0:
+        return SASTFlags()
+
     sarif_data = json.loads(string)
 
     if sarif_data["version"] != SARIF_VERSION:
