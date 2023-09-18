@@ -17,6 +17,9 @@ from sfa.utils.proc import run_shell_command
 # Build script name
 BUILD_SCRIPT_NAME: str = "build.sh"
 
+# Compilation database name
+COMPILATION_DATABASE_NAME: str = "compile_commands.json"
+
 # Supported SARIF version
 SARIF_VERSION: str = "2.1.0"
 
@@ -178,7 +181,7 @@ class InferRunner(SASTToolRunner):
         result_dir = temp_dir / "infer_res"
 
         if self._is_cmake_project:
-            setup_cmd = f'./{BUILD_SCRIPT_NAME} "{self._config.path} capture --results-dir {result_dir} --compilation-database compile_commands.json"'
+            setup_cmd = f'./{BUILD_SCRIPT_NAME} "{self._config.path} capture --results-dir {result_dir} --compilation-database {self._subject_dir / COMPILATION_DATABASE_NAME}"'
         else:
             setup_cmd = f'./{BUILD_SCRIPT_NAME} "{self._config.path} capture --results-dir {result_dir} -- make"'
 
