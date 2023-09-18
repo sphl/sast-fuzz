@@ -27,6 +27,16 @@ SAST_SETUP_ENV: Dict[str, str] = {
 }
 
 
+def is_cmake_project(subject_dir: Path) -> bool:
+    """
+    Check if the subject directory contains a CMake project.
+
+    :param subject_dir:
+    :return:
+    """
+    return (subject_dir / "CMakeLists.txt").exists()
+
+
 def convert_sarif(string: str) -> SASTFlags:
     """
     Convert SARIF data into our SAST flag format.
@@ -72,6 +82,8 @@ class SASTToolRunner(ABC):
     def __init__(self, subject_dir: Path, config: SASTToolConfig) -> None:
         self._subject_dir = subject_dir
         self._config = config
+
+        self._is_cmake_project = is_cmake_project(subject_dir)
 
     @abstractmethod
     def _setup(self, temp_dir: Path) -> Path:
@@ -165,11 +177,12 @@ class InferRunner(SASTToolRunner):
     def _setup(self, temp_dir: Path) -> Path:
         result_dir = temp_dir / "infer_res"
 
-        run_shell_command(
-            f'./{BUILD_SCRIPT_NAME} "{self._config.path} capture --results-dir {result_dir} -- make"',
-            cwd=copy_dir(self._subject_dir, temp_dir),
-            env=SAST_SETUP_ENV,
-        )
+        if self._is_cmake_project:
+            setup_cmd = f'./{BUILD_SCRIPT_NAME} "{self._config.path} capture --results-dir {result_dir} --compilation-database compile_commands.json"'
+        else:
+            setup_cmd = f'./{BUILD_SCRIPT_NAME} "{self._config.path} capture --results-dir {result_dir} -- make"'
+
+        run_shell_command(setup_cmd, cwd=copy_dir(self._subject_dir, temp_dir), env=SAST_SETUP_ENV)
 
         return result_dir
 
