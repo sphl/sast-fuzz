@@ -20,6 +20,9 @@ BUILD_SCRIPT_NAME: str = "build.sh"
 # Compilation database name
 COMPILATION_DATABASE_NAME: str = "compile_commands.json"
 
+# Name of the environment variable holding the path to clang-scan
+CLANG_SCAN_ENVVAR: str = "CLANG_SCAN"
+
 # Supported SARIF version
 SARIF_VERSION: str = "2.1.0"
 
@@ -48,7 +51,7 @@ def convert_sarif(string: str) -> SASTFlags:
     :return:
     """
     if len(string.strip()) == 0:
-        return SASTFlags()
+        raise ValueError("Empty input / no JSON string.")
 
     sarif_data = json.loads(string)
 
@@ -257,7 +260,7 @@ class ClangScanRunner(SASTToolRunner):
         run_shell_command(
             f"./{BUILD_SCRIPT_NAME} \"{self._config.path} -o {result_dir} --keep-empty -sarif {' '.join(self._config.checks)} make\"",
             cwd=copy_dir(self._subject_dir, temp_dir),
-            env={**SAST_SETUP_ENV, **{"CLANG_SCAN": self._config.path}},
+            env={**SAST_SETUP_ENV, **{CLANG_SCAN_ENVVAR: self._config.path}},
         )
 
         return result_dir
