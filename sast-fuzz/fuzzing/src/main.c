@@ -94,6 +94,8 @@ EXP_ST u8 *in_dir,                        //< Input directory with test cases
           *target_path, *target_path2,    //< Path to target binary
           *orig_cmdline;                  //< Original command line
 
+static char *config_dir = ".";            //< Directory path with the target analysis artifacts
+
 EXP_ST u32 exec_tmout = EXEC_TIMEOUT;     //< Configurable exec timeout (ms)
 static u32 hang_tmout = EXEC_TIMEOUT;     //< Timeout used for hang det (ms)
 
@@ -9390,8 +9392,10 @@ static void usage(u8 *argv0) {
          "  -m megs       - memory limit for child process (%u MB)\n"
          "  -Q            - use binary-only instrumentation (QEMU mode)\n\n"
 
-         "Target location execution settings:\n\n"
+         "Target execution settings:\n\n"
 
+         "  -w dir        - Directory path with the target analysis artifacts\n"
+         "                - (default: . [current working directory])\n"
          "  -r factor     - factor for reducing the number of required BB hit-counts\n"
          "                  (range: 0 <= factor <= 1, default: 0.5)\n"
          "  -v score      - minimum vuln. score a target BB must have for reactivation\n"
@@ -10057,7 +10061,9 @@ int stricmp(char const *a, char const *b) {
 }
 
 void readDistanceAndTargets() {
-    FILE *distance_file = fopen("distance.txt", "r");
+    char *fn = alloc_printf("%s/distance.txt", config_dir);
+    FILE *distance_file = fopen(fn, "r");
+    ck_free(fn);
 
     if (distance_file == NULL) {
         FATAL("distance.txt not exist");
@@ -10103,7 +10109,9 @@ void readDistanceAndTargets() {
 
     fclose(distance_file);
 
-    FILE *targets_file = fopen("targets.txt", "r");
+    fn = alloc_printf("%s/targets.txt", config_dir);
+    FILE *targets_file = fopen(fn, "r");
+    ck_free(fn);
 
     if (targets_file == NULL) {
         FATAL("targets.txt not exist");
@@ -10133,7 +10141,10 @@ void readDistanceAndTargets() {
 }
 
 void readCondition() {
-    FILE *condition_file = fopen("condition_info.txt", "r");
+    char *fn = alloc_printf("%s/condition_info.txt", config_dir);
+    FILE *condition_file = fopen(fn, "r");
+    ck_free(fn);
+
     char buf[1024];
 
     if (condition_file == NULL) {
@@ -10201,7 +10212,7 @@ int main(int argc, char **argv) {
     gettimeofday(&tv, &tz);
     srandom(tv.tv_sec ^ tv.tv_usec ^ getpid());
 
-    while ((opt = getopt(argc, argv, "+i:o:f:m:t:T:E:dnCB:S:M:x:Qz:c:jul:r:v:")) > 0) {
+    while ((opt = getopt(argc, argv, "+i:o:w:f:m:t:T:E:dnCB:S:M:x:Qz:c:jul:r:v:")) > 0) {
         switch (opt) {
         case 'i': /* input dir */
 
@@ -10222,6 +10233,11 @@ int main(int argc, char **argv) {
                 FATAL("Multiple -o options not supported");
             }
             out_dir = optarg;
+            break;
+
+        case 'w': /* config dir */
+
+            config_dir = optarg;
             break;
 
         case 'M': { /* master sync ID */
@@ -10611,7 +10627,10 @@ int main(int argc, char **argv) {
     readCondition();
 
     u32 dm_n_rows, dm_n_cols;
-    distance_matrix = dm_create_from_file("./dm.csv", &dm_n_rows, &dm_n_cols);
+
+    char *fn = alloc_printf("%s/dm.csv", config_dir);
+    distance_matrix = dm_create_from_file(fn, &dm_n_rows, &dm_n_cols);
+    ck_free(fn);
 
     if (distance_matrix == NULL) {
         FATAL("Could not open matrix file!");
