@@ -17,5 +17,4 @@ add_custom_target(
 )
 add_dependencies(afl-clang-fast++ afl-clang-fast)
 
-# add_subdirectory(beacon)
 add_subdirectory(windranger)

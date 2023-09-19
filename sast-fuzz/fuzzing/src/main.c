@@ -10661,15 +10661,13 @@ int main(int argc, char **argv) {
         use_argv = argv + optind;
     }
 
-    char *tmp;
-
-    // tmp = alloc_printf("%s/distance.log", out_dir);
+    // char *tmp = alloc_printf("%s/distance.log", out_dir);
     // distance_log = fopen(tmp, "w");
     // ck_free(tmp);
 
 #ifdef SFZ_OUTPUT_STATS
-    tmp = alloc_printf("%s/sfz_stats.csv", out_dir);
-    stats_fd = fopen(tmp, "w");
+    char *stats_fname = alloc_printf("%s/sfz_stats.csv", out_dir);
+    stats_fd = fopen(stats_fname, "w");
 
     if (stats_fd == NULL) {
         FATAL("Could not create the SASTFuzz stats file!");
@@ -10679,7 +10677,7 @@ int main(int argc, char **argv) {
             "cycle_interval", "hc_reduct_factor", "n_target_bbs", "n_target_bbs_hit", "n_target_bbs_finished",
             "n_unique_crashes");
 
-    ck_free(tmp);
+    ck_free(stats_fname);
 #endif
 
     perform_dry_run(use_argv);

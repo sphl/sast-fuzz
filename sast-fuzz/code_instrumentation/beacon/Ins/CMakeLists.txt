@@ -1,1 +1,0 @@
-configure_file("${CMAKE_CURRENT_SOURCE_DIR}/bin/Ins" "${CMAKE_CURRENT_BINARY_DIR}/Ins" COPYONLY)
