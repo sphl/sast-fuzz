@@ -369,9 +369,9 @@ static s32 interesting_32[] = {INTERESTING_8, INTERESTING_16, INTERESTING_32};
 /* SASTFuzz variables */
 
 float vuln_score_thres = 0.5f;            //< Minimum vulnerability score a target BB must have for reactivation
-float hc_reduct_factor = 0.0f;            //< Factor for reducing the number of required BB hit-counts
+float hc_reduct_factor = 0.5f;            //< Factor for reducing the number of required BB hit-counts
 
-u32 init_cycle_interval = 1800;           //< Initial cycle interval (in seconds)
+u32 init_cycle_interval = 7200;           //< Initial cycle interval (in seconds)
 u32 cycle_thres;                          //< Current cycle threshold (increases over time)
 
 #if defined(SFZ_DEBUG) || defined(SFZ_OUTPUT_STATS)
@@ -9379,7 +9379,7 @@ static void usage(u8 *argv0) {
          "  -z schedule   - temperature-based power schedules\n"
          "                  {exp, log, lin, quad} (Default: exp)\n"
          "  -l secs       - cycle interval\n"
-         "                  (range: secs >= 60, default: 1800)\n"
+         "                  (range: secs >= 60, default: 7200 [2h])\n"
          "  -c min        - time from start when SA enters exploitation\n"
          "                  in secs (s), mins (m), hrs (h), or days (d)\n\n"
 
@@ -9393,7 +9393,7 @@ static void usage(u8 *argv0) {
          "Target location execution settings:\n\n"
 
          "  -r factor     - factor for reducing the number of required BB hit-counts\n"
-         "                  (range: 0 <= factor <= 1, default: 0 [none])\n"
+         "                  (range: 0 <= factor <= 1, default: 0.5)\n"
          "  -v score      - minimum vuln. score a target BB must have for reactivation\n"
          "                  (range: 0 <= score <= 1, default: 0.5)\n\n"
 
