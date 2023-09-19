@@ -17,4 +17,4 @@ add_custom_target(
 )
 add_dependencies(afl-clang-fast++ afl-clang-fast)
 
-add_subdirectory(windranger)
+add_subdirectory(target_sites)
