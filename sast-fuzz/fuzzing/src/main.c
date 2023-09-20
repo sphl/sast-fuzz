@@ -10620,8 +10620,11 @@ int main(int argc, char **argv) {
     check_crash_handling();
     check_cpu_governor();
 
-    cycle_interval = init_cycle_interval;
-    cycle_thres = cycle_interval;
+    cycle_thres = init_cycle_interval;
+
+#if defined(SFZ_DEBUG) || defined(SFZ_OUTPUT_STATS)
+    cycle_interval = cycle_thres;
+#endif
 
     readDistanceAndTargets();
     readCondition();
