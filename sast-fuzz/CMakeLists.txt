@@ -1,8 +1,6 @@
 include("${CMAKE_SOURCE_DIR}/cmake/string_to_list.cmake")
 include("${CMAKE_SOURCE_DIR}/cmake/find_llvm.cmake")
 
-# TODO: Remove the line below in the release version!
-set(SVF_DIR "/opt/svf-2.2")
 include("${CMAKE_SOURCE_DIR}/cmake/find_svf.cmake")
 
 add_library(afl_config INTERFACE)

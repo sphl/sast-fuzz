@@ -19,6 +19,19 @@
 
 option(USE_CMAKE_FIND_PACKAGE_LLVM "Use find_package(LLVM CONFIG) to find LLVM" OFF)
 
+function (string_to_list s output_var)
+    string(
+        REPLACE " "
+                ";"
+                _output
+                "${s}"
+    )
+    set(${output_var}
+        ${_output}
+        PARENT_SCOPE
+    )
+endfunction ()
+
 if (USE_CMAKE_FIND_PACKAGE_LLVM)
     find_package(LLVM CONFIG REQUIRED)
 
