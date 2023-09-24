@@ -1,9 +1,0 @@
-.github
-.gitignore
-
-.clang-format
-.clang-tidy
-
-.cmake-format.yaml
-
-docker
