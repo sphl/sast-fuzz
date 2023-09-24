@@ -1,7 +1,7 @@
 # CLion remote docker environment (taken from: https://github.com/JetBrains/clion-remote/blob/master/Dockerfile.remote-cpp-env)
 #
 # Build and run:
-#   docker build -t sast-fuzz/devenv -f Dockerfile .
+#   docker build -t sast-fuzz/devenv -f Dockerfile.dev .
 #   docker run -d --cap-add sys_ptrace -p 127.0.0.1:2222:22 --name remote_env sast-fuzz/devenv
 #   ssh-keygen -f "$HOME/.ssh/known_hosts" -R "[localhost]:2222"
 #
