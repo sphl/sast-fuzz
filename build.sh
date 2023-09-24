@@ -1,6 +1,8 @@
 #!/bin/bash
 
 build_type=${1:-Release}
+
+# Please change this variable if SVF was installed in a different directory.
 svf_dir="/opt/svf-2.2"
 
 [ -d build ] && rm -rf build
