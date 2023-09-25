@@ -166,7 +166,7 @@ WORKDIR /opt/llvm-${LLVM_VERSION}/compiler-rt/lib/fuzzer/standalone
 RUN ${CC} -c -fPIC StandaloneFuzzTargetMain.c \
     && ar r StandaloneFuzzTargetMain.a StandaloneFuzzTargetMain.o
 
-ENV FUZZ_HARNESS_LIB="/opt/llvm-${LLVM_VERSION}/compiler-rt/lib/fuzzer/standalone/StandaloneFuzzTargetMain.a"
+ENV LIB_FUZZING_ENGINE="/opt/llvm-${LLVM_VERSION}/compiler-rt/lib/fuzzer/standalone/StandaloneFuzzTargetMain.a"
 
 # Note: Make sure that 'LLVM_DIR' is set to the right directory! Otherwise SVF's
 # build script will download pre-built LLVM binaries which may conflict with the
