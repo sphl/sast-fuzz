@@ -1,4 +1,3 @@
-include("${CMAKE_SOURCE_DIR}/cmake/string_to_list.cmake")
 include("${CMAKE_SOURCE_DIR}/cmake/find_llvm.cmake")
 
 include("${CMAKE_SOURCE_DIR}/cmake/find_svf.cmake")
