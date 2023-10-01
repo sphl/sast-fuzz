@@ -7359,6 +7359,7 @@ static u8 fuzz_one(char **argv) {
         }
 
         if (!(cb_mask[i] & 1) || !(cb_mask[i + 1] & 1)) {
+            stage_max--;
             continue;
         }
 
@@ -7401,6 +7402,7 @@ static u8 fuzz_one(char **argv) {
         }
 
         if (!(cb_mask[i] & 1) || !(cb_mask[i + 1] & 1) || !(cb_mask[i + 2] & 1) || !(cb_mask[i + 3] & 1)) {
+            stage_max--;
             continue;
         }
 
@@ -7453,6 +7455,7 @@ skip_bitflip:
         }
 
         if (!(cb_mask[i] & 1)) {
+            stage_max -= 2 * ARITH_MAX;
             continue;
         }
 
@@ -7525,6 +7528,7 @@ skip_bitflip:
         }
 
         if (!(cb_mask[i] & 1) || !(cb_mask[i + 1] & 1)) {
+            stage_max -= 4 * ARITH_MAX;
             continue;
         }
 
@@ -7631,6 +7635,7 @@ skip_bitflip:
         }
 
         if (!(cb_mask[i] & 1) || !(cb_mask[i + 1] & 1) || !(cb_mask[i + 2] & 1) || !(cb_mask[i + 3] & 1)) {
+            stage_max -= 4 * ARITH_MAX;
             continue;
         }
 
@@ -7738,6 +7743,7 @@ skip_arith:
         }
 
         if (!(cb_mask[i] & 1)) {
+            stage_max -= sizeof(interesting_8);
             continue;
         }
 
@@ -7792,6 +7798,7 @@ skip_arith:
         }
 
         if (!(cb_mask[i] & 1) || !(cb_mask[i + 1] & 1)) {
+            stage_max -= sizeof(interesting_16);
             continue;
         }
 
@@ -7868,6 +7875,7 @@ skip_arith:
         }
 
         if (!(cb_mask[i] & 1) || !(cb_mask[i + 1] & 1) || !(cb_mask[i + 2] & 1) || !(cb_mask[i + 3] & 1)) {
+            stage_max -= sizeof(interesting_32) >> 1;
             continue;
         }
 
@@ -7972,6 +7980,7 @@ skip_interest:
             }
 
             if (bailing) {
+                stage_max--;
                 continue;
             }
 
@@ -8015,6 +8024,7 @@ skip_interest:
             }
 
             if (!(cb_mask[i] & 4)) {
+                stage_max--;
                 continue;
             }
 
@@ -8081,6 +8091,7 @@ skip_user_extras:
             }
 
             if (bailing) {
+                stage_max--;
                 continue;
             }
 
