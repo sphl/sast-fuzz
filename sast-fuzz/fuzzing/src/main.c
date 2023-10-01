@@ -120,7 +120,7 @@ EXP_ST u8 skip_deterministic,             //< Skip deterministic stages?
           resuming_fuzz,                  //< Resuming an older fuzzing job?
           timeout_given,                  //< Specific timeout given?
           not_on_tty,                     //< stdout is not a tty
-          term_too_small,                 //< terminal dimensions too small
+          // term_too_small,              //< terminal dimensions too small
           uses_asan,                      //< Target uses ASAN?
           no_forkserver,                  //< Disable forkserver?
           crash_mode,                     //< Crash mode! Yeah!
@@ -5128,7 +5128,7 @@ dir_cleanup_failed:
     FATAL("Output directory cleanup failed");
 }
 
-static void check_term_size(void);
+// static void check_term_size(void);
 
 /* A spiffy retro stats screen! This is called every stats_update_freq
    execve() calls, plus in several other circumstances. */
@@ -5239,17 +5239,16 @@ static void show_stats(void) {
         SAYF(TERM_CLEAR CURSOR_HIDE);
         clear_screen = 0;
 
-        check_term_size();
+        // check_term_size();
     }
 
     SAYF(TERM_HOME);
 
-    if (term_too_small) {
-        SAYF(cBRI "Your terminal is too small to display the UI.\n"
-                  "Please resize terminal window to at least 80x25.\n" cRST);
-
-        return;
-    }
+    // if (term_too_small) {
+    //     SAYF(cBRI "Your terminal is too small to display the UI.\n"
+    //               "Please resize terminal window to at least 80x25.\n" cRST);
+    //     return;
+    // }
 
     /* Let's start by drawing a centered banner. */
 
@@ -9352,19 +9351,19 @@ static void check_if_tty(void) {
 
 /* Check terminal dimensions after resize. */
 
-static void check_term_size(void) {
-    struct winsize ws;
-
-    term_too_small = 0;
-
-    if (ioctl(1, TIOCGWINSZ, &ws)) {
-        return;
-    }
-
-    if (ws.ws_row < 25 || ws.ws_col < 80) {
-        term_too_small = 1;
-    }
-}
+// static void check_term_size(void) {
+//     struct winsize ws;
+//
+//     term_too_small = 0;
+//
+//     if (ioctl(1, TIOCGWINSZ, &ws)) {
+//         return;
+//     }
+//
+//     if (ws.ws_row < 25 || ws.ws_col < 80) {
+//         term_too_small = 1;
+//     }
+// }
 
 /* Display usage hints. */
 
