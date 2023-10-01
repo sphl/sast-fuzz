@@ -397,7 +397,7 @@ tbb_info_t **tbb_infos = NULL;            //< 1D array containing target BB info
 static int32_t **distance_matrix = NULL;  //< 2D array containing the distance of each critical BB to each target BB (-1 if unreachable)
 static float *cbb_distances = NULL;       //< 1D array containing for each critical BB the average distance to all reachable target BBs
 
-static bool reset_queue_ptr = false;      //< If set to true, fuzzing is restarted with the first entry in the (sorted) queue
+static bool update_strategy = false;      //< If set to true, update target BB states and distances, as well as the queue order
 // clang-format on
 
 /* Fuzzing stages */
@@ -6112,20 +6112,7 @@ EXP_ST u8 common_fuzz_stuff(char **argv, u8 *out_buf, u32 len) {
 
     if (fuzz_dur >= cycle_thres) {
 
-        update_tbb_states();
-        update_cbb_distances();
-
-        if (!explore_status) {
-            struct queue_entry *q = queue;
-            while (q != NULL) {
-                update_distance(q);
-                q = q->next;
-            }
-        }
-
-        sort_queue();
-
-        reset_queue_ptr = true;
+        update_strategy = true;
 
 #if defined(SFZ_DEBUG) || defined(SFZ_OUTPUT_STATS)
         u32 old_cycle_thres = cycle_thres;
@@ -10776,11 +10763,25 @@ int main(int argc, char **argv) {
             cull_queue();
         }
 
-        if (reset_queue_ptr) {
+        if (update_strategy) {
+
+            update_tbb_states();
+            update_cbb_distances();
+
+            if (!explore_status) {
+                struct queue_entry *q = queue;
+                while (q != NULL) {
+                    update_distance(q);
+                    q = q->next;
+                }
+            }
+
+            sort_queue();
             queue_cur = queue;
 
-            reset_queue_ptr = false;
+            update_strategy = false;
         } else {
+
             if (!queue_cur) {
                 queue_cycle++;
                 current_entry = 0;
