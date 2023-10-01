@@ -396,6 +396,8 @@ tbb_info_t **tbb_infos = NULL;            //< 1D array containing target BB info
 
 static int32_t **distance_matrix = NULL;  //< 2D array containing the distance of each critical BB to each target BB (-1 if unreachable)
 static float *cbb_distances = NULL;       //< 1D array containing for each critical BB the average distance to all reachable target BBs
+
+static bool reset_queue_ptr = false;      //< If set to true, fuzzing is restarted with the first entry in the (sorted) queue
 // clang-format on
 
 /* Fuzzing stages */
@@ -6010,6 +6012,32 @@ void update_distance(struct queue_entry *q) {
     }
 }
 
+void insert_sorted(struct queue_entry **head, struct queue_entry *elem) {
+    if (*head == NULL || (*head)->distance >= elem->distance) {
+        elem->next = *head;
+        *head = elem;
+    } else {
+        struct queue_entry *iter = *head;
+        while (iter->next != NULL && iter->next->distance < elem->distance) {
+            iter = iter->next;
+        }
+        elem->next = iter->next;
+        iter->next = elem;
+    }
+}
+
+void sort_queue() {
+    struct queue_entry *sorted = NULL;
+
+    struct queue_entry *q = queue;
+    while (q != NULL) {
+        insert_sorted(&sorted, q);
+        q = q->next;
+    }
+
+    queue = sorted;
+}
+
 /* Write a modified test case, run program, process results. Handle
    error conditions, returning 1 if it's time to bail out. This is
    a helper function for fuzz_one(). */
@@ -6089,11 +6117,15 @@ EXP_ST u8 common_fuzz_stuff(char **argv, u8 *out_buf, u32 len) {
 
         if (!explore_status) {
             struct queue_entry *q = queue;
-            while (q) {
+            while (q != NULL) {
                 update_distance(q);
                 q = q->next;
             }
         }
+
+        sort_queue();
+
+        reset_queue_ptr = true;
 
 #if defined(SFZ_DEBUG) || defined(SFZ_OUTPUT_STATS)
         u32 old_cycle_thres = cycle_thres;
@@ -10744,42 +10776,49 @@ int main(int argc, char **argv) {
             cull_queue();
         }
 
-        if (!queue_cur) {
-            queue_cycle++;
-            current_entry = 0;
-            cur_skipped_paths = 0;
+        if (reset_queue_ptr) {
             queue_cur = queue;
 
-            while (seek_to) {
-                current_entry++;
-                seek_to--;
-                queue_cur = queue_cur->next;
-            }
+            reset_queue_ptr = false;
+        } else {
+            if (!queue_cur) {
+                queue_cycle++;
+                current_entry = 0;
+                cur_skipped_paths = 0;
 
-            show_stats();
+                queue_cur = queue;
 
-            if (not_on_tty) {
-                ACTF("Entering queue cycle %llu.", queue_cycle);
-                fflush(stdout);
-            }
-
-            /* If we had a full queue cycle with no new finds, try
-               recombination strategies next. */
-
-            if (queued_paths == prev_queued) {
-                if (use_splicing) {
-                    cycles_wo_finds++;
-                } else {
-                    use_splicing = 1;
+                while (seek_to) {
+                    current_entry++;
+                    seek_to--;
+                    queue_cur = queue_cur->next;
                 }
-            } else {
-                cycles_wo_finds = 0;
-            }
 
-            prev_queued = queued_paths;
+                show_stats();
 
-            if (sync_id && queue_cycle == 1 && getenv("AFL_IMPORT_FIRST")) {
-                sync_fuzzers(use_argv);
+                if (not_on_tty) {
+                    ACTF("Entering queue cycle %llu.", queue_cycle);
+                    fflush(stdout);
+                }
+
+                /* If we had a full queue cycle with no new finds, try
+                   recombination strategies next. */
+
+                if (queued_paths == prev_queued) {
+                    if (use_splicing) {
+                        cycles_wo_finds++;
+                    } else {
+                        use_splicing = 1;
+                    }
+                } else {
+                    cycles_wo_finds = 0;
+                }
+
+                prev_queued = queued_paths;
+
+                if (sync_id && queue_cycle == 1 && getenv("AFL_IMPORT_FIRST")) {
+                    sync_fuzzers(use_argv);
+                }
             }
         }
 
