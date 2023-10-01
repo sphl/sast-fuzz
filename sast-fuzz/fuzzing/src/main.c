@@ -6673,10 +6673,6 @@ bool sniff_mask(char **argv, struct queue_entry *q, u8 *in_buf, u8 **cb_mask_ptr
         return false;
     }
 
-    u32 modify_count = 0;
-    u32 insert_count = 0;
-    u32 delete_count = 0;
-
     cb_mask = ck_alloc(len + 1);
     conformance_mask = ck_alloc(len + 1);
     u8 *out_buf = ck_alloc_nozero(len);
@@ -6716,7 +6712,6 @@ bool sniff_mask(char **argv, struct queue_entry *q, u8 *in_buf, u8 **cb_mask_ptr
         }
 
         if ((hit_flag = hit_critical(q)) != 0) {
-            modify_count++;
             if ((hit_flag & 1) == 1) {
                 cb_mask[stage_cur] = 1;
             }
@@ -6763,7 +6758,6 @@ bool sniff_mask(char **argv, struct queue_entry *q, u8 *in_buf, u8 **cb_mask_ptr
         }
 
         if ((hit_flag = hit_critical(q)) != 0) {
-            delete_count++;
             if ((hit_flag & 1) == 1) {
                 cb_mask[stage_cur] += 2;
             }
@@ -6789,7 +6783,6 @@ bool sniff_mask(char **argv, struct queue_entry *q, u8 *in_buf, u8 **cb_mask_ptr
         }
 
         if ((hit_flag = hit_critical(q)) != 0) {
-            insert_count++;
             if ((hit_flag & 1) == 1) {
                 cb_mask[stage_cur] += 4;
             }
@@ -9078,7 +9071,7 @@ EXP_ST void check_binary(u8 *fname) {
 
 #ifndef __APPLE__
 
-    if (f_data[0] != 0x7f || memcmp(f_data + 1, "ELF", 3)) {
+    if (f_data[0] != 0x7f || memcmp(f_data + 1, "ELF", 3) != 0) {
         FATAL("Program '%s' is not an ELF binary", target_path);
     }
 
@@ -9239,7 +9232,7 @@ EXP_ST void check_binary2(u8 *fname) {
 
 #ifndef __APPLE__
 
-    if (f_data[0] != 0x7f || memcmp(f_data + 1, "ELF", 3)) {
+    if (f_data[0] != 0x7f || memcmp(f_data + 1, "ELF", 3) != 0) {
         FATAL("Program '%s' is not an ELF binary", target_path2);
     }
 
