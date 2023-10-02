@@ -6029,8 +6029,9 @@ void sort_queue() {
 
     struct queue_entry *q = queue;
     while (q != NULL) {
+        struct queue_entry *next = q->next;
         insert_sorted(&sorted, q);
-        q = q->next;
+        q = next;
     }
 
     queue = sorted;
@@ -6039,27 +6040,28 @@ void sort_queue() {
 void update_queue() {
     sort_queue();
 
-    queue_cur = q_prev100 = queue;
+    // queue_cur = q_prev100 = queue;
+    queue_cur = queue;
 
-    u32 i = 0;
-    struct queue_entry *q = queue;
-    while (q != NULL) {
-        i++;
-
-        // Reset old forward-jump pointers
-        q->next_100 = NULL;
-
-        if ((i % 100) == 0) {
-            q_prev100->next_100 = q;
-            q_prev100 = q;
-        }
-
-        if (q->next == NULL) {
-            queue_top = q;
-        }
-
-        q = q->next;
-    }
+//    u32 i = 0;
+//    struct queue_entry *q = queue;
+//    while (q != NULL) {
+//        i++;
+//
+//        // Reset old forward-jump pointers
+//        q->next_100 = NULL;
+//
+//        if ((i % 100) == 0) {
+//            q_prev100->next_100 = q;
+//            q_prev100 = q;
+//        }
+//
+//        if (q->next == NULL) {
+//            queue_top = q;
+//        }
+//
+//        q = q->next;
+//    }
 }
 
 /* Write a modified test case, run program, process results. Handle
