@@ -6038,6 +6038,32 @@ void sort_queue() {
     queue = sorted;
 }
 
+void update_queue() {
+    sort_queue();
+
+    queue_cur = q_prev100 = queue;
+
+    u32 i = 0;
+    struct queue_entry *q = queue;
+    while (q != NULL) {
+        i++;
+
+        // Reset old forward-jump pointers
+        q->next_100 = NULL;
+
+        if ((i % 100) == 0) {
+            q_prev100->next_100 = q;
+            q_prev100 = q;
+        }
+
+        if (q->next == NULL) {
+            queue_top = q;
+        }
+
+        q = q->next;
+    }
+}
+
 /* Write a modified test case, run program, process results. Handle
    error conditions, returning 1 if it's time to bail out. This is
    a helper function for fuzz_one(). */
@@ -10776,8 +10802,7 @@ int main(int argc, char **argv) {
                 }
             }
 
-            sort_queue();
-            queue_cur = queue;
+            update_queue();
 
             update_strategy = false;
         } else {
