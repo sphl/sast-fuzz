@@ -6132,6 +6132,32 @@ EXP_ST u8 common_fuzz_stuff(char **argv, u8 *out_buf, u32 len) {
 
     cycle_input_count++;
 
+#ifdef SFZ_OUTPUT_STATS
+    u32 fuzz_dur = (get_cur_time() - start_time) / 1000;
+
+    if (fuzz_dur >= (stats_count * stats_interval)) {
+        u32 n_tbbs_hit = 0;
+        u32 n_tbbs_finished = 0;
+
+        for (u32 i = 0; i < n_tbbs; i++) {
+            if (tbb_infos[i]->n_input_execs > 0) {
+                n_tbbs_hit++;
+            }
+            if (tbb_infos[i]->state == finished) {
+                n_tbbs_finished++;
+            }
+        }
+
+        fprintf(stats_fd, "%d,%u,%u,%u,%.2f,%d,%d,%d,%llu\n", fuzz_dur, cycle_count, init_cycle_interval,
+                cycle_interval, hc_reduct_factor, n_tbbs, n_tbbs_hit, n_tbbs_finished, unique_crashes);
+
+        // Enforce file write operation ...
+        fflush(stats_fd);
+
+        stats_count++;
+    }
+#endif
+
     /* This handles FAULT_ERROR for us: */
 
     u8 is_saved = save_if_interesting(argv, out_buf, len, fault);
@@ -10773,30 +10799,6 @@ int main(int argc, char **argv) {
             printf("sast-fuzz: cycle interval = %u [%u] -- %ds\n", cycle_interval, cycle_count, fuzz_dur);
 #endif
         }
-
-#ifdef SFZ_OUTPUT_STATS
-        if (fuzz_dur >= (stats_count * stats_interval)) {
-            u32 n_tbbs_hit = 0;
-            u32 n_tbbs_finished = 0;
-
-            for (u32 i = 0; i < n_tbbs; i++) {
-                if (tbb_infos[i]->n_input_execs > 0) {
-                    n_tbbs_hit++;
-                }
-                if (tbb_infos[i]->state == finished) {
-                    n_tbbs_finished++;
-                }
-            }
-
-            fprintf(stats_fd, "%d,%u,%u,%u,%.2f,%d,%d,%d,%llu\n", fuzz_dur, cycle_count, init_cycle_interval,
-                    cycle_interval, hc_reduct_factor, n_tbbs, n_tbbs_hit, n_tbbs_finished, unique_crashes);
-
-            // Enforce file write operation ...
-            fflush(stats_fd);
-
-            stats_count++;
-        }
-#endif
 
         if (!queue_cur) {
             queue_cycle++;
