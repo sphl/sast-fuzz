@@ -396,8 +396,6 @@ tbb_info_t **tbb_infos = NULL;            //< 1D array containing target BB info
 
 static int32_t **distance_matrix = NULL;  //< 2D array containing the distance of each critical BB to each target BB (-1 if unreachable)
 static float *cbb_distances = NULL;       //< 1D array containing for each critical BB the average distance to all reachable target BBs
-
-static bool update_strategy = false;      //< If set to true, update target BB states and distances, as well as the queue order
 // clang-format on
 
 /* Fuzzing stages */
@@ -6134,54 +6132,6 @@ EXP_ST u8 common_fuzz_stuff(char **argv, u8 *out_buf, u32 len) {
 
     cycle_input_count++;
 
-    u32 fuzz_dur = (get_cur_time() - start_time) / 1000;
-
-    if (fuzz_dur >= cycle_thres) {
-
-        update_strategy = true;
-
-#if defined(SFZ_DEBUG) || defined(SFZ_OUTPUT_STATS)
-        u32 old_cycle_thres = cycle_thres;
-#endif
-
-        cycle_thres += log_cycle_interval(init_cycle_interval, fuzz_dur);
-
-#if defined(SFZ_DEBUG) || defined(SFZ_OUTPUT_STATS)
-        cycle_interval = (cycle_thres - old_cycle_thres);
-#endif
-
-        cycle_count++;
-        cycle_input_count = 0;
-
-#ifdef SFZ_DEBUG
-        printf("sast-fuzz: cycle interval = %u [%u] -- %ds\n", cycle_interval, cycle_count, fuzz_dur);
-#endif
-    }
-
-#ifdef SFZ_OUTPUT_STATS
-    if (fuzz_dur >= (stats_count * stats_interval)) {
-        u32 n_tbbs_hit = 0;
-        u32 n_tbbs_finished = 0;
-
-        for (u32 i = 0; i < n_tbbs; i++) {
-            if (tbb_infos[i]->n_input_execs > 0) {
-                n_tbbs_hit++;
-            }
-            if (tbb_infos[i]->state == finished) {
-                n_tbbs_finished++;
-            }
-        }
-
-        fprintf(stats_fd, "%d,%u,%u,%u,%.2f,%d,%d,%d,%llu\n", fuzz_dur, cycle_count, init_cycle_interval,
-                cycle_interval, hc_reduct_factor, n_tbbs, n_tbbs_hit, n_tbbs_finished, unique_crashes);
-
-        // Enforce file write operation ...
-        fflush(stats_fd);
-
-        stats_count++;
-    }
-#endif
-
     /* This handles FAULT_ERROR for us: */
 
     u8 is_saved = save_if_interesting(argv, out_buf, len, fault);
@@ -10789,7 +10739,9 @@ int main(int argc, char **argv) {
             cull_queue();
         }
 
-        if (update_strategy) {
+        u32 fuzz_dur = (get_cur_time() - start_time) / 1000;
+
+        if (fuzz_dur >= cycle_thres) {
 
             update_tbb_states();
             update_cbb_distances();
@@ -10800,51 +10752,89 @@ int main(int argc, char **argv) {
                     update_distance(q);
                     q = q->next;
                 }
+
+                update_queue();
             }
 
-            update_queue();
+#if defined(SFZ_DEBUG) || defined(SFZ_OUTPUT_STATS)
+            u32 old_cycle_thres = cycle_thres;
+#endif
 
-            update_strategy = false;
-        } else {
+            cycle_thres += log_cycle_interval(init_cycle_interval, fuzz_dur);
 
-            if (!queue_cur) {
-                queue_cycle++;
-                current_entry = 0;
-                cur_skipped_paths = 0;
+#if defined(SFZ_DEBUG) || defined(SFZ_OUTPUT_STATS)
+            cycle_interval = (cycle_thres - old_cycle_thres);
+#endif
 
-                queue_cur = queue;
+            cycle_count++;
+            cycle_input_count = 0;
 
-                while (seek_to) {
-                    current_entry++;
-                    seek_to--;
-                    queue_cur = queue_cur->next;
+#ifdef SFZ_DEBUG
+            printf("sast-fuzz: cycle interval = %u [%u] -- %ds\n", cycle_interval, cycle_count, fuzz_dur);
+#endif
+        }
+
+#ifdef SFZ_OUTPUT_STATS
+        if (fuzz_dur >= (stats_count * stats_interval)) {
+            u32 n_tbbs_hit = 0;
+            u32 n_tbbs_finished = 0;
+
+            for (u32 i = 0; i < n_tbbs; i++) {
+                if (tbb_infos[i]->n_input_execs > 0) {
+                    n_tbbs_hit++;
                 }
-
-                show_stats();
-
-                if (not_on_tty) {
-                    ACTF("Entering queue cycle %llu.", queue_cycle);
-                    fflush(stdout);
+                if (tbb_infos[i]->state == finished) {
+                    n_tbbs_finished++;
                 }
+            }
 
-                /* If we had a full queue cycle with no new finds, try
-                   recombination strategies next. */
+            fprintf(stats_fd, "%d,%u,%u,%u,%.2f,%d,%d,%d,%llu\n", fuzz_dur, cycle_count, init_cycle_interval,
+                    cycle_interval, hc_reduct_factor, n_tbbs, n_tbbs_hit, n_tbbs_finished, unique_crashes);
 
-                if (queued_paths == prev_queued) {
-                    if (use_splicing) {
-                        cycles_wo_finds++;
-                    } else {
-                        use_splicing = 1;
-                    }
+            // Enforce file write operation ...
+            fflush(stats_fd);
+
+            stats_count++;
+        }
+#endif
+
+        if (!queue_cur) {
+            queue_cycle++;
+            current_entry = 0;
+            cur_skipped_paths = 0;
+
+            queue_cur = queue;
+
+            while (seek_to) {
+                current_entry++;
+                seek_to--;
+                queue_cur = queue_cur->next;
+            }
+
+            show_stats();
+
+            if (not_on_tty) {
+                ACTF("Entering queue cycle %llu.", queue_cycle);
+                fflush(stdout);
+            }
+
+            /* If we had a full queue cycle with no new finds, try
+               recombination strategies next. */
+
+            if (queued_paths == prev_queued) {
+                if (use_splicing) {
+                    cycles_wo_finds++;
                 } else {
-                    cycles_wo_finds = 0;
+                    use_splicing = 1;
                 }
+            } else {
+                cycles_wo_finds = 0;
+            }
 
-                prev_queued = queued_paths;
+            prev_queued = queued_paths;
 
-                if (sync_id && queue_cycle == 1 && getenv("AFL_IMPORT_FIRST")) {
-                    sync_fuzzers(use_argv);
-                }
+            if (sync_id && queue_cycle == 1 && getenv("AFL_IMPORT_FIRST")) {
+                sync_fuzzers(use_argv);
             }
         }
 
