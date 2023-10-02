@@ -10786,7 +10786,7 @@ int main(int argc, char **argv) {
             u32 old_cycle_thres = cycle_thres;
 #endif
 
-            cycle_thres += log_cycle_interval(init_cycle_interval, fuzz_dur);
+            cycle_thres = (fuzz_dur + log_cycle_interval(init_cycle_interval, fuzz_dur));
 
 #if defined(SFZ_DEBUG) || defined(SFZ_OUTPUT_STATS)
             cycle_interval = (cycle_thres - old_cycle_thres);
