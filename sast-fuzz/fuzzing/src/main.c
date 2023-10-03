@@ -1009,10 +1009,10 @@ void alloca_cnd_bits(struct queue_entry *q) {
     q->cnd_bits[0] = count;
 }
 
-u32 queue_length(struct queue_entry *_queue) {
+u32 queue_length(struct queue_entry *head) {
     u32 n = 0;
 
-    struct queue_entry *q = _queue;
+    struct queue_entry *q = head;
     while (q != NULL) {
         n++;
         q = q->next;
@@ -1021,7 +1021,7 @@ u32 queue_length(struct queue_entry *_queue) {
     return n;
 }
 
-void insert_sorted(struct queue_entry **head, struct queue_entry *elem) {
+void queue_insert_sorted(struct queue_entry **head, struct queue_entry *elem) {
     struct queue_entry *iter = *head;
     if (*head == NULL || (*head)->distance >= elem->distance) {
         elem->next = *head;
@@ -1036,19 +1036,19 @@ void insert_sorted(struct queue_entry **head, struct queue_entry *elem) {
     }
 }
 
-void sort_queue() {
+void queue_sort(struct queue_entry **head) {
     struct queue_entry *sorted = NULL;
 
-    struct queue_entry *q = queue;
+    struct queue_entry *q = *head;
     while (q != NULL) {
         struct queue_entry *next = q->next;
-        insert_sorted(&sorted, q);
+        queue_insert_sorted(&sorted, q);
         q = next;
     }
 
-    assert(queue_length(queue) == queue_length(sorted));
+    assert(queue_length(*head) == queue_length(sorted));
 
-    queue = sorted;
+    *head = sorted;
 }
 
 // void update_queue() {
@@ -10805,7 +10805,7 @@ int main(int argc, char **argv) {
                         q = q->next;
                     }
 
-                    sort_queue();
+                    queue_sort();
                     queue_cur = queue;
                 }
 
