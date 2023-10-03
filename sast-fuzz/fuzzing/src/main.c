@@ -489,14 +489,78 @@ static inline u32 UR(u32 limit) {
 /* Shuffle an array of pointers. Might be slightly biased. */
 
 static void shuffle_ptrs(void **ptrs, u32 cnt) {
-    u32 i;
-
-    for (i = 0; i < cnt - 2; i++) {
+    for (u32 i = 0; i < cnt - 2; i++) {
         u32 j = i + UR(cnt - i);
         void *s = ptrs[i];
         ptrs[i] = ptrs[j];
         ptrs[j] = s;
     }
+}
+
+/* Return the length of a testcase queue. */
+
+u32 queue_length(struct queue_entry *head) {
+    u32 n = 0;
+
+    struct queue_entry *q = head;
+    while (q != NULL) {
+        n++;
+        q = q->next;
+    }
+
+    return n;
+}
+
+/* Return the top-entry of a testcase queue. */
+
+struct queue_entry *queue_top_entry(struct queue_entry *head) {
+    struct queue_entry *q = head;
+
+    if (q == NULL) {
+        return NULL;
+    }
+
+    while (q->next != NULL) {
+        q = q->next;
+    }
+
+    return q;
+}
+
+/* Insert an entry into a testcase queue in a sorted manner, i.e. ascending by the target BB distances. */
+
+void queue_insert_sorted(struct queue_entry **head, struct queue_entry *elem) {
+    struct queue_entry *q = *head;
+    if (*head == NULL || (*head)->distance >= elem->distance) {
+        elem->next = *head;
+        *head = elem;
+    } else {
+        // Place inputs with unknown distance (= -1) at the end of the queue
+        while (q->next != NULL && q->next->distance != -1 && q->next->distance < elem->distance) {
+            q = q->next;
+        }
+        elem->next = q->next;
+        q->next = elem;
+    }
+}
+
+/* Sort a testcase queue based on the target BB distances in ascending order. */
+
+void queue_sort(struct queue_entry **head) {
+    struct queue_entry *sorted = NULL;
+
+    u32 len = queue_length(queue);
+
+    struct queue_entry *q = *head;
+    while (q != NULL) {
+        struct queue_entry *next = q->next;
+        queue_insert_sorted(&sorted, q);
+        q = next;
+    }
+
+    assert(len == queue_length(sorted));
+
+    *head = sorted;
 }
 
 #ifdef HAVE_AFFINITY
@@ -1010,70 +1074,33 @@ void alloca_cnd_bits(struct queue_entry *q) {
     q->cnd_bits[0] = count;
 }
 
-/* Return the length of a testcase queue. */
+void update_queue_next100() {
+    q_prev100 = queue;
 
-u32 queue_length(struct queue_entry *head) {
-    u32 n = 0;
-
-    struct queue_entry *q = head;
+    u32 i = 0;
+    struct queue_entry *q = queue;
     while (q != NULL) {
-        n++;
-        q = q->next;
-    }
+        i++;
 
-    return n;
-}
+        // Reset old forward-jump pointers
+        q->next_100 = NULL;
 
-/* Return the top-entry of a testcase queue. */
-
-struct queue_entry *queue_top_entry(struct queue_entry *head) {
-    struct queue_entry *q = head;
-
-    if (q == NULL) {
-        return NULL;
-    }
-
-    while (q->next != NULL) {
-        q = q->next;
-    }
-
-    return q;
-}
-
-/* Insert an entry into a testcase queue in a sorted manner, i.e. ascending by the target BB distances. */
-
-void queue_insert_sorted(struct queue_entry **head, struct queue_entry *elem) {
-    struct queue_entry *q = *head;
-    if (*head == NULL || (*head)->distance >= elem->distance) {
-        elem->next = *head;
-        *head = elem;
-    } else {
-        // Place inputs with unknown distance (= -1) at the end of the queue
-        while (q->next != NULL && q->next->distance != -1 && q->next->distance < elem->distance) {
-            q = q->next;
+        if ((i % 100) == 0) {
+            q_prev100->next_100 = q;
+            q_prev100 = q;
         }
-        elem->next = q->next;
-        q->next = elem;
+
+        q = q->next;
     }
 }
 
-/* Sort a testcase queue based on the target BB distances in ascending order. */
+void update_queue() {
+    queue_sort(&queue);
 
-void queue_sort(struct queue_entry **head) {
-    struct queue_entry *sorted = NULL;
+    queue_top = queue_top_entry(queue);
+    queue_cur = queue;
 
-    u32 len = queue_length(queue);
-
-    struct queue_entry *q = *head;
-    while (q != NULL) {
-        struct queue_entry *next = q->next;
-        queue_insert_sorted(&sorted, q);
-        q = next;
-    }
-
-    assert(len == queue_length(sorted));
-
-    *head = sorted;
+    update_queue_next100();
 }
 
 /* Append new test case to the queue. */
@@ -8729,7 +8756,7 @@ retry_splicing:
             target = target->next_100;
             tid -= 100;
         }
-        while (tid--) {
+         while (tid--) {
             target = target->next;
         }
 
@@ -10758,8 +10785,7 @@ int main(int argc, char **argv) {
     cull_queue();
 
     if (dynamic_targets) {
-        queue_sort(&queue);
-        queue_top = queue_top_entry(queue);
+        update_queue();
     }
 
     show_init_stats();
@@ -10812,12 +10838,7 @@ int main(int argc, char **argv) {
                         q = q->next;
                     }
 
-                    queue_sort(&queue);
-
-                    queue_top = queue_top_entry(queue);
-
-                    // Continue fuzzing with the input that has the smallest total distance to the new target BB set
-                    queue_cur = queue;
+                    update_queue();
                 }
 
 #if defined(SFZ_DEBUG) || defined(SFZ_OUTPUT_STATS)
