@@ -1009,6 +1009,18 @@ void alloca_cnd_bits(struct queue_entry *q) {
     q->cnd_bits[0] = count;
 }
 
+u32 queue_length(struct queue_entry *_queue) {
+    u32 n = 0;
+
+    struct queue_entry *q = _queue;
+    while (q != NULL) {
+        n++;
+        q = q->next;
+    }
+
+    return n;
+}
+
 void insert_sorted(struct queue_entry **head, struct queue_entry *elem) {
     if (*head == NULL || (*head)->distance >= elem->distance) {
         elem->next = *head;
@@ -1032,6 +1044,8 @@ void sort_queue() {
         insert_sorted(&sorted, q);
         q = next;
     }
+
+    assert(queue_length(queue) == queue_length(sorted));
 
     queue = sorted;
 }
