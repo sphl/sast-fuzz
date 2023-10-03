@@ -10805,7 +10805,9 @@ int main(int argc, char **argv) {
                         q = q->next;
                     }
 
-                    queue_sort();
+                    queue_sort(&queue);
+
+                    // Continue fuzzing with the input that has the smallest total distance to the new target BB set
                     queue_cur = queue;
                 }
 
