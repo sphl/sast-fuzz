@@ -290,6 +290,7 @@ struct queue_entry {
 static struct queue_entry *queue,         //< Fuzzing queue (linked list)
                           *queue_cur,     //< Current offset within the queue
                           *queue_top,     //< Top of the list
+                          *queue_last_added, //< Last added queue entry
                           *q_prev100;     //< Previous 100 marker
 
 static struct queue_entry *top_rated[MAP_SIZE]; //< Top entries for bitmap bytes
@@ -1009,6 +1010,8 @@ void alloca_cnd_bits(struct queue_entry *q) {
     q->cnd_bits[0] = count;
 }
 
+/* Return the length of a testcase queue. */
+
 u32 queue_length(struct queue_entry *head) {
     u32 n = 0;
 
@@ -1021,23 +1024,45 @@ u32 queue_length(struct queue_entry *head) {
     return n;
 }
 
+/* Return the top-entry of a testcase queue. */
+
+struct queue_entry *queue_top_entry(struct queue_entry *head) {
+    struct queue_entry *q = head;
+
+    if (q == NULL) {
+        return NULL;
+    }
+
+    while (q->next != NULL) {
+        q = q->next;
+    }
+
+    return q;
+}
+
+/* Insert an entry into a testcase queue in a sorted manner, i.e. ascending by the target BB distances. */
+
 void queue_insert_sorted(struct queue_entry **head, struct queue_entry *elem) {
-    struct queue_entry *iter = *head;
+    struct queue_entry *q = *head;
     if (*head == NULL || (*head)->distance >= elem->distance) {
         elem->next = *head;
         *head = elem;
     } else {
         // Place inputs with unknown distance (= -1) at the end of the queue
-        while (iter->next != NULL && iter->next->distance != -1 && iter->next->distance < elem->distance) {
-            iter = iter->next;
+        while (q->next != NULL && q->next->distance != -1 && q->next->distance < elem->distance) {
+            q = q->next;
         }
-        elem->next = iter->next;
-        iter->next = elem;
+        elem->next = q->next;
+        q->next = elem;
     }
 }
 
+/* Sort a testcase queue based on the target BB distances in ascending order. */
+
 void queue_sort(struct queue_entry **head) {
     struct queue_entry *sorted = NULL;
+
+    u32 len = queue_length(queue);
 
     struct queue_entry *q = *head;
     while (q != NULL) {
@@ -1046,37 +1071,10 @@ void queue_sort(struct queue_entry **head) {
         q = next;
     }
 
-    assert(queue_length(*head) == queue_length(sorted));
+    assert(len == queue_length(sorted));
 
     *head = sorted;
 }
-
-// void update_queue() {
-//     sort_queue();
-//
-//     // queue_cur = q_prev100 = queue;
-//     queue_cur = queue;
-//
-//         u32 i = 0;
-//         struct queue_entry *q = queue;
-//         while (q != NULL) {
-//             i++;
-//
-//             // Reset old forward-jump pointers
-//             q->next_100 = NULL;
-//
-//             if ((i % 100) == 0) {
-//                 q_prev100->next_100 = q;
-//                 q_prev100 = q;
-//             }
-//
-//             if (q->next == NULL) {
-//                 queue_top = q;
-//             }
-//
-//             q = q->next;
-//         }
-// }
 
 /* Append new test case to the queue. */
 
@@ -1123,11 +1121,15 @@ static void add_to_queue(u8 *fname, u32 len, u8 passed_det) {
         queue_top->next = q;
         queue_top = q;
     } else {
-        q_prev100 = queue = queue_top = q;
+        queue = queue_top = q_prev100 = q;
     }
+
+    queue_last_added = q;
 
     queued_paths++;
     pending_not_fuzzed++;
+
+    assert(queued_paths == queue_length(queue));
 
     cycles_wo_finds = 0;
 
@@ -4254,7 +4256,7 @@ static void update_critical_conformance() {
                     top_conformance[cnd_id]->is_dead = 1;
                 }
 
-                top_conformance[cnd_id] = queue_top;
+                top_conformance[cnd_id] = queue_last_added;
                 score_changed = 1;
             }
         }
@@ -4312,12 +4314,12 @@ static u8 save_if_interesting(char **argv, void *mem, u32 len, u8 fault) {
         add_to_queue(fn, len, 0);
 
         if (hnb == 2) {
-            queue_top->has_new_cov = 1;
+            queue_last_added->has_new_cov = 1;
             queued_with_cov++;
         }
 
         // queue_top->exec_cksum = hash32(trace_bits, MAP_SIZE, HASH_CONST);
-        queue_top->exec_cksum = cksum;
+        queue_last_added->exec_cksum = cksum;
 
         if (hnc) {
             update_critical_conformance();
@@ -4326,7 +4328,7 @@ static u8 save_if_interesting(char **argv, void *mem, u32 len, u8 fault) {
         /* Try to calibrate inline; this also calls update_bitmap_score() when
            successful. */
 
-        res = calibrate_case(argv, queue_top, mem, queue_cycle - 1, 0);
+        res = calibrate_case(argv, queue_last_added, mem, queue_cycle - 1, 0);
 
         if (res == FAULT_ERROR) {
             FATAL("Unable to execute target application");
@@ -6183,11 +6185,11 @@ EXP_ST u8 common_fuzz_stuff(char **argv, u8 *out_buf, u32 len) {
     queued_discovered += is_saved;
 
     if (is_saved && is_rare_target) {
-        queue_top->is_rare_target = 1;
+        queue_last_added->is_rare_target = 1;
     }
 
     if (is_saved) {
-        queue_top->targets = tmp_targets_bits;
+        queue_last_added->targets = tmp_targets_bits;
     } else {
         ck_free(tmp_targets_bits);
     }
@@ -10755,6 +10757,11 @@ int main(int argc, char **argv) {
 
     cull_queue();
 
+    if (dynamic_targets) {
+        queue_sort(&queue);
+        queue_top = queue_top_entry(queue);
+    }
+
     show_init_stats();
 
     seek_to = find_start_position();
@@ -10806,6 +10813,8 @@ int main(int argc, char **argv) {
                     }
 
                     queue_sort(&queue);
+
+                    queue_top = queue_top_entry(queue);
 
                     // Continue fuzzing with the input that has the smallest total distance to the new target BB set
                     queue_cur = queue;
