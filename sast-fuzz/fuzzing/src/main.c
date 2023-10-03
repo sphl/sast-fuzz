@@ -1028,7 +1028,7 @@ void insert_sorted(struct queue_entry **head, struct queue_entry *elem) {
         *head = elem;
     } else {
         // Place inputs with unknown distance (= -1) at the end of the queue
-        while (iter->next != NULL && iter->next->distance < elem->distance && iter->next->distance != -1) {
+        while (iter->next != NULL && iter->next->distance != -1 && iter->next->distance < elem->distance) {
             iter = iter->next;
         }
         elem->next = iter->next;
@@ -1120,11 +1120,7 @@ static void add_to_queue(u8 *fname, u32 len, u8 passed_det) {
     }
 
     if (queue_top) {
-        if (dynamic_targets) {
-            insert_sorted(&queue, q);
-        } else {
-            queue_top->next = q;
-        }
+        queue_top->next = q;
         queue_top = q;
     } else {
         q_prev100 = queue = queue_top = q;
