@@ -1022,12 +1022,13 @@ u32 queue_length(struct queue_entry *_queue) {
 }
 
 void insert_sorted(struct queue_entry **head, struct queue_entry *elem) {
+    struct queue_entry *iter = *head;
     if (*head == NULL || (*head)->distance >= elem->distance) {
         elem->next = *head;
         *head = elem;
     } else {
-        struct queue_entry *iter = *head;
-        while (iter->next != NULL && iter->next->distance < elem->distance) {
+        // Place inputs with unknown distance (= -1) at the end of the queue
+        while (iter->next != NULL && iter->next->distance < elem->distance && iter->next->distance != -1) {
             iter = iter->next;
         }
         elem->next = iter->next;
