@@ -396,6 +396,8 @@ tbb_info_t **tbb_infos = NULL;            //< 1D array containing target BB info
 
 static int32_t **distance_matrix = NULL;  //< 2D array containing the distance of each critical BB to each target BB (-1 if unreachable)
 static float *cbb_distances = NULL;       //< 1D array containing for each critical BB the average distance to all reachable target BBs
+
+static bool dynamic_targets = true;       //< Switch to turn on/off dynamic target BB fuzzing
 // clang-format on
 
 /* Fuzzing stages */
@@ -1007,6 +1009,60 @@ void alloca_cnd_bits(struct queue_entry *q) {
     q->cnd_bits[0] = count;
 }
 
+void insert_sorted(struct queue_entry **head, struct queue_entry *elem) {
+    if (*head == NULL || (*head)->distance >= elem->distance) {
+        elem->next = *head;
+        *head = elem;
+    } else {
+        struct queue_entry *iter = *head;
+        while (iter->next != NULL && iter->next->distance < elem->distance) {
+            iter = iter->next;
+        }
+        elem->next = iter->next;
+        iter->next = elem;
+    }
+}
+
+void sort_queue() {
+    struct queue_entry *sorted = NULL;
+
+    struct queue_entry *q = queue;
+    while (q != NULL) {
+        struct queue_entry *next = q->next;
+        insert_sorted(&sorted, q);
+        q = next;
+    }
+
+    queue = sorted;
+}
+
+// void update_queue() {
+//     sort_queue();
+//
+//     // queue_cur = q_prev100 = queue;
+//     queue_cur = queue;
+//
+//         u32 i = 0;
+//         struct queue_entry *q = queue;
+//         while (q != NULL) {
+//             i++;
+//
+//             // Reset old forward-jump pointers
+//             q->next_100 = NULL;
+//
+//             if ((i % 100) == 0) {
+//                 q_prev100->next_100 = q;
+//                 q_prev100 = q;
+//             }
+//
+//             if (q->next == NULL) {
+//                 queue_top = q;
+//             }
+//
+//             q = q->next;
+//         }
+// }
+
 /* Append new test case to the queue. */
 
 static void add_to_queue(u8 *fname, u32 len, u8 passed_det) {
@@ -1049,7 +1105,11 @@ static void add_to_queue(u8 *fname, u32 len, u8 passed_det) {
     }
 
     if (queue_top) {
-        queue_top->next = q;
+        if (dynamic_targets) {
+            insert_sorted(&queue, q);
+        } else {
+            queue_top->next = q;
+        }
         queue_top = q;
     } else {
         q_prev100 = queue = queue_top = q;
@@ -6010,60 +6070,6 @@ void update_distance(struct queue_entry *q) {
     }
 }
 
-void insert_sorted(struct queue_entry **head, struct queue_entry *elem) {
-    if (*head == NULL || (*head)->distance >= elem->distance) {
-        elem->next = *head;
-        *head = elem;
-    } else {
-        struct queue_entry *iter = *head;
-        while (iter->next != NULL && iter->next->distance < elem->distance) {
-            iter = iter->next;
-        }
-        elem->next = iter->next;
-        iter->next = elem;
-    }
-}
-
-void sort_queue() {
-    struct queue_entry *sorted = NULL;
-
-    struct queue_entry *q = queue;
-    while (q != NULL) {
-        struct queue_entry *next = q->next;
-        insert_sorted(&sorted, q);
-        q = next;
-    }
-
-    queue = sorted;
-}
-
-void update_queue() {
-    sort_queue();
-
-    // queue_cur = q_prev100 = queue;
-    queue_cur = queue;
-
-//    u32 i = 0;
-//    struct queue_entry *q = queue;
-//    while (q != NULL) {
-//        i++;
-//
-//        // Reset old forward-jump pointers
-//        q->next_100 = NULL;
-//
-//        if ((i % 100) == 0) {
-//            q_prev100->next_100 = q;
-//            q_prev100 = q;
-//        }
-//
-//        if (q->next == NULL) {
-//            queue_top = q;
-//        }
-//
-//        q = q->next;
-//    }
-}
-
 /* Write a modified test case, run program, process results. Handle
    error conditions, returning 1 if it's time to bail out. This is
    a helper function for fuzz_one(). */
@@ -9431,7 +9437,8 @@ static void usage(u8 *argv0) {
 
          "  -d            - quick & dirty mode (skips deterministic steps)\n"
          "  -n            - fuzz without instrumentation (dumb mode)\n"
-         "  -x dir        - optional fuzzer dictionary (see README)\n\n"
+         "  -x dir        - optional fuzzer dictionary (see README)\n"
+         "  -X            - disable dynamic target BB fuzzing\n\n"
 
          "Other stuff:\n\n"
 
@@ -10238,7 +10245,7 @@ int main(int argc, char **argv) {
     gettimeofday(&tv, &tz);
     srandom(tv.tv_sec ^ tv.tv_usec ^ getpid());
 
-    while ((opt = getopt(argc, argv, "+i:o:w:f:m:t:T:E:dnCB:S:M:x:Qz:c:jul:r:v:")) > 0) {
+    while ((opt = getopt(argc, argv, "+i:o:w:f:m:t:T:E:dnCB:S:M:x:Qz:c:jul:r:v:X")) > 0) {
         switch (opt) {
         case 'i': /* input dir */
 
@@ -10553,6 +10560,11 @@ int main(int argc, char **argv) {
             break;
         }
 
+        case 'X': {
+            dynamic_targets = false;
+            break;
+        }
+
         default:
 
             usage(argv[0]);
@@ -10767,39 +10779,42 @@ int main(int argc, char **argv) {
             cull_queue();
         }
 
-        u32 fuzz_dur = (get_cur_time() - start_time) / 1000;
+        if (dynamic_targets) {
+            u32 fuzz_dur = (get_cur_time() - start_time) / 1000;
 
-        if (fuzz_dur >= cycle_thres) {
+            if (fuzz_dur >= cycle_thres) {
 
-            update_tbb_states();
-            update_cbb_distances();
+                update_tbb_states();
+                update_cbb_distances();
 
-            if (!explore_status) {
-                struct queue_entry *q = queue;
-                while (q != NULL) {
-                    update_distance(q);
-                    q = q->next;
+                if (!explore_status) {
+                    struct queue_entry *q = queue;
+                    while (q != NULL) {
+                        update_distance(q);
+                        q = q->next;
+                    }
+
+                    sort_queue();
+                    queue_cur = queue;
                 }
 
-                update_queue();
-            }
-
 #if defined(SFZ_DEBUG) || defined(SFZ_OUTPUT_STATS)
-            u32 old_cycle_thres = cycle_thres;
+                u32 old_cycle_thres = cycle_thres;
 #endif
 
-            cycle_thres = (fuzz_dur + log_cycle_interval(init_cycle_interval, fuzz_dur));
+                cycle_thres = (fuzz_dur + log_cycle_interval(init_cycle_interval, fuzz_dur));
 
 #if defined(SFZ_DEBUG) || defined(SFZ_OUTPUT_STATS)
-            cycle_interval = (cycle_thres - old_cycle_thres);
+                cycle_interval = (cycle_thres - old_cycle_thres);
 #endif
 
-            cycle_count++;
-            cycle_input_count = 0;
+                cycle_count++;
+                cycle_input_count = 0;
 
 #ifdef SFZ_DEBUG
-            printf("sast-fuzz: cycle interval = %u [%u] -- %ds\n", cycle_interval, cycle_count, fuzz_dur);
+                printf("sast-fuzz: cycle interval = %u [%u] -- %ds\n", cycle_interval, cycle_count, fuzz_dur);
 #endif
+            }
         }
 
         if (!queue_cur) {
