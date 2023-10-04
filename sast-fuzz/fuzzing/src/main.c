@@ -1634,8 +1634,12 @@ static bool hit_rare_targets(struct queue_entry *q) {
     for (u32 i = 0; i < n_tbbs; i++) {
         if (tbb_infos[i]->state == active) {
             if (q->targets && q->targets[i]) {
-                if (target_count[i] < TARGET_LIMIT) {
+                if (dynamic_targets) {
                     return true;
+                } else {
+                    if (target_count[i] < TARGET_LIMIT) {
+                        return true;
+                    }
                 }
             }
         }
@@ -6986,27 +6990,29 @@ static u8 fuzz_one(char **argv) {
         return 1;
     }
 
-    if (pending_favored) {
-        /* If we have any favored, non-fuzzed new arrivals in the queue,
-           possibly skip to them at the expense of already-fuzzed or non-favored
-           cases. */
+    if (!dynamic_targets || explore_status) {
+        if (pending_favored) {
+            /* If we have any favored, non-fuzzed new arrivals in the queue,
+               possibly skip to them at the expense of already-fuzzed or non-favored
+               cases. */
 
-        if ((queue_cur->was_fuzzed || !queue_cur->favored) && UR(100) < SKIP_TO_NEW_PROB) {
-            return 1;
-        }
-
-    } else if (!dumb_mode && !queue_cur->favored && queued_paths > 10) {
-        /* Otherwise, still possibly skip non-favored cases, albeit less often.
-           The odds of skipping stuff are higher for already-fuzzed inputs and
-           lower for never-fuzzed entries. */
-
-        if (cycle_count > 1 && !queue_cur->was_fuzzed) {
-            if (UR(100) < SKIP_NFAV_NEW_PROB) {
+            if ((queue_cur->was_fuzzed || !queue_cur->favored) && UR(100) < SKIP_TO_NEW_PROB) {
                 return 1;
             }
-        } else {
-            if (UR(100) < SKIP_NFAV_OLD_PROB) {
-                return 1;
+
+        } else if (!dumb_mode && !queue_cur->favored && queued_paths > 10) {
+            /* Otherwise, still possibly skip non-favored cases, albeit less often.
+               The odds of skipping stuff are higher for already-fuzzed inputs and
+               lower for never-fuzzed entries. */
+
+            if (cycle_count > 1 && !queue_cur->was_fuzzed) {
+                if (UR(100) < SKIP_NFAV_NEW_PROB) {
+                    return 1;
+                }
+            } else {
+                if (UR(100) < SKIP_NFAV_OLD_PROB) {
+                    return 1;
+                }
             }
         }
     }
@@ -10817,16 +10823,6 @@ int main(int argc, char **argv) {
     while (1) {
         u8 skipped_fuzz;
 
-        if (!pending_favored) {
-            explore_status = 1;
-        }
-
-        if (!explore_status) {
-            cb_cull_queue();
-        } else {
-            cull_queue();
-        }
-
         if (dynamic_targets) {
             u32 fuzz_dur = (get_cur_time() - start_time) / 1000;
 
@@ -10862,6 +10858,10 @@ int main(int argc, char **argv) {
 #endif
 
                 is_new_cycle = true;
+            }
+        } else {
+            if (!pending_favored) {
+                explore_status = 1;
             }
         }
 
@@ -10908,6 +10908,12 @@ int main(int argc, char **argv) {
             }
 
             is_new_cycle = false;
+        }
+
+        if (!explore_status) {
+            cb_cull_queue();
+        } else {
+            cull_queue();
         }
 
         skipped_fuzz = fuzz_one(use_argv);
