@@ -191,7 +191,7 @@ EXP_ST u64 total_crashes,                 //< Total number of crashes
            last_crash_time,               //< Time for most recent crash (ms)
            last_hang_time,                //< Time for most recent hang (ms)
            last_crash_execs,              //< Exec counter at last crash
-           queue_cycle,                   //< Queue round counter
+           // cycle_count,                //< Queue round counter (defined below)
            cycles_wo_finds,               //< Cycles without any new paths
            trim_execs,                    //< Execs done to trim input files
            bytes_trim_in,                 //< Bytes coming into the trimmer
@@ -381,7 +381,7 @@ u32 cycle_thres;                          //< Current cycle threshold (increases
 u32 cycle_interval;                       //< Current cycle interval
 #endif
 
-u32 cycle_count = 1;                      //< Number of performed cycles
+u64 cycle_count = 0;                      //< Number of performed cycles
 u64 cycle_input_count = 0;                //< Current number of fuzz inputs generated within the cycle
 
 #ifdef SFZ_OUTPUT_STATS
@@ -4355,7 +4355,7 @@ static u8 save_if_interesting(char **argv, void *mem, u32 len, u8 fault) {
         /* Try to calibrate inline; this also calls update_bitmap_score() when
            successful. */
 
-        res = calibrate_case(argv, queue_last_added, mem, queue_cycle - 1, 0);
+        res = calibrate_case(argv, queue_last_added, mem, cycle_count - 1, 0);
 
         if (res == FAULT_ERROR) {
             FATAL("Unable to execute target application");
@@ -4802,7 +4802,7 @@ static void write_stats_file(double bitmap_cvg, double stability, double eps) {
             "afl_version       : " VERSION "\n"
             "target_mode       : %s%s%s%s%s%s%s\n"
             "command_line      : %s\n",
-            start_time / 1000, get_cur_time() / 1000, getpid(), queue_cycle ? (queue_cycle - 1) : 0, total_execs, eps,
+            start_time / 1000, get_cur_time() / 1000, getpid(), cycle_count ? (cycle_count - 1) : 0, total_execs, eps,
             queued_paths, queued_favored, queued_discovered, queued_imported, max_depth, current_entry, pending_favored,
             pending_not_fuzzed, queued_variable, stability, bitmap_cvg, unique_crashes, unique_hangs,
             last_path_time / 1000, last_crash_time / 1000, last_hang_time / 1000, total_execs - last_crash_execs,
@@ -4824,7 +4824,7 @@ static void maybe_update_plot_file(double bitmap_cvg, double eps) {
     static u64 prev_qc, prev_uc, prev_uh;
 
     if (prev_qp == queued_paths && prev_pf == pending_favored && prev_pnf == pending_not_fuzzed &&
-        prev_ce == current_entry && prev_qc == queue_cycle && prev_uc == unique_crashes && prev_uh == unique_hangs &&
+        prev_ce == current_entry && prev_qc == cycle_count && prev_uc == unique_crashes && prev_uh == unique_hangs &&
         prev_md == max_depth) {
         return;
     }
@@ -4833,7 +4833,7 @@ static void maybe_update_plot_file(double bitmap_cvg, double eps) {
     prev_pf = pending_favored;
     prev_pnf = pending_not_fuzzed;
     prev_ce = current_entry;
-    prev_qc = queue_cycle;
+    prev_qc = cycle_count;
     prev_uc = unique_crashes;
     prev_uh = unique_hangs;
     prev_md = max_depth;
@@ -4845,7 +4845,7 @@ static void maybe_update_plot_file(double bitmap_cvg, double eps) {
        execs_per_sec */
 
     fprintf(plot_file, "%llu, %llu, %u, %u, %u, %u, %0.02f%%, %llu, %llu, %u, %0.02f, %s\n", get_cur_time() / 1000,
-            queue_cycle - 1, current_entry, queued_paths, pending_not_fuzzed, pending_favored, bitmap_cvg,
+            cycle_count - 1, current_entry, queued_paths, pending_not_fuzzed, pending_favored, bitmap_cvg,
             unique_crashes, unique_hangs, max_depth, eps, DI(total_execs)); /* ignore errors */
 
     fflush(plot_file);
@@ -5385,7 +5385,7 @@ static void show_stats(void) {
         u64 min_wo_finds = (cur_ms - last_path_time) / 1000 / 60;
 
         /* First queue cycle: don't stop now! */
-        if (queue_cycle == 1 || min_wo_finds < 15) {
+        if (cycle_count == 1 || min_wo_finds < 15) {
             strcpy(tmp, cMGN);
         } else
 
@@ -5406,12 +5406,12 @@ static void show_stats(void) {
     }
 
     SAYF(bV bSTOP "        run time : " cRST "%-34s " bSTG bV bSTOP "  cycles done : %s%-5s  " bSTG bV "\n",
-         DTD(cur_ms, start_time), tmp, DI(queue_cycle - 1));
+         DTD(cur_ms, start_time), tmp, DI(cycle_count - 1));
 
     /* We want to warn people about not seeing new paths after a full cycle,
        except when resuming fuzzing or running in non-instrumented mode. */
 
-    if (!dumb_mode && (last_path_time || resuming_fuzz || queue_cycle == 1 || in_bitmap || crash_mode)) {
+    if (!dumb_mode && (last_path_time || resuming_fuzz || cycle_count == 1 || in_bitmap || crash_mode)) {
         SAYF(bV bSTOP "   last new path : " cRST "%-34s ", DTD(cur_ms, last_path_time));
 
     } else {
@@ -6196,7 +6196,7 @@ EXP_ST u8 common_fuzz_stuff(char **argv, u8 *out_buf, u32 len) {
             }
         }
 
-        fprintf(stats_fd, "%d,%u,%u,%u,%.2f,%d,%d,%d,%llu\n", fuzz_dur, cycle_count, init_cycle_interval,
+        fprintf(stats_fd, "%d,%llu,%u,%u,%.2f,%d,%d,%d,%llu\n", fuzz_dur, cycle_count, init_cycle_interval,
                 cycle_interval, hc_reduct_factor, n_tbbs, n_tbbs_hit, n_tbbs_finished, unique_crashes);
 
         // Enforce file write operation ...
@@ -6251,7 +6251,7 @@ EXP_ST u8 common_fuzz_stuff(char **argv, u8 *out_buf, u32 len) {
 
 static u32 choose_block_len(u32 limit) {
     u32 min_value, max_value;
-    u32 rlim = MIN(queue_cycle, 3);
+    u32 rlim = MIN(cycle_count, 3);
 
     if (!run_over10m) {
         rlim = 1;
@@ -7000,7 +7000,7 @@ static u8 fuzz_one(char **argv) {
            The odds of skipping stuff are higher for already-fuzzed inputs and
            lower for never-fuzzed entries. */
 
-        if (queue_cycle > 1 && !queue_cur->was_fuzzed) {
+        if (cycle_count > 1 && !queue_cur->was_fuzzed) {
             if (UR(100) < SKIP_NFAV_NEW_PROB) {
                 return 1;
             }
@@ -7057,7 +7057,7 @@ static u8 fuzz_one(char **argv) {
         u8 res = FAULT_TMOUT;
 
         if (queue_cur->cal_failed < CAL_CHANCES) {
-            res = calibrate_case(argv, queue_cur, in_buf, queue_cycle - 1, 0);
+            res = calibrate_case(argv, queue_cur, in_buf, cycle_count - 1, 0);
 
             if (res == FAULT_ERROR) {
                 FATAL("Unable to execute target application");
@@ -10276,6 +10276,8 @@ int main(int argc, char **argv) {
     u8 exit_1 = !!getenv("AFL_BENCH_JUST_ONE");
     char **use_argv;
 
+    bool is_new_cycle = false;
+
     struct timeval tv;
     struct timezone tz;
 
@@ -10787,6 +10789,7 @@ int main(int argc, char **argv) {
 
     if (dynamic_targets) {
         update_queue();
+        is_new_cycle = true;
     }
 
     show_init_stats();
@@ -10852,21 +10855,25 @@ int main(int argc, char **argv) {
                 cycle_interval = (cycle_thres - old_cycle_thres);
 #endif
 
-                cycle_count++;
                 cycle_input_count = 0;
 
 #ifdef SFZ_DEBUG
-                printf("sast-fuzz: cycle interval = %u [%u] -- %ds\n", cycle_interval, cycle_count, fuzz_dur);
+                printf("sast-fuzz: cycle interval = %u [%llu] -- %ds\n", cycle_interval, cycle_count, fuzz_dur);
 #endif
+
+                is_new_cycle = true;
             }
         }
 
-        if (!queue_cur) {
-            queue_cycle++;
+        if (queue_cur == NULL) {
+            queue_cur = queue;
+            is_new_cycle = !dynamic_targets;
+        }
+
+        if (is_new_cycle) {
+            cycle_count++;
             current_entry = 0;
             cur_skipped_paths = 0;
-
-            queue_cur = queue;
 
             // while (seek_to) {
             //     current_entry++;
@@ -10877,7 +10884,7 @@ int main(int argc, char **argv) {
             show_stats();
 
             if (not_on_tty) {
-                ACTF("Entering queue cycle %llu.", queue_cycle);
+                ACTF("Entering queue cycle %llu.", cycle_count);
                 fflush(stdout);
             }
 
@@ -10896,9 +10903,11 @@ int main(int argc, char **argv) {
 
             prev_queued = queued_paths;
 
-            if (sync_id && queue_cycle == 1 && getenv("AFL_IMPORT_FIRST")) {
+            if (sync_id && cycle_count == 1 && getenv("AFL_IMPORT_FIRST")) {
                 sync_fuzzers(use_argv);
             }
+
+            is_new_cycle = false;
         }
 
         skipped_fuzz = fuzz_one(use_argv);
@@ -10957,7 +10966,7 @@ stop_fuzzing:
 
     /* Running for more than 30 minutes but still doing first cycle? */
 
-    if (queue_cycle == 1 && get_cur_time() - start_time > 30 * 60 * 1000) {
+    if (cycle_count == 1 && get_cur_time() - start_time > 30 * 60 * 1000) {
         SAYF("\n" cYEL "[!] " cRST "Stopped during the first cycle, results may be incomplete.\n"
              "    (For info on resuming, see %s/README.)\n",
              doc_path);
