@@ -357,7 +357,7 @@ static u32 period_critical_count;
 
 // static FILE *distance_log;
 
-static u8 explore_status = 0;
+static bool explore_status = false;
 
 static u32 target_exec = 0;
 
@@ -545,20 +545,25 @@ static struct queue_entry *queue_top_entry(struct queue_entry *head) {
     return q;
 }
 
-/* Returns true if the sort criteria for placing a before b in the testcase queue are met, false otherwise. */
+/* Returns true if the sorting criteria for placing a before b in the testcase queue are met, false otherwise. */
 
-static inline bool queue_place_before(struct queue_entry *a, struct queue_entry *b) {
+static inline bool queue_cmp_func(bool a_hit_rare, float a_distance, bool b_hit_rare, float b_distance) {
     // clang-format off
-    if (b == NULL) { return true; }
-
-    bool a_hit_rare = hit_rare_targets(a);
-    bool b_hit_rare = hit_rare_targets(b);
-
-    return b->distance == -1 ||
+    return b_distance == -1 ||
            ( a_hit_rare && !b_hit_rare) ||
-           ( a_hit_rare &&  b_hit_rare && a->distance < b->distance) ||
-           (!a_hit_rare && !b_hit_rare && a->distance < b->distance);
+           ( a_hit_rare &&  b_hit_rare && a_distance < b_distance) ||
+           (!a_hit_rare && !b_hit_rare && a_distance < b_distance);
     // clang-format on
+}
+
+static inline bool queue_place_before(bool a_hit_rare, struct queue_entry *a, struct queue_entry *b) {
+    if (b == NULL) {
+        return true;
+    } else {
+        bool b_hit_rare = hit_rare_targets(b);
+
+        return queue_cmp_func(a_hit_rare, a->distance, b_hit_rare, b->distance);
+    }
 }
 
 /* Insert an entry into a testcase queue in a sorted manner, i.e. ascending by the target BB distances. */
@@ -566,11 +571,13 @@ static inline bool queue_place_before(struct queue_entry *a, struct queue_entry 
 static void queue_insert_sorted(struct queue_entry **head, struct queue_entry *elem) {
     struct queue_entry *q = *head;
 
-    if (queue_place_before(elem, q)) {
+    bool elem_hr = hit_rare_targets(elem);
+
+    if (queue_place_before(elem_hr, elem, q)) {
         elem->next = *head;
         *head = elem;
     } else {
-        while (!queue_place_before(elem, q->next)) {
+        while (!queue_place_before(elem_hr, elem, q->next)) {
             q = q->next;
         }
         elem->next = q->next;
@@ -10846,7 +10853,7 @@ int main(int argc, char **argv) {
 
                 if (!explore_status) {
                     update_cbb_distances();
-                    
+
                     struct queue_entry *q = queue;
                     while (q != NULL) {
                         update_distance(q);
@@ -10876,7 +10883,7 @@ int main(int argc, char **argv) {
             }
         } else {
             if (!pending_favored) {
-                explore_status = 1;
+                explore_status = true;
             }
         }
 
