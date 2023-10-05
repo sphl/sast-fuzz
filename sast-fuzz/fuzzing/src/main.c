@@ -355,8 +355,6 @@ static u8 is_rare_target;
 
 static u32 period_critical_count;
 
-// static FILE *distance_log;
-
 static bool explore_status = false;
 
 static u32 target_exec = 0;
@@ -1015,12 +1013,15 @@ void update_cbb_distances() {
 }
 
 float calculate_cb_distance() {
-    float distance = 0.0f;
+    float dist_factor, distance = 0.0f;
 
     const u8 *cbb_trace = (trace_bits + MAP_SIZE + 16);
 
-    float vuln_factor = get_vuln_factor(cbb_trace);
-    float dist_factor = get_dist_factor(DEFAULT_DIFFICULTY, vuln_factor);
+    if (!dynamic_targets) {
+        dist_factor = DEFAULT_DIFFICULTY;
+    } else {
+        dist_factor = get_dist_factor(DEFAULT_DIFFICULTY, get_vuln_factor(cbb_trace));
+    }
 
     u32 count = 0;
     for (u32 i = 0; i < MAP_SIZE; i++) {
@@ -6096,7 +6097,7 @@ void update_tbb_states() {
 }
 
 void update_distance(struct queue_entry *q) {
-    float distance = 0.0f;
+    float dist_factor, distance = 0.0f;
 
     float vuln_factor = get_vuln_factor(q->targets);
 
@@ -6122,7 +6123,11 @@ void update_distance(struct queue_entry *q) {
                 }
             }
 
-            float dist_factor = get_dist_factor(dflt_factor, vuln_factor);
+            if (!dynamic_targets) {
+                dist_factor = dflt_factor;
+            } else {
+                dist_factor = get_dist_factor(dflt_factor, vuln_factor);
+            }
 
             distance += (cbb_dist * dist_factor);
             count++;
@@ -10792,10 +10797,6 @@ int main(int argc, char **argv) {
         use_argv = argv + optind;
     }
 
-    // char *tmp = alloc_printf("%s/distance.log", out_dir);
-    // distance_log = fopen(tmp, "w");
-    // ck_free(tmp);
-
 #ifdef SFZ_OUTPUT_STATS
     char *stats_fname = alloc_printf("%s/sfz_stats.csv", out_dir);
     stats_fd = fopen(stats_fname, "w");
@@ -11017,8 +11018,6 @@ stop_fuzzing:
 
     ck_free(cbb_distances);
     ck_free(critical_ids);
-
-    // fclose(distance_log);
 
 #ifdef SFZ_OUTPUT_STATS
     fclose(stats_fd);
