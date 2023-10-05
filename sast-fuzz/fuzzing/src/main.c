@@ -497,9 +497,27 @@ static void shuffle_ptrs(void **ptrs, u32 cnt) {
     }
 }
 
+static bool hit_rare_targets(struct queue_entry *q) {
+    for (u32 i = 0; i < n_tbbs; i++) {
+        if (tbb_infos[i]->state == active) {
+            if (q->targets && q->targets[i]) {
+                if (dynamic_targets) {
+                    return true;
+                } else {
+                    if (target_count[i] < TARGET_LIMIT) {
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+
+    return false;
+}
+
 /* Return the length of a testcase queue. */
 
-u32 queue_length(struct queue_entry *head) {
+static u32 queue_length(struct queue_entry *head) {
     u32 n = 0;
 
     struct queue_entry *q = head;
@@ -513,7 +531,7 @@ u32 queue_length(struct queue_entry *head) {
 
 /* Return the top-entry of a testcase queue. */
 
-struct queue_entry *queue_top_entry(struct queue_entry *head) {
+static struct queue_entry *queue_top_entry(struct queue_entry *head) {
     struct queue_entry *q = head;
 
     if (q == NULL) {
@@ -527,16 +545,32 @@ struct queue_entry *queue_top_entry(struct queue_entry *head) {
     return q;
 }
 
+/* Returns true if the sort criteria for placing a before b in the testcase queue are met, false otherwise. */
+
+static inline bool queue_place_before(struct queue_entry *a, struct queue_entry *b) {
+    // clang-format off
+    if (b == NULL) { return true; }
+
+    bool a_hit_rare = hit_rare_targets(a);
+    bool b_hit_rare = hit_rare_targets(b);
+
+    return b->distance == -1 ||
+           ( a_hit_rare && !b_hit_rare) ||
+           ( a_hit_rare &&  b_hit_rare && a->distance < b->distance) ||
+           (!a_hit_rare && !b_hit_rare && a->distance < b->distance);
+    // clang-format on
+}
+
 /* Insert an entry into a testcase queue in a sorted manner, i.e. ascending by the target BB distances. */
 
-void queue_insert_sorted(struct queue_entry **head, struct queue_entry *elem) {
+static void queue_insert_sorted(struct queue_entry **head, struct queue_entry *elem) {
     struct queue_entry *q = *head;
-    if (*head == NULL || (*head)->distance >= elem->distance) {
+
+    if (queue_place_before(elem, q)) {
         elem->next = *head;
         *head = elem;
     } else {
-        // Place inputs with unknown distance (= -1) at the end of the queue
-        while (q->next != NULL && q->next->distance != -1 && q->next->distance < elem->distance) {
+        while (!queue_place_before(elem, q->next)) {
             q = q->next;
         }
         elem->next = q->next;
@@ -546,7 +580,7 @@ void queue_insert_sorted(struct queue_entry **head, struct queue_entry *elem) {
 
 /* Sort a testcase queue based on the target BB distances in ascending order. */
 
-void queue_sort(struct queue_entry **head) {
+static void queue_sort(struct queue_entry **head) {
     struct queue_entry *sorted = NULL;
 
     u32 len = queue_length(queue);
@@ -1628,24 +1662,6 @@ static void update_cb_bitmap_score(struct queue_entry *q) {
 
         cb_score_changed = 1;
     }
-}
-
-static bool hit_rare_targets(struct queue_entry *q) {
-    for (u32 i = 0; i < n_tbbs; i++) {
-        if (tbb_infos[i]->state == active) {
-            if (q->targets && q->targets[i]) {
-                if (dynamic_targets) {
-                    return true;
-                } else {
-                    if (target_count[i] < TARGET_LIMIT) {
-                        return true;
-                    }
-                }
-            }
-        }
-    }
-
-    return false;
 }
 
 /* The second part of the mechanism discussed above is a routine that
