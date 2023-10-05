@@ -10843,9 +10843,10 @@ int main(int argc, char **argv) {
             if (fuzz_dur >= cycle_thres) {
 
                 update_tbb_states();
-                update_cbb_distances();
 
                 if (!explore_status) {
+                    update_cbb_distances();
+                    
                     struct queue_entry *q = queue;
                     while (q != NULL) {
                         update_distance(q);
