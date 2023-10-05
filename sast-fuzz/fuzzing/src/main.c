@@ -9474,7 +9474,7 @@ static void usage(u8 *argv0) {
 
          "  -z schedule   - temperature-based power schedules\n"
          "                  {exp, log, lin, quad} (Default: exp)\n"
-         "  -l secs       - cycle interval\n"
+         "  -l secs       - cycle interval; disable dyn. targets with -1\n"
          "                  (range: secs >= 60, default: 7200 [2h])\n"
          "  -c min        - time from start when SA enters exploitation\n"
          "                  in secs (s), mins (m), hrs (h), or days (d)\n\n"
@@ -9499,8 +9499,7 @@ static void usage(u8 *argv0) {
 
          "  -d            - quick & dirty mode (skips deterministic steps)\n"
          "  -n            - fuzz without instrumentation (dumb mode)\n"
-         "  -x dir        - optional fuzzer dictionary (see README)\n"
-         "  -X            - disable dynamic target BB fuzzing\n\n"
+         "  -x dir        - optional fuzzer dictionary (see README)\n\n"
 
          "Other stuff:\n\n"
 
@@ -10310,7 +10309,7 @@ int main(int argc, char **argv) {
     gettimeofday(&tv, &tz);
     srandom(tv.tv_sec ^ tv.tv_usec ^ getpid());
 
-    while ((opt = getopt(argc, argv, "+i:o:w:f:m:t:T:E:dnCB:S:M:x:Qz:c:jul:r:v:X")) > 0) {
+    while ((opt = getopt(argc, argv, "+i:o:w:f:m:t:T:E:dnCB:S:M:x:Qz:c:jul:r:v:")) > 0) {
         switch (opt) {
         case 'i': /* input dir */
 
@@ -10590,12 +10589,16 @@ int main(int argc, char **argv) {
             break;
 
         case 'l': {
-            u64 interval = atol(optarg);
+            s64 interval = atol(optarg);
 
-            if (interval >= 60) {
-                init_cycle_interval = interval;
+            if (interval == -1) {
+                dynamic_targets = false;
             } else {
-                FATAL("Cycle interval must be at least 60 seconds");
+                if (interval >= 60) {
+                    init_cycle_interval = (u32)interval;
+                } else {
+                    FATAL("Cycle interval must be at least 60 seconds");
+                }
             }
 
             break;
@@ -10622,11 +10625,6 @@ int main(int argc, char **argv) {
                 FATAL("Threshold of the vulnerability score must be between 0 and 1");
             }
 
-            break;
-        }
-
-        case 'X': {
-            dynamic_targets = false;
             break;
         }
 
