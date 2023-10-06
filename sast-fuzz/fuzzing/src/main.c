@@ -324,7 +324,6 @@ u8 solved_cbbs[MAP_SIZE];
 
 u8 *distance_bits;
 
-// Note: Condition IDs start at 1
 u32 n_cnds = 1;
 
 u8   condition_info[MAP_SIZE];     //< Condition var/const infos
@@ -354,7 +353,7 @@ u8 *(*post_handler)(u8 *buf, u32 *len);
 
 /* Interesting values, as per config.h */
 
-s8 interesting_8[] = {INTERESTING_8};
+s8 interesting_8[]   = {INTERESTING_8};
 s16 interesting_16[] = {INTERESTING_8, INTERESTING_16};
 s32 interesting_32[] = {INTERESTING_8, INTERESTING_16, INTERESTING_32};
 
@@ -382,7 +381,7 @@ bool dynamic_targets = true;       //< Switch to turn on/off dynamic target BB f
 FILE *stats_fd = NULL;             //< File descriptor of the output stats file
 
 u64 stats_count = 1;               //< Number of written stat entries
-u64 stats_interval = (15 * 60);    //< Interval (in seconds) at which stats entries should be written
+u64 stats_interval = (15 * 60);    //< Interval (in seconds) at which the fuzzing stats are written
 #endif
 
 int cbb_id_map[MAP_SIZE];          //< Mapping between SASTFuzz and WindRanger critical BB IDs
