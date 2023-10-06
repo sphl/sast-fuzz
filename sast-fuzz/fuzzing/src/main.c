@@ -372,12 +372,7 @@ u32 cycle_interval;                //< Current cycle interval
 u64 cycle_count = 0;               //< Number of performed cycles
 u64 cycle_input_count = 0;         //< Current number of fuzz inputs generated within the cycle
 
-bool dynamic_targets = true;       //< Switch to turn on/off dynamic target BB fuzzing
-
 #ifdef SFZ_OUTPUT_STATS
-
-#define S(val) ((dynamic_targets) ? (val) : -1)
-
 FILE *stats_fd = NULL;             //< File descriptor of the output stats file
 
 u64 stats_count = 1;               //< Number of written stat entries
@@ -492,13 +487,7 @@ bool hit_rare_targets(struct queue_entry *q) {
     for (u32 i = 0; i < n_tbbs; i++) {
         if (tbb_infos[i]->state == active) {
             if (q->targets && q->targets[i]) {
-                if (dynamic_targets) {
-                    return true;
-                } else {
-                    if (target_count[i] < TARGET_LIMIT) {
-                        return true;
-                    }
-                }
+                return true;
             }
         }
     }
@@ -998,15 +987,11 @@ void update_cbb_distances() {
 }
 
 float calculate_cb_distance() {
-    float dist_factor, distance = 0.0f;
+    float distance = 0.0f;
 
     const u8 *cbb_trace = (trace_bits + MAP_SIZE + 16);
 
-    if (!dynamic_targets) {
-        dist_factor = DEFAULT_DIFFICULTY;
-    } else {
-        dist_factor = get_dist_factor(DEFAULT_DIFFICULTY, get_vuln_factor(cbb_trace));
-    }
+    float dist_factor = get_dist_factor(DEFAULT_DIFFICULTY, get_vuln_factor(cbb_trace));
 
     u32 count = 0;
     for (u32 i = 0; i < MAP_SIZE; i++) {
@@ -6059,7 +6044,7 @@ void update_tbb_states() {
 }
 
 void update_distance(struct queue_entry *q) {
-    float dist_factor, distance = 0.0f;
+    float distance = 0.0f;
 
     float vuln_factor = get_vuln_factor(q->targets);
 
@@ -6085,11 +6070,7 @@ void update_distance(struct queue_entry *q) {
                 }
             }
 
-            if (!dynamic_targets) {
-                dist_factor = dflt_factor;
-            } else {
-                dist_factor = get_dist_factor(dflt_factor, vuln_factor);
-            }
+            float dist_factor = get_dist_factor(dflt_factor, vuln_factor);
 
             distance += (cbb_dist * dist_factor);
             count++;
@@ -6191,7 +6172,7 @@ u8 common_fuzz_stuff(char **argv, u8 *out_buf, u32 len) {
         }
 
         fprintf(stats_fd, "%d,%llu,%s,%d,%d,%.2f,%d,%d,%d,%llu\n", fuzz_dur, cycle_count,
-                ((explore_status) ? "cov" : "dir"), S(init_cycle_interval), S(cycle_interval), hc_reduct_factor, n_tbbs,
+                ((explore_status) ? "cov" : "dir"), init_cycle_interval, cycle_interval, hc_reduct_factor, n_tbbs,
                 n_tbbs_hit, n_tbbs_finished, unique_crashes);
 
         // Enforce file write operation ...
@@ -6981,7 +6962,7 @@ u8 fuzz_one(char **argv) {
         return 1;
     }
 
-    if (!dynamic_targets || explore_status) {
+    if (explore_status) {
         if (pending_favored) {
             /* If we have any favored, non-fuzzed new arrivals in the queue,
                possibly skip to them at the expense of already-fuzzed or non-favored
@@ -10547,14 +10528,10 @@ int main(int argc, char **argv) {
         case 'l': {
             s64 interval = atol(optarg);
 
-            if (interval == -1) {
-                dynamic_targets = false;
+            if (interval >= 60) {
+                init_cycle_interval = (u32)interval;
             } else {
-                if (interval >= 60) {
-                    init_cycle_interval = (u32)interval;
-                } else {
-                    FATAL("Cycle interval must be at least 60 seconds");
-                }
+                FATAL("Cycle interval must be at least 60 seconds");
             }
 
             break;
@@ -10757,13 +10734,8 @@ int main(int argc, char **argv) {
 
     perform_dry_run(use_argv);
 
-    if (!dynamic_targets) {
-        cull_queue();
-    } else {
-        update_queue();
-
-        is_new_cycle = true;
-    }
+    update_queue();
+    is_new_cycle = true;
 
     show_init_stats();
 
@@ -10789,12 +10761,11 @@ int main(int argc, char **argv) {
     while (1) {
         u8 skipped_fuzz;
 
-        if (dynamic_targets) {
-            u32 fuzz_dur = (get_cur_time() - start_time) / 1000;
+        u32 fuzz_dur = (get_cur_time() - start_time) / 1000;
 
-            if (fuzz_dur >= cycle_thres) {
+        if (fuzz_dur >= cycle_thres) {
 
-                update_tbb_states();
+            update_tbb_states();
 
                 if (!explore_status) {
                     min_distance = -1.0f;
@@ -10812,62 +10783,37 @@ int main(int argc, char **argv) {
                     update_queue();
                 }
 
-#if defined(SFZ_DEBUG) || defined(SFZ_OUTPUT_STATS)
-                u32 old_cycle_thres = cycle_thres;
-#endif
-
-                cycle_thres = (fuzz_dur + log_cycle_interval(init_cycle_interval, fuzz_dur));
+                update_queue();
+            }
 
 #if defined(SFZ_DEBUG) || defined(SFZ_OUTPUT_STATS)
-                cycle_interval = (cycle_thres - old_cycle_thres);
+            u32 old_cycle_thres = cycle_thres;
 #endif
 
-                cycle_input_count = 0;
+            cycle_thres = (fuzz_dur + log_cycle_interval(init_cycle_interval, fuzz_dur));
+
+#if defined(SFZ_DEBUG) || defined(SFZ_OUTPUT_STATS)
+            cycle_interval = (cycle_thres - old_cycle_thres);
+#endif
+
+            cycle_input_count = 0;
 
 #ifdef SFZ_DEBUG
-                printf("sast-fuzz: cycle interval = %u [%llu] -- %ds\n", cycle_interval, cycle_count, fuzz_dur);
+            printf("sast-fuzz: cycle interval = %u [%llu] -- %ds\n", cycle_interval, cycle_count, fuzz_dur);
 #endif
 
-                is_new_cycle = true;
-            }
+            is_new_cycle = true;
+        }
 
-            if (explore_status) {
-                cull_queue();
-            }
-        } else {
-            // ---------------------------------------------------------------------------------------------------------
-            explore_status = true;
-
-            for (u32 i = 0; i < critical_ids[0]; i++) {
-                if (critical_count[critical_ids[i + 1]] && !solved_cbbs[critical_ids[i + 1]] &&
-                    critical_count[critical_ids[i + 1]] < BLOCK_TIMES) {
-                    explore_status = false;
-                }
-            }
-
-            if (!pending_favored) {
-                explore_status = true;
-            }
-            // ---------------------------------------------------------------------------------------------------------
-
-            if (explore_status) {
-                cull_queue();
-            } else {
-                cb_cull_queue();
-            }
+        if (explore_status) {
+            cull_queue();
         }
 
         if (queue_cur == NULL) {
             queue_cur = queue;
 
-            if (!dynamic_targets) {
-                is_new_cycle = true;
-            } else {
-                is_new_cycle = false;
-
-                cur_skipped_paths = current_entry = 0;
-                show_stats();
-            }
+            cur_skipped_paths = current_entry = 0;
+            show_stats();
         }
 
         if (is_new_cycle) {
