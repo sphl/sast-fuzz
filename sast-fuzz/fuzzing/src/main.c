@@ -3688,8 +3688,6 @@ u8 calibrate_case(char **argv, struct queue_entry *q, u8 *use_mem, u32 handicap,
             }
 
             if (q->exec_cksum) {
-                u32 i;
-
                 for (i = 0; i < MAP_SIZE; i++) {
                     if (!var_bytes[i] && first_trace[i] != trace_bits[i]) {
                         var_bytes[i] = 1;
@@ -10872,6 +10870,7 @@ int main(int argc, char **argv) {
                 is_new_cycle = false;
 
                 cur_skipped_paths = current_entry = 0;
+                show_stats();
             }
         }
 
