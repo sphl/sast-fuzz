@@ -301,8 +301,8 @@ struct extra_data *a_extras;       //< Automatically selected extras
 u32 a_extras_cnt;                  //< Total number of tokens available
 
 float cur_distance = -1.0f;        //< Distance of executed input
-float max_distance = -1.0f;        //< Maximal distance for any input
 float min_distance = -1.0f;        //< Minimal distance for any input
+float max_distance = -1.0f;        //< Maximal distance for any input
 u32 t_x = 10;                      //< Time to exploitation (Default: 10 min)
 
 u32 active_count = 0;
@@ -1101,6 +1101,22 @@ void alloca_cnd_bits(struct queue_entry *q) {
     q->cnd_bits[0] = count;
 }
 
+void update_min_max_distance(float distance) {
+    if (distance > 0.0f) {
+        if (max_distance <= 0.0f) {
+            min_distance = distance;
+            max_distance = distance;
+        } else {
+            if (distance < min_distance) {
+                min_distance = distance;
+            }
+            if (distance > max_distance) {
+                max_distance = distance;
+            }
+        }
+    }
+}
+
 /* Append new test case to the queue. */
 
 void add_to_queue(u8 *fname, u32 len, u8 passed_det) {
@@ -1123,20 +1139,7 @@ void add_to_queue(u8 *fname, u32 len, u8 passed_det) {
 
     q->distance = cur_distance;
 
-    if (cur_distance > 0) {
-        if (max_distance <= 0) {
-            max_distance = cur_distance;
-            min_distance = cur_distance;
-        }
-
-        if (cur_distance > max_distance) {
-            max_distance = cur_distance;
-        }
-
-        if (cur_distance < min_distance) {
-            min_distance = cur_distance;
-        }
-    }
+    update_min_max_distance(cur_distance);
 
     if (q->depth > max_depth) {
         max_depth = q->depth;
@@ -3665,18 +3668,7 @@ u8 calibrate_case(char **argv, struct queue_entry *q, u8 *use_mem, u32 handicap,
 
             q->distance = cur_distance;
 
-            if (cur_distance > 0) {
-                if (max_distance <= 0) {
-                    max_distance = cur_distance;
-                    min_distance = cur_distance;
-                }
-                if (cur_distance > max_distance) {
-                    max_distance = cur_distance;
-                }
-                if (cur_distance < min_distance) {
-                    min_distance = cur_distance;
-                }
-            }
+            update_min_max_distance(cur_distance);
         }
 
         alloca_cnd_bits(q);
@@ -10805,11 +10797,15 @@ int main(int argc, char **argv) {
                 update_tbb_states();
 
                 if (!explore_status) {
+                    min_distance = -1.0f;
+                    max_distance = -1.0f;
+
                     update_cbb_distances();
 
                     struct queue_entry *q = queue;
                     while (q != NULL) {
                         update_distance(q);
+                        update_min_max_distance(q->distance);
                         q = q->next;
                     }
 
