@@ -381,11 +381,16 @@ u32 cycle_interval;                       //< Current cycle interval
 u64 cycle_count = 0;                      //< Number of performed cycles
 u64 cycle_input_count = 0;                //< Current number of fuzz inputs generated within the cycle
 
+static bool dynamic_targets = true;       //< Switch to turn on/off dynamic target BB fuzzing
+
 #ifdef SFZ_OUTPUT_STATS
+
+#define S(val) ((dynamic_targets) ? (val) : -1)
+
 FILE *stats_fd = NULL;                    //< File descriptor of the output stats file
 
 u64 stats_count = 1;                      //< Number of written stat entries
-u64 stats_interval = (5 * 60);            //< Interval (in seconds) at which stats entries should be written
+u64 stats_interval = (15 * 60);            //< Interval (in seconds) at which stats entries should be written
 #endif
 
 static int cbb_id_map[MAP_SIZE];          //< Mapping between SASTFuzz and WindRanger critical BB IDs
@@ -394,8 +399,6 @@ tbb_info_t **tbb_infos = NULL;            //< 1D array containing target BB info
 
 static int32_t **distance_matrix = NULL;  //< 2D array containing the distance of each critical BB to each target BB (-1 if unreachable)
 static float *cbb_distances = NULL;       //< 1D array containing for each critical BB the average distance to all reachable target BBs
-
-static bool dynamic_targets = true;       //< Switch to turn on/off dynamic target BB fuzzing
 // clang-format on
 
 /* Fuzzing stages */
@@ -6226,8 +6229,8 @@ EXP_ST u8 common_fuzz_stuff(char **argv, u8 *out_buf, u32 len) {
             }
         }
 
-        fprintf(stats_fd, "%d,%llu,%s,%u,%u,%.2f,%d,%d,%d,%llu\n", fuzz_dur, cycle_count,
-                ((explore_status) ? "cov" : "dir"), init_cycle_interval, cycle_interval, hc_reduct_factor, n_tbbs,
+        fprintf(stats_fd, "%d,%llu,%s,%d,%d,%.2f,%d,%d,%d,%llu\n", fuzz_dur, cycle_count,
+                ((explore_status) ? "cov" : "dir"), S(init_cycle_interval), S(cycle_interval), hc_reduct_factor, n_tbbs,
                 n_tbbs_hit, n_tbbs_finished, unique_crashes);
 
         // Enforce file write operation ...
