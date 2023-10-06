@@ -191,7 +191,6 @@ EXP_ST u64 total_crashes,                 //< Total number of crashes
            last_crash_time,               //< Time for most recent crash (ms)
            last_hang_time,                //< Time for most recent hang (ms)
            last_crash_execs,              //< Exec counter at last crash
-           // cycle_count,                //< Queue round counter (defined below)
            cycles_wo_finds,               //< Cycles without any new paths
            trim_execs,                    //< Execs done to trim input files
            bytes_trim_in,                 //< Bytes coming into the trimmer
@@ -4373,7 +4372,6 @@ static u8 save_if_interesting(char **argv, void *mem, u32 len, u8 fault) {
             queued_with_cov++;
         }
 
-        // queue_top->exec_cksum = hash32(trace_bits, MAP_SIZE, HASH_CONST);
         queue_last_added->exec_cksum = cksum;
 
         if (hnc) {
@@ -4679,45 +4677,45 @@ static u8 save_if_crash(char **argv, void *mem, u32 len, u8 fault) {
 /* When resuming, try to find the queue position to start from. This makes sense
    only when resuming, and when we can find the original fuzzer_stats. */
 
-// static u32 find_start_position(void) {
-//     static u8 tmp[4096]; /* Ought to be enough for anybody. */
-//
-//     u8 *fn, *off;
-//     s32 fd, i;
-//     u32 ret;
-//
-//     if (!resuming_fuzz) {
-//         return 0;
-//     }
-//
-//     if (in_place_resume) {
-//         fn = alloc_printf("%s/fuzzer_stats", out_dir);
-//     } else {
-//         fn = alloc_printf("%s/../fuzzer_stats", in_dir);
-//     }
-//
-//     fd = open(fn, O_RDONLY);
-//     ck_free(fn);
-//
-//     if (fd < 0) {
-//         return 0;
-//     }
-//
-//     i = read(fd, tmp, sizeof(tmp) - 1);
-//     (void)i; /* Ignore errors */
-//     close(fd);
-//
-//     off = strstr(tmp, "cur_path          : ");
-//     if (!off) {
-//         return 0;
-//     }
-//
-//     ret = atoi(off + 20);
-//     if (ret >= queued_paths) {
-//         ret = 0;
-//     }
-//     return ret;
-// }
+static u32 find_start_position(void) {
+    static u8 tmp[4096]; /* Ought to be enough for anybody. */
+
+    u8 *fn, *off;
+    s32 fd, i;
+    u32 ret;
+
+    if (!resuming_fuzz) {
+        return 0;
+    }
+
+    if (in_place_resume) {
+        fn = alloc_printf("%s/fuzzer_stats", out_dir);
+    } else {
+        fn = alloc_printf("%s/../fuzzer_stats", in_dir);
+    }
+
+    fd = open(fn, O_RDONLY);
+    ck_free(fn);
+
+    if (fd < 0) {
+        return 0;
+    }
+
+    i = read(fd, tmp, sizeof(tmp) - 1);
+    (void)i; /* Ignore errors */
+    close(fd);
+
+    off = strstr(tmp, "cur_path          : ");
+    if (!off) {
+        return 0;
+    }
+
+    ret = atoi(off + 20);
+    if (ret >= queued_paths) {
+        ret = 0;
+    }
+    return ret;
+}
 
 /* The same, but for timeouts. The idea is that when resuming sessions without
    -t given, we don't want to keep auto-scaling the timeout over and over
@@ -5256,7 +5254,7 @@ dir_cleanup_failed:
     FATAL("Output directory cleanup failed");
 }
 
-// static void check_term_size(void);
+static void check_term_size(void);
 
 /* A spiffy retro stats screen! This is called every stats_update_freq
    execve() calls, plus in several other circumstances. */
@@ -5367,7 +5365,7 @@ static void show_stats(void) {
         SAYF(TERM_CLEAR CURSOR_HIDE);
         clear_screen = 0;
 
-        // check_term_size();
+        check_term_size();
     }
 
     SAYF(TERM_HOME);
@@ -8366,12 +8364,8 @@ havoc_stage:
                     posn = UR(temp_len - 1);
                 }
                 if (UR(2)) {
-                    // u32 pos = UR(temp_len - 1);
-
                     *(u16 *)(out_buf + posn) -= 1 + UR(ARITH_MAX);
-
                 } else {
-                    // u32 pos = UR(temp_len - 1);
                     u16 num = 1 + UR(ARITH_MAX);
 
                     *(u16 *)(out_buf + posn) = SWAP16(SWAP16(*(u16 *)(out_buf + posn)) - num);
@@ -8392,12 +8386,8 @@ havoc_stage:
                 }
 
                 if (UR(2)) {
-                    // u32 pos = UR(temp_len - 1);
-
                     *(u16 *)(out_buf + posn) += (1 + UR(ARITH_MAX));
-
                 } else {
-                    // u32 pos = UR(temp_len - 1);
                     u16 num = 1 + UR(ARITH_MAX);
 
                     *(u16 *)(out_buf + posn) = SWAP16(SWAP16(*(u16 *)(out_buf + posn)) + num);
@@ -8418,12 +8408,8 @@ havoc_stage:
                 }
 
                 if (UR(2)) {
-                    // u32 pos = UR(temp_len - 3);
-
                     *(u32 *)(out_buf + posn) -= 1 + UR(ARITH_MAX);
-
                 } else {
-                    // u32 pos = UR(temp_len - 3);
                     u32 num = 1 + UR(ARITH_MAX);
 
                     *(u32 *)(out_buf + posn) = SWAP32(SWAP32(*(u32 *)(out_buf + posn)) - num);
@@ -8444,12 +8430,8 @@ havoc_stage:
                 }
 
                 if (UR(2)) {
-                    // u32 pos = UR(temp_len - 3);
-
                     *(u32 *)(out_buf + posn) += (1 + UR(ARITH_MAX));
-
                 } else {
-                    // u32 pos = UR(temp_len - 3);
                     u32 num = 1 + UR(ARITH_MAX);
 
                     *(u32 *)(out_buf + posn) = SWAP32(SWAP32(*(u32 *)(out_buf + posn)) + num);
@@ -8852,7 +8834,6 @@ retry_splicing:
         cb_mask = new_cb_mask;
         ck_free(orig_cb_mask);
         orig_cb_mask = ck_alloc(len + 1);
-        // ck_realloc(orig_branch_mask, len + 1);
         memcpy(orig_cb_mask, cb_mask, len + 1);
         position_map = ck_realloc(position_map, sizeof(u32) * (len + 1));
         if (!position_map) {
@@ -10304,7 +10285,7 @@ int main(int argc, char **argv) {
     s32 opt;
     u64 prev_queued = 0;
     u32 sync_interval_cnt = 0;
-    // u32 seek_to;
+    u32 seek_to;
     u8 *extras_dir = 0;
     u8 mem_limit_given = 0;
     u8 exit_1 = !!getenv("AFL_BENCH_JUST_ONE");
@@ -10823,7 +10804,7 @@ int main(int argc, char **argv) {
 
     show_init_stats();
 
-    // seek_to = find_start_position();
+    seek_to = find_start_position();
 
     write_stats_file(0, 0, 0);
     save_auto();
@@ -10842,7 +10823,6 @@ int main(int argc, char **argv) {
         }
     }
 
-    // Main fuzzing routine ...
     while (1) {
         u8 skipped_fuzz;
 
@@ -10906,11 +10886,11 @@ int main(int argc, char **argv) {
 
             cur_skipped_paths = current_entry = 0;
 
-            // while (seek_to) {
-            //     current_entry++;
-            //     seek_to--;
-            //     queue_cur = queue_cur->next;
-            // }
+            while (seek_to) {
+                current_entry++;
+                seek_to--;
+                queue_cur = queue_cur->next;
+            }
 
             show_stats();
 
