@@ -538,22 +538,16 @@ struct queue_entry *queue_top_entry(struct queue_entry *head) {
 
 /* Returns true if the sorting criteria for placing a before b in the testcase queue are met, false otherwise. */
 
-static inline bool queue_cmp_func(bool a_hit_rare, float a_distance, bool b_hit_rare, float b_distance) {
-    // clang-format off
-    return b_distance == -1 ||
-           ( a_hit_rare && !b_hit_rare) ||
-           ( a_hit_rare &&  b_hit_rare && a_distance < b_distance) ||
-           (!a_hit_rare && !b_hit_rare && a_distance < b_distance);
-    // clang-format on
-}
-
-static inline bool queue_place_before(bool a_hit_rare, struct queue_entry *a, struct queue_entry *b) {
+static inline bool queue_place_before(struct queue_entry *a, struct queue_entry *b) {
     if (b == NULL) {
         return true;
     } else {
-        bool b_hit_rare = hit_rare_targets(b);
-
-        return queue_cmp_func(a_hit_rare, a->distance, b_hit_rare, b->distance);
+        // clang-format off
+        return b->distance == -1.0f ||
+               ( a->favored && !b->favored) ||
+               ( a->favored &&  b->favored && a->distance < b->distance) ||
+               (!a->favored && !b->favored && a->distance < b->distance);
+        // clang-format on
     }
 }
 
@@ -562,13 +556,11 @@ static inline bool queue_place_before(bool a_hit_rare, struct queue_entry *a, st
 void queue_insert_sorted(struct queue_entry **head, struct queue_entry *elem) {
     struct queue_entry *q = *head;
 
-    bool elem_hr = hit_rare_targets(elem);
-
-    if (queue_place_before(elem_hr, elem, q)) {
+    if (queue_place_before(elem, q)) {
         elem->next = *head;
         *head = elem;
     } else {
-        while (!queue_place_before(elem_hr, elem, q->next)) {
+        while (!queue_place_before(elem, q->next)) {
             q = q->next;
         }
         elem->next = q->next;
@@ -1107,35 +1099,6 @@ void alloca_cnd_bits(struct queue_entry *q) {
         }
     }
     q->cnd_bits[0] = count;
-}
-
-void update_queue_next100() {
-    q_prev100 = queue;
-
-    u32 i = 0;
-    struct queue_entry *q = queue;
-    while (q != NULL) {
-        i++;
-
-        // Reset old forward-jump pointers
-        q->next_100 = NULL;
-
-        if ((i % 100) == 0) {
-            q_prev100->next_100 = q;
-            q_prev100 = q;
-        }
-
-        q = q->next;
-    }
-}
-
-void update_queue() {
-    queue_sort(&queue);
-
-    queue_top = queue_top_entry(queue);
-    queue_cur = queue;
-
-    update_queue_next100();
 }
 
 /* Append new test case to the queue. */
@@ -1785,6 +1748,37 @@ void cb_cull_queue(void) {
         mark_as_redundant(q, !q->favored);
         q = q->next;
     }
+}
+
+void update_queue_next100() {
+    q_prev100 = queue;
+
+    u32 i = 0;
+    struct queue_entry *q = queue;
+    while (q != NULL) {
+        i++;
+
+        // Reset old forward-jump pointers
+        q->next_100 = NULL;
+
+        if ((i % 100) == 0) {
+            q_prev100->next_100 = q;
+            q_prev100 = q;
+        }
+
+        q = q->next;
+    }
+}
+
+void update_queue() {
+    cb_cull_queue();
+
+    queue_sort(&queue);
+
+    queue_top = queue_top_entry(queue);
+    queue_cur = queue;
+
+    update_queue_next100();
 }
 
 /* Configure shared memory and virgin_bits. This is called at startup. */
@@ -10773,10 +10767,11 @@ int main(int argc, char **argv) {
 
     perform_dry_run(use_argv);
 
-    cull_queue();
-
-    if (dynamic_targets) {
+    if (!dynamic_targets) {
+        cull_queue();
+    } else {
         update_queue();
+
         is_new_cycle = true;
     }
 
@@ -10841,9 +10836,30 @@ int main(int argc, char **argv) {
 
                 is_new_cycle = true;
             }
+
+            if (explore_status) {
+                cull_queue();
+            }
         } else {
+            // ---------------------------------------------------------------------------------------------------------
+            explore_status = true;
+
+            for (u32 i = 0; i < critical_ids[0]; i++) {
+                if (critical_count[critical_ids[i + 1]] && !solved_cbbs[critical_ids[i + 1]] &&
+                    critical_count[critical_ids[i + 1]] < BLOCK_TIMES) {
+                    explore_status = false;
+                }
+            }
+
             if (!pending_favored) {
                 explore_status = true;
+            }
+            // ---------------------------------------------------------------------------------------------------------
+
+            if (explore_status) {
+                cull_queue();
+            } else {
+                cb_cull_queue();
             }
         }
 
@@ -10897,12 +10913,6 @@ int main(int argc, char **argv) {
             }
 
             is_new_cycle = false;
-        }
-
-        if (!explore_status) {
-            cb_cull_queue();
-        } else {
-            cull_queue();
         }
 
         skipped_fuzz = fuzz_one(use_argv);
