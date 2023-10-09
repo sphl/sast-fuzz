@@ -9413,7 +9413,7 @@ void usage(u8 *argv0) {
 
          "  -z schedule   - temperature-based power schedules\n"
          "                  {exp, log, lin, quad} (Default: exp)\n"
-         "  -l secs       - cycle interval; disable dyn. targets with -1\n"
+         "  -l secs       - cycle interval\n"
          "                  (range: secs >= 60, default: 7200 [2h])\n"
          "  -c min        - time from start when SA enters exploitation\n"
          "                  in secs (s), mins (m), hrs (h), or days (d)\n\n"
