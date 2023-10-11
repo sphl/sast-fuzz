@@ -10767,20 +10767,17 @@ int main(int argc, char **argv) {
 
             update_tbb_states();
 
-                if (!explore_status) {
-                    min_distance = -1.0f;
-                    max_distance = -1.0f;
+            if (!explore_status) {
+                min_distance = -1.0f;
+                max_distance = -1.0f;
 
-                    update_cbb_distances();
+                update_cbb_distances();
 
-                    struct queue_entry *q = queue;
-                    while (q != NULL) {
-                        update_distance(q);
-                        update_min_max_distance(q->distance);
-                        q = q->next;
-                    }
-
-                    update_queue();
+                struct queue_entry *q = queue;
+                while (q != NULL) {
+                    update_distance(q);
+                    update_min_max_distance(q->distance);
+                    q = q->next;
                 }
 
                 update_queue();
