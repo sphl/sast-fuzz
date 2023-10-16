@@ -9,6 +9,7 @@ INPUT_FILE: /path/to/file22
     #3 0x539687 in processing /mnt/benchmark/mir/c2mir/c2mir.c:3569:7
     #4 0x4fd548 in pre /mnt/benchmark/mir/c2mir/c2mir.c:3807:5
     #5 0x61600000007f  (<unknown module>)
+    #6 0x7f1147b1841f  (/lib/x86_64-linux-gnu/libpthread.so.0+0x1441f)
 
 AddressSanitizer can not provide additional info.
 SUMMARY: AddressSanitizer: SEGV /mnt/benchmark/mir/c2mir/c2mir.c:856 in error

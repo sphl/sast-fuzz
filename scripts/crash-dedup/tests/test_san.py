@@ -87,6 +87,7 @@ class TestSanitizerOutput(unittest.TestCase):
                     StackFrame(3, "c2mir.c", "processing", 3569),
                     StackFrame(4, "c2mir.c", "pre", 3807),
                     StackFrame(5, "-", "-", -1),
+                    StackFrame(6, "-", "-", -1),
                 ]
             )
         ]
