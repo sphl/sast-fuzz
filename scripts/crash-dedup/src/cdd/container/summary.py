@@ -40,7 +40,7 @@ class DedupSummary:
 
     def to_csv(self, file: Path) -> None:
         with file.open("w+") as csv_file:
-            csv_file.write("bug_id,n_frames,input_name,vuln_type,stack_trace" + os.linesep)
+            csv_file.write("bug_id,n_frames,input_name,sanitizer,vuln_type,stack_trace" + os.linesep)
 
             for entry in self.summary:
                 for san_output in entry.elems:
