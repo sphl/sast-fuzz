@@ -26,9 +26,7 @@ from cdd.grouping import group_by
 from cdd.utils.fs import find_files
 from cdd.utils.proc import get_cpu_count, run_program_with_sanitizer, run_with_multiproc
 
-logging.basicConfig(
-    format="%(asctime)s crash-dedup[%(levelname)s]: %(message)s", level=logging.INFO, stream=sys.stdout
-)
+logging.basicConfig(format="%(asctime)s crash-dedup[%(levelname)s]: %(message)s", level=logging.INFO, stream=sys.stdout)
 
 # Path of the default config file.
 DEFAULT_CONFIG_FILE = Path.cwd() / "config.yml"

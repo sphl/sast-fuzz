@@ -63,8 +63,11 @@ def find_frame(line: str) -> Optional[StackFrame]:
 
     if m := re.search(r"#([0-9]+).*in\s([a-zA-Z0-9_]+)", line):
         return StackFrame(int(m.group(1)), "-", m.group(2), -1)
-    else:
-        return None
+
+    if m := re.search(r"#([0-9]+).*unknown\smodule", line):
+        return StackFrame(int(m.group(1)), "-", "-", -1)
+
+    return None
 
 
 class ParseState(Enum):
