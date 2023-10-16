@@ -50,7 +50,14 @@ def run_shell_command(
     logging.info(f"Command: {cmd_str}")
 
     proc_info = subprocess.run(
-        cmd_str, shell=True, cwd=cmd_cwd, env=cmd_env, capture_output=True, text=True, encoding="utf-8"
+        cmd_str,
+        shell=True,
+        cwd=cmd_cwd,
+        env=cmd_env,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
     )  # nosec
 
     if proc_info.stderr:
