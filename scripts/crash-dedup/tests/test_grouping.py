@@ -50,14 +50,15 @@ class TestGrouping(unittest.TestCase):
             Path(__file__).parent / "data" / "sanitizer" / "test.703506",
             Path(__file__).parent / "data" / "sanitizer" / "test.703510",
             Path(__file__).parent / "data" / "sanitizer" / "test.703512",
+            Path(__file__).parent / "data" / "sanitizer" / "test.703514",
         ]
 
     def test_group_by_all_frames(self) -> None:
         # Arrange
         sanitizer_infos = [
-            SanitizerOutput("input1", "type1", [StackFrame(1, "file1", "func1", 10)]),
-            SanitizerOutput("input2", "type2", [StackFrame(2, "file2", "func2", 20)]),
-            SanitizerOutput("input3", "type3", [StackFrame(3, "file3", "func3", 30)]),
+            SanitizerOutput("input1", "san1", "type1", [StackFrame(1, "file1", "func1", 10)]),
+            SanitizerOutput("input2", "san1", "type2", [StackFrame(2, "file2", "func2", 20)]),
+            SanitizerOutput("input3", "san1", "type3", [StackFrame(3, "file3", "func3", 30)]),
         ]
 
         # Act
@@ -76,9 +77,9 @@ class TestGrouping(unittest.TestCase):
     def test_group_by_all_frames_same_vtype(self) -> None:
         # Arrange
         sanitizer_infos = [
-            SanitizerOutput("input1", "type1", [StackFrame(1, "file1", "func1", 10)]),
-            SanitizerOutput("input2", "type1", [StackFrame(2, "file2", "func2", 20)]),
-            SanitizerOutput("input3", "type1", [StackFrame(3, "file3", "func3", 30)]),
+            SanitizerOutput("input1", "san1", "type1", [StackFrame(1, "file1", "func1", 10)]),
+            SanitizerOutput("input2", "san1", "type1", [StackFrame(2, "file2", "func2", 20)]),
+            SanitizerOutput("input3", "san1", "type1", [StackFrame(3, "file3", "func3", 30)]),
         ]
 
         # Act
@@ -97,9 +98,9 @@ class TestGrouping(unittest.TestCase):
     def test_group_by_all_frames_same_trace(self) -> None:
         # Arrange
         sanitizer_infos = [
-            SanitizerOutput("input1", "type1", [StackFrame(1, "file1", "func1", 10)]),
-            SanitizerOutput("input2", "type2", [StackFrame(1, "file1", "func1", 10)]),
-            SanitizerOutput("input3", "type3", [StackFrame(1, "file1", "func1", 10)]),
+            SanitizerOutput("input1", "san1", "type1", [StackFrame(1, "file1", "func1", 10)]),
+            SanitizerOutput("input2", "san1", "type2", [StackFrame(1, "file1", "func1", 10)]),
+            SanitizerOutput("input3", "san1", "type3", [StackFrame(1, "file1", "func1", 10)]),
         ]
 
         # Act
@@ -118,9 +119,9 @@ class TestGrouping(unittest.TestCase):
     def test_group_by_all_frames_same_group(self) -> None:
         # Arrange
         sanitizer_infos = [
-            SanitizerOutput("input1", "type1", [StackFrame(1, "file1", "func1", 10)]),
-            SanitizerOutput("input2", "type1", [StackFrame(1, "file1", "func1", 10)]),
-            SanitizerOutput("input3", "type1", [StackFrame(1, "file1", "func1", 10)]),
+            SanitizerOutput("input1", "san1", "type1", [StackFrame(1, "file1", "func1", 10)]),
+            SanitizerOutput("input2", "san1", "type1", [StackFrame(1, "file1", "func1", 10)]),
+            SanitizerOutput("input3", "san1", "type1", [StackFrame(1, "file1", "func1", 10)]),
         ]
 
         # Act
@@ -143,6 +144,7 @@ class TestGrouping(unittest.TestCase):
             {"/path/to/file17"},
             {"/path/to/file14"},
             {"/path/to/file20"},
+            {"/path/to/file23"},
         ]
 
         # Act
@@ -161,6 +163,7 @@ class TestGrouping(unittest.TestCase):
             {"/path/to/file08", "/path/to/file15", "/path/to/file18", "/path/to/file21"},
             {"/path/to/file17"},
             {"/path/to/file14", "/path/to/file20"},
+            {"/path/to/file23"},
         ]
 
         # Act
@@ -180,6 +183,7 @@ class TestGrouping(unittest.TestCase):
             {"/path/to/file08", "/path/to/file15", "/path/to/file18", "/path/to/file21"},
             {"/path/to/file17"},
             {"/path/to/file14", "/path/to/file20"},
+            {"/path/to/file23"},
         ]
 
         # Act
@@ -200,6 +204,7 @@ class TestGrouping(unittest.TestCase):
             {"/path/to/file17"},
             {"/path/to/file14"},
             {"/path/to/file20"},
+            {"/path/to/file23"},
         ]
 
         # Act

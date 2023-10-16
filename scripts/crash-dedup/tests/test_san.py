@@ -31,6 +31,7 @@ class TestSanitizerOutput(unittest.TestCase):
         expected = [
             SanitizerOutput(
                 "/path/to/file01",
+                "addresssanitizer",
                 "segv",
                 [
                     StackFrame(0, "outputscript.c", "outputSWF_TEXT_RECORD", 1429),
@@ -44,6 +45,7 @@ class TestSanitizerOutput(unittest.TestCase):
             ),
             SanitizerOutput(
                 "/path/to/file04",
+                "addresssanitizer",
                 "segv",
                 [
                     StackFrame(0, "decompile.c", "OpCode", 868),
@@ -61,6 +63,7 @@ class TestSanitizerOutput(unittest.TestCase):
             ),
             SanitizerOutput(
                 "/path/to/file14",
+                "addresssanitizer",
                 "heap-buffer-overflow",
                 [
                     StackFrame(0, "asan_interceptors.cpp", "strcat", 375),
@@ -79,6 +82,7 @@ class TestSanitizerOutput(unittest.TestCase):
             ),
             SanitizerOutput(
                 "/path/to/file22",
+                "addresssanitizer",
                 "segv",
                 [
                     StackFrame(0, "c2mir.c", "error", 856),

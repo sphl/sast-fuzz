@@ -38,15 +38,15 @@ def find_input(line: str) -> Optional[str]:
         return None
 
 
-def find_vtype(line: str) -> Optional[str]:
+def find_vinfo(line: str) -> Optional[Tuple[str, str]]:
     """
-    Find the vuln.-type in a sanitizer output line.
+    Find the sanitizer and vuln.-type in a output line.
 
     :param line:
     :return:
     """
-    if m := re.search(r"ERROR:\s[^:]+:\s([a-zA-Z-_]+)", line):
-        return str(m.group(1)).lower()
+    if m := re.search(r"ERROR:\s([^:]+):\s([a-zA-Z-_]+)", line):
+        return str(m.group(1)).lower(), str(m.group(2)).lower()
     else:
         return None
 
@@ -86,8 +86,9 @@ class SanitizerOutput:
     Sanitizer output container.
     """
 
-    def __init__(self, input_id: str, vtype: str, stack_trace: StackTrace) -> None:
+    def __init__(self, input_id: str, san: str, vtype: str, stack_trace: StackTrace) -> None:
         self.input_id = input_id
+        self.san = san
         self.vtype = vtype
         self.stack_trace = stack_trace
 
@@ -98,13 +99,13 @@ class SanitizerOutput:
         :param n_frames:
         :return:
         """
-        return self.vtype, self.stack_trace if n_frames is None else self.stack_trace[:n_frames]
+        return self.san, self.vtype, self.stack_trace if n_frames is None else self.stack_trace[:n_frames]
 
     def __eq__(self, o: object) -> bool:
         if not isinstance(o, SanitizerOutput):
             return False
 
-        return self.vtype == o.vtype and self.stack_trace == o.stack_trace
+        return self.san == o.san and self.vtype == o.vtype and self.stack_trace == o.stack_trace
 
     @classmethod
     def from_file(cls, sanitizer_file: Path) -> "SanitizerOutput":
@@ -115,6 +116,7 @@ class SanitizerOutput:
         :return:
         """
         input_id = ""
+        san = "-"
         vtype = "-"
         stack_trace = []
 
@@ -124,8 +126,8 @@ class SanitizerOutput:
             if state == ParseState.VTYPE:
                 if i := find_input(line):
                     input_id = i
-                elif v := find_vtype(line):
-                    vtype = v
+                elif v := find_vinfo(line):
+                    san, vtype = v
                     state = ParseState.FRAME
 
             elif state == ParseState.FRAME:
@@ -145,4 +147,4 @@ class SanitizerOutput:
         if state != ParseState.VALID:
             raise Exception(f"Invalid sanitizer output in '{sanitizer_file}'!")
 
-        return SanitizerOutput(input_id, vtype, stack_trace)
+        return SanitizerOutput(input_id, san, vtype, stack_trace)
