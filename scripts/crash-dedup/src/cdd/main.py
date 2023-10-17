@@ -26,9 +26,7 @@ from cdd.grouping import group_by
 from cdd.utils.fs import find_files
 from cdd.utils.proc import get_cpu_count, run_program_with_sanitizer, run_with_multiproc
 
-logging.basicConfig(
-    format="%(asctime)s crash-dedup[%(levelname)s]: %(message)s", level=logging.INFO, stream=sys.stdout
-)
+logging.basicConfig(format="%(asctime)s crash-dedup[%(levelname)s]: %(message)s", level=logging.INFO, stream=sys.stdout)
 
 # Path of the default config file.
 DEFAULT_CONFIG_FILE = Path.cwd() / "config.yml"
@@ -89,6 +87,14 @@ def main(
             help="Number of stack frames to be included in deduplication. Note: If not specified, all frames are considered.",
         ),
     ] = None,
+    consider_lines: Annotated[
+        bool,
+        typer.Option(
+            "--consider-lines",
+            is_flag=True,
+            help="Consider the line numbers within the stack frames for deduplication.",
+        ),
+    ] = False,
     config_file: Annotated[
         Path,
         typer.Option(
@@ -145,5 +151,5 @@ def main(
 
     summary_file = output_dir / "summary.csv"
 
-    summary = group_by(sanitizer_infos, n_frames)
+    summary = group_by(sanitizer_infos, n_frames, consider_lines)
     summary.to_csv(summary_file)

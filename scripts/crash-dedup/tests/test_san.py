@@ -25,11 +25,13 @@ class TestSanitizerOutput(unittest.TestCase):
             Path(__file__).parent / "data" / "sanitizer" / "test.703472",
             Path(__file__).parent / "data" / "sanitizer" / "test.703478",
             Path(__file__).parent / "data" / "sanitizer" / "test.703498",
+            Path(__file__).parent / "data" / "sanitizer" / "test.703513",
         ]
 
         expected = [
             SanitizerOutput(
                 "/path/to/file01",
+                "addresssanitizer",
                 "segv",
                 [
                     StackFrame(0, "outputscript.c", "outputSWF_TEXT_RECORD", 1429),
@@ -43,6 +45,7 @@ class TestSanitizerOutput(unittest.TestCase):
             ),
             SanitizerOutput(
                 "/path/to/file04",
+                "addresssanitizer",
                 "segv",
                 [
                     StackFrame(0, "decompile.c", "OpCode", 868),
@@ -60,6 +63,7 @@ class TestSanitizerOutput(unittest.TestCase):
             ),
             SanitizerOutput(
                 "/path/to/file14",
+                "addresssanitizer",
                 "heap-buffer-overflow",
                 [
                     StackFrame(0, "asan_interceptors.cpp", "strcat", 375),
@@ -76,6 +80,20 @@ class TestSanitizerOutput(unittest.TestCase):
                     StackFrame(11, "-", "_start", -1),
                 ],
             ),
+            SanitizerOutput(
+                "/path/to/file22",
+                "addresssanitizer",
+                "segv",
+                [
+                    StackFrame(0, "c2mir.c", "error", 856),
+                    StackFrame(1, "c2mir.c", "get_header_name", 2967),
+                    StackFrame(2, "c2mir.c", "process_directive", 3091),
+                    StackFrame(3, "c2mir.c", "processing", 3569),
+                    StackFrame(4, "c2mir.c", "pre", 3807),
+                    StackFrame(5, "-", "-", -1),
+                    StackFrame(6, "-", "-", -1),
+                ]
+            )
         ]
 
         # Act

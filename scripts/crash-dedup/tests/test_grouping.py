@@ -50,18 +50,19 @@ class TestGrouping(unittest.TestCase):
             Path(__file__).parent / "data" / "sanitizer" / "test.703506",
             Path(__file__).parent / "data" / "sanitizer" / "test.703510",
             Path(__file__).parent / "data" / "sanitizer" / "test.703512",
+            Path(__file__).parent / "data" / "sanitizer" / "test.703514",
         ]
 
     def test_group_by_all_frames(self) -> None:
         # Arrange
         sanitizer_infos = [
-            SanitizerOutput("input1", "type1", [StackFrame(1, "file1", "func1", 10)]),
-            SanitizerOutput("input2", "type2", [StackFrame(2, "file2", "func2", 20)]),
-            SanitizerOutput("input3", "type3", [StackFrame(3, "file3", "func3", 30)]),
+            SanitizerOutput("input1", "san1", "type1", [StackFrame(1, "file1", "func1", 10)]),
+            SanitizerOutput("input2", "san1", "type2", [StackFrame(2, "file2", "func2", 20)]),
+            SanitizerOutput("input3", "san1", "type3", [StackFrame(3, "file3", "func3", 30)]),
         ]
 
         # Act
-        actual = group_by(sanitizer_infos, None)
+        actual = group_by(sanitizer_infos, None, True)
 
         # Assert
         n = len(actual.summary)
@@ -76,13 +77,13 @@ class TestGrouping(unittest.TestCase):
     def test_group_by_all_frames_same_vtype(self) -> None:
         # Arrange
         sanitizer_infos = [
-            SanitizerOutput("input1", "type1", [StackFrame(1, "file1", "func1", 10)]),
-            SanitizerOutput("input2", "type1", [StackFrame(2, "file2", "func2", 20)]),
-            SanitizerOutput("input3", "type1", [StackFrame(3, "file3", "func3", 30)]),
+            SanitizerOutput("input1", "san1", "type1", [StackFrame(1, "file1", "func1", 10)]),
+            SanitizerOutput("input2", "san1", "type1", [StackFrame(2, "file2", "func2", 20)]),
+            SanitizerOutput("input3", "san1", "type1", [StackFrame(3, "file3", "func3", 30)]),
         ]
 
         # Act
-        actual = group_by(sanitizer_infos, None)
+        actual = group_by(sanitizer_infos, None, True)
 
         # Assert
         n = len(actual.summary)
@@ -97,13 +98,34 @@ class TestGrouping(unittest.TestCase):
     def test_group_by_all_frames_same_trace(self) -> None:
         # Arrange
         sanitizer_infos = [
-            SanitizerOutput("input1", "type1", [StackFrame(1, "file1", "func1", 10)]),
-            SanitizerOutput("input2", "type2", [StackFrame(1, "file1", "func1", 10)]),
-            SanitizerOutput("input3", "type3", [StackFrame(1, "file1", "func1", 10)]),
+            SanitizerOutput("input1", "san1", "type1", [StackFrame(1, "file1", "func1", 10)]),
+            SanitizerOutput("input2", "san1", "type2", [StackFrame(1, "file1", "func1", 10)]),
+            SanitizerOutput("input3", "san1", "type3", [StackFrame(1, "file1", "func1", 10)]),
         ]
 
         # Act
-        actual = group_by(sanitizer_infos, None)
+        actual = group_by(sanitizer_infos, None, True)
+
+        # Assert
+        n = len(actual.summary)
+        for i in range(n):
+            for j in range(n):
+                if i != j:
+                    bug_id_a = actual.summary[i].bug_id
+                    bug_id_b = actual.summary[j].bug_id
+
+                    self.assertNotEqual(bug_id_a, bug_id_b)
+
+    def test_group_by_all_frames_different_sanitizer(self) -> None:
+        # Arrange
+        sanitizer_infos = [
+            SanitizerOutput("input1", "san1", "type1", [StackFrame(1, "file1", "func1", 10)]),
+            SanitizerOutput("input2", "san2", "type1", [StackFrame(1, "file1", "func1", 10)]),
+            SanitizerOutput("input3", "san3", "type1", [StackFrame(1, "file1", "func1", 10)]),
+        ]
+
+        # Act
+        actual = group_by(sanitizer_infos, None, True)
 
         # Assert
         n = len(actual.summary)
@@ -118,13 +140,30 @@ class TestGrouping(unittest.TestCase):
     def test_group_by_all_frames_same_group(self) -> None:
         # Arrange
         sanitizer_infos = [
-            SanitizerOutput("input1", "type1", [StackFrame(1, "file1", "func1", 10)]),
-            SanitizerOutput("input2", "type1", [StackFrame(1, "file1", "func1", 10)]),
-            SanitizerOutput("input3", "type1", [StackFrame(1, "file1", "func1", 10)]),
+            SanitizerOutput("input1", "san1", "type1", [StackFrame(1, "file1", "func1", 10)]),
+            SanitizerOutput("input2", "san1", "type1", [StackFrame(1, "file1", "func1", 10)]),
+            SanitizerOutput("input3", "san1", "type1", [StackFrame(1, "file1", "func1", 10)]),
         ]
 
         # Act
-        actual = group_by(sanitizer_infos, None)
+        actual = group_by(sanitizer_infos, None, True)
+
+        # Assert
+        self.assertEqual(len(actual.summary), 1)
+
+        for info in sanitizer_infos:
+            self.assertIn(info, actual.summary[0].elems)
+
+    def test_group_by_all_frames_same_group_ignore_lines(self) -> None:
+        # Arrange
+        sanitizer_infos = [
+            SanitizerOutput("input1", "san1", "type1", [StackFrame(1, "file1", "func1", 10)]),
+            SanitizerOutput("input2", "san1", "type1", [StackFrame(1, "file1", "func1", 20)]),
+            SanitizerOutput("input3", "san1", "type1", [StackFrame(1, "file1", "func1", 30)]),
+        ]
+
+        # Act
+        actual = group_by(sanitizer_infos, None, False)
 
         # Assert
         self.assertEqual(len(actual.summary), 1)
@@ -143,10 +182,11 @@ class TestGrouping(unittest.TestCase):
             {"/path/to/file17"},
             {"/path/to/file14"},
             {"/path/to/file20"},
+            {"/path/to/file23"},
         ]
 
         # Act
-        actual = group_by(sanitizer_infos, None)
+        actual = group_by(sanitizer_infos, None, True)
 
         # Assert
         for group in expected:
@@ -161,10 +201,11 @@ class TestGrouping(unittest.TestCase):
             {"/path/to/file08", "/path/to/file15", "/path/to/file18", "/path/to/file21"},
             {"/path/to/file17"},
             {"/path/to/file14", "/path/to/file20"},
+            {"/path/to/file23"},
         ]
 
         # Act
-        actual = group_by(sanitizer_infos, 1)
+        actual = group_by(sanitizer_infos, 1, True)
 
         # Assert
         for group in expected:
@@ -180,10 +221,11 @@ class TestGrouping(unittest.TestCase):
             {"/path/to/file08", "/path/to/file15", "/path/to/file18", "/path/to/file21"},
             {"/path/to/file17"},
             {"/path/to/file14", "/path/to/file20"},
+            {"/path/to/file23"},
         ]
 
         # Act
-        actual = group_by(sanitizer_infos, 5)
+        actual = group_by(sanitizer_infos, 5, True)
 
         # Assert
         for group in expected:
@@ -200,10 +242,11 @@ class TestGrouping(unittest.TestCase):
             {"/path/to/file17"},
             {"/path/to/file14"},
             {"/path/to/file20"},
+            {"/path/to/file23"},
         ]
 
         # Act
-        actual = group_by(sanitizer_infos, 7)
+        actual = group_by(sanitizer_infos, 7, True)
 
         # Assert
         for group in expected:

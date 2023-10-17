@@ -1,0 +1,20 @@
+INPUT_FILE: /path/to/file22
+=================================================================
+==1520520==ERROR: AddressSanitizer: SEGV on unknown address (pc 0x00000051cbe7 bp 0x000000000000 sp 0x7fa80a1fe538 T1)
+==1520520==The signal is caused by a READ memory access.
+==1520520==Hint: this fault was caused by a dereference of a high value address (see register values below).  Disassemble the provided pc to learn which register was used.
+    #0 0x51cbe7 in error /mnt/benchmark/mir/c2mir/c2mir.c:856
+    #1 0x542319 in get_header_name /mnt/benchmark/mir/c2mir/c2mir.c:2967:5
+    #2 0x540164 in process_directive /mnt/benchmark/mir/c2mir/c2mir.c:3091:19
+    #3 0x539687 in processing /mnt/benchmark/mir/c2mir/c2mir.c:3569:7
+    #4 0x4fd548 in pre /mnt/benchmark/mir/c2mir/c2mir.c:3807:5
+    #5 0x61600000007f  (<unknown module>)
+    #6 0x7f1147b1841f  (/lib/x86_64-linux-gnu/libpthread.so.0+0x1441f)
+
+AddressSanitizer can not provide additional info.
+SUMMARY: AddressSanitizer: SEGV /mnt/benchmark/mir/c2mir/c2mir.c:856 in error
+Thread T1 created by T0 here:
+    #0 0x4339b6 in pthread_create /opt/llvm-12.0.0/compiler-rt/lib/asan/asan_interceptors.cpp:205:3
+    #1 0x551b47 in init_compilers /mnt/benchmark/mir/c2mir/c2mir-driver.c:540:9
+
+==1520520==ABORTING
