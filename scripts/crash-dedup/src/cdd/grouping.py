@@ -19,18 +19,22 @@ from cdd.container.san import SanitizerOutput
 from cdd.container.summary import DedupEntry, DedupSummary
 
 
-def group_by(sanitizer_infos: List[SanitizerOutput], n_frames: Optional[int] = None) -> DedupSummary:
+def group_by(
+    sanitizer_infos: List[SanitizerOutput], n_frames: Optional[int] = None, consider_lines: bool = False
+) -> DedupSummary:
     """
     Group/deduplicate sanitizer outputs.
 
     :param sanitizer_infos:
     :param n_frames:
+    :param consider_lines:
     :return:
     """
-    keyfunc = lambda s: s.sorting_key(n_frames)
+    keyfunc = lambda s: s.sorting_key(n_frames, consider_lines)
 
     return DedupSummary(
         n_frames,
+        consider_lines,
         [
             DedupEntry(i, k, list(g))
             for i, (k, g) in enumerate(groupby(sorted(sanitizer_infos, key=keyfunc), key=keyfunc))

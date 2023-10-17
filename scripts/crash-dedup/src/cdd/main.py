@@ -87,6 +87,14 @@ def main(
             help="Number of stack frames to be included in deduplication. Note: If not specified, all frames are considered.",
         ),
     ] = None,
+    consider_lines: Annotated[
+        bool,
+        typer.Option(
+            "--consider-lines",
+            is_flag=True,
+            help="Consider the line numbers within the stack frames for deduplication.",
+        ),
+    ] = False,
     config_file: Annotated[
         Path,
         typer.Option(
@@ -143,5 +151,5 @@ def main(
 
     summary_file = output_dir / "summary.csv"
 
-    summary = group_by(sanitizer_infos, n_frames)
+    summary = group_by(sanitizer_infos, n_frames, consider_lines)
     summary.to_csv(summary_file)
