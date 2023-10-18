@@ -73,7 +73,7 @@ def run_program_with_sanitizer(shell_cmd: str, input_file: Path, sanitizer_dir: 
     :param shell_cmd:
     :param input_file:
     :param sanitizer_dir:
-    :param trials
+    :param trials:
     :return:
     """
 
