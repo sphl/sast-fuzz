@@ -26,6 +26,8 @@ class TestSanitizerOutput(unittest.TestCase):
             Path(__file__).parent / "data" / "sanitizer" / "test.703478",
             Path(__file__).parent / "data" / "sanitizer" / "test.703498",
             Path(__file__).parent / "data" / "sanitizer" / "test.703513",
+            Path(__file__).parent / "data" / "sanitizer" / "test.703514",
+            Path(__file__).parent / "data" / "sanitizer" / "test.703515",
         ]
 
         expected = [
@@ -93,7 +95,17 @@ class TestSanitizerOutput(unittest.TestCase):
                     StackFrame(5, "-", "-", -1),
                     StackFrame(6, "-", "-", -1),
                 ]
-            )
+            ),
+            SanitizerOutput(
+                "/path/to/file23",
+                "leaksanitizer",
+                "detected",
+                [
+                    StackFrame(0, "asan_malloc_linux.cpp", "realloc", 164),
+                    StackFrame(1, "public.c", "defaultRealloc", 1092),
+                ]
+            ),
+            SanitizerOutput("/path/to/file24", "addresssanitizer", "segv", [])
         ]
 
         # Act
