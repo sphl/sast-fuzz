@@ -79,12 +79,12 @@ def main(
             help="Path to the output directory.",
         ),
     ] = Path.cwd(),
-    n_frames: Annotated[
-        Optional[int],
+    n_frames_list: Annotated[
+        Optional[List[int]],
         typer.Option(
             "--frames",
             min=1,
-            help="Number of stack frames to be included in deduplication. Note: If not specified, all frames are considered.",
+            help="Number(s) of stack frames to be included in deduplication. Note: If not specified, all frames are considered.",
         ),
     ] = None,
     consider_lines: Annotated[
@@ -149,7 +149,8 @@ def main(
         except Exception as ex:
             logging.error(ex)
 
-    summary_file = output_dir / "summary.csv"
+    for n_frames in set(n_frames_list or [None]):  # type: ignore
+        summary_file = output_dir / f"summary{'' if n_frames is None else '_nframes' + str(n_frames)}.csv"
 
-    summary = group_by(sanitizer_infos, n_frames, consider_lines)
-    summary.to_csv(summary_file)
+        summary = group_by(sanitizer_infos, n_frames, consider_lines)
+        summary.to_csv(summary_file)
