@@ -150,7 +150,7 @@ def main(
             logging.error(ex)
 
     for n_frames in set(n_frames_list or [None]):  # type: ignore
-        summary_file = output_dir / f"summary{'' if n_frames is None else '_nframes' + str(n_frames)}.csv"
+        summary_file = output_dir / f"summary{'' if n_frames is None else '_nf' + str(n_frames)}.csv"
 
         summary = group_by(sanitizer_infos, n_frames, consider_lines)
         summary.to_csv(summary_file)
