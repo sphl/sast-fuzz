@@ -1,0 +1,11 @@
+INPUT_FILE: /path/to/file24
+AddressSanitizer:DEADLYSIGNAL
+=================================================================
+==27145==ERROR: AddressSanitizer: SEGV on unknown address 0x000000000000 (pc 0x000000000000 bp 0x000000000001 sp 0x7ffe4ca98888 T0)
+==27145==Hint: pc points to the zero page.
+==27145==The signal is caused by a READ memory access.
+==27145==Hint: address points to the zero page.
+
+AddressSanitizer can not provide additional info.
+SUMMARY: AddressSanitizer: SEGV (<unknown module>)
+==27145==ABORTING

@@ -66,13 +66,14 @@ def run_shell_command(
     return proc_info.stdout
 
 
-def run_program_with_sanitizer(shell_cmd: str, input_file: Path, sanitizer_dir: Path) -> None:
+def run_program_with_sanitizer(shell_cmd: str, input_file: Path, sanitizer_dir: Path, trials: int = 100) -> None:
     """
     Run a program/command and store the sanitizer output in the output directory.
 
     :param shell_cmd:
     :param input_file:
     :param sanitizer_dir:
+    :param trials:
     :return:
     """
 
@@ -84,11 +85,18 @@ def run_program_with_sanitizer(shell_cmd: str, input_file: Path, sanitizer_dir: 
 
     env = {**os.environ.copy(), **{"ASAN_OPTIONS": f"allocator_may_return_null=1:log_path={sanitizer_file}"}}
 
-    run_shell_command(shell_cmd.replace("@@", str(input_file)), env=env)
+    # Some bugs are flaky -- re-run the program `trials` times to reduce the likelihood of missing a bug
+    for i in range(trials):
+        run_shell_command(shell_cmd.replace("@@", str(input_file)), env=env)
 
-    if output := find_output(sanitizer_file):
-        # Prepend input file to sanitizer output
-        output.write_text(f"INPUT_FILE: {input_file}" + os.linesep + output.read_text())
+        if output := find_output(sanitizer_file):
+            content = output.read_text()
+
+            if len(content.strip()) > 0:
+                # Prepend input file to sanitizer output
+                output.write_text(f"INPUT_FILE: {input_file}" + os.linesep + content)
+
+                break
 
 
 def run_with_multiproc(func: Callable, items: List, n_jobs: int = get_cpu_count() - 1) -> List:

@@ -140,6 +140,9 @@ class SanitizerOutput:
                 if f := find_frame(line):
                     stack_trace.append(f)
                     state = ParseState.TRACE
+                elif len(line) == 0 and san != "leaksanitizer":
+                    state = ParseState.VALID
+                    break
 
             elif state == ParseState.TRACE:
                 if f := find_frame(line):

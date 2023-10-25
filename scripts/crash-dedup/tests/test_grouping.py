@@ -51,6 +51,7 @@ class TestGrouping(unittest.TestCase):
             Path(__file__).parent / "data" / "sanitizer" / "test.703510",
             Path(__file__).parent / "data" / "sanitizer" / "test.703512",
             Path(__file__).parent / "data" / "sanitizer" / "test.703514",
+            Path(__file__).parent / "data" / "sanitizer" / "test.703515",
         ]
 
     def test_group_by_all_frames(self) -> None:
@@ -183,6 +184,7 @@ class TestGrouping(unittest.TestCase):
             {"/path/to/file14"},
             {"/path/to/file20"},
             {"/path/to/file23"},
+            {"/path/to/file24"},
         ]
 
         # Act
@@ -202,6 +204,7 @@ class TestGrouping(unittest.TestCase):
             {"/path/to/file17"},
             {"/path/to/file14", "/path/to/file20"},
             {"/path/to/file23"},
+            {"/path/to/file24"},
         ]
 
         # Act
@@ -222,6 +225,7 @@ class TestGrouping(unittest.TestCase):
             {"/path/to/file17"},
             {"/path/to/file14", "/path/to/file20"},
             {"/path/to/file23"},
+            {"/path/to/file24"},
         ]
 
         # Act
@@ -243,6 +247,7 @@ class TestGrouping(unittest.TestCase):
             {"/path/to/file14"},
             {"/path/to/file20"},
             {"/path/to/file23"},
+            {"/path/to/file24"},
         ]
 
         # Act
