@@ -87,6 +87,14 @@ def main(
             help="Number(s) of stack frames to be included in deduplication. Note: If not specified, all frames are considered.",
         ),
     ] = None,
+    consider_filepaths: Annotated[
+        bool,
+        typer.Option(
+            "--consider-filepaths",
+            is_flag=True,
+            help="Consider the filepaths within the stack frames for deduplication.",
+        ),
+    ] = False,
     consider_lines: Annotated[
         bool,
         typer.Option(
@@ -152,5 +160,5 @@ def main(
     for n_frames in set(n_frames_list or [None]):  # type: ignore
         summary_file = output_dir / f"summary{'' if n_frames is None else '_nf' + str(n_frames)}.csv"
 
-        summary = group_by(sanitizer_infos, n_frames, consider_lines)
+        summary = group_by(sanitizer_infos, n_frames, consider_filepaths, consider_lines)
         summary.to_csv(summary_file)

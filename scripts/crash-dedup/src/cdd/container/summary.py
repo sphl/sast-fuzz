@@ -32,9 +32,14 @@ class DedupSummary:
     """
 
     def __init__(
-        self, n_frames: Optional[int], consider_lines: bool, summary: Optional[List[DedupEntry]] = None
+        self,
+        n_frames: Optional[int],
+        consider_filepaths: bool,
+        consider_lines: bool,
+        summary: Optional[List[DedupEntry]] = None,
     ) -> None:
         self.n_frames = n_frames
+        self.consider_filepaths = consider_filepaths
         self.consider_lines = consider_lines
         self.summary = summary or []
 
@@ -44,7 +49,8 @@ class DedupSummary:
     def to_csv(self, file: Path) -> None:
         with file.open("w+") as csv_file:
             csv_file.write(
-                "bug_id,n_dedup_frames,consider_lines,input_name,sanitizer,vuln_type,stack_trace,n_frames" + os.linesep
+                "bug_id,n_dedup_frames,consider_filepaths,consider_lines,input_name,sanitizer,vuln_type,stack_trace,n_frames"
+                + os.linesep
             )
 
             for entry in self.summary:
@@ -57,6 +63,7 @@ class DedupSummary:
                         (
                             str(entry.bug_id),
                             frame_str,
+                            str(self.consider_filepaths),
                             str(self.consider_lines),
                             str(san_output.input_id).replace(CSV_SEP, "-"),
                             san_output.san,

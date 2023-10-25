@@ -20,20 +20,25 @@ from cdd.container.summary import DedupEntry, DedupSummary
 
 
 def group_by(
-    sanitizer_infos: List[SanitizerOutput], n_frames: Optional[int] = None, consider_lines: bool = False
+    sanitizer_infos: List[SanitizerOutput],
+    n_frames: Optional[int] = None,
+    consider_filepaths: bool = False,
+    consider_lines: bool = False,
 ) -> DedupSummary:
     """
     Group/deduplicate sanitizer outputs.
 
     :param sanitizer_infos:
     :param n_frames:
+    :param consider_filepaths:
     :param consider_lines:
     :return:
     """
-    keyfunc = lambda s: s.sorting_key(n_frames, consider_lines)
+    keyfunc = lambda s: s.sorting_key(n_frames, consider_filepaths, consider_lines)
 
     return DedupSummary(
         n_frames,
+        consider_filepaths,
         consider_lines,
         [
             DedupEntry(i, k, list(g))
