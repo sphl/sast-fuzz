@@ -57,6 +57,41 @@ def is_cmake_project(subject_dir: Path) -> bool:
     return (subject_dir / "CMakeLists.txt").exists()
 
 
+def codeql_sanity_check(sarif_string: str) -> None:
+    """
+    Check if the CodeQL database actually contains user code.
+    """
+
+    if len(sarif_string.strip()) == 0:
+        raise ValueError("Empty input / no JSON string.")
+
+    sarif_data = json.loads(sarif_string)
+
+    if sarif_data["version"] != SARIF_VERSION:
+        raise ValueError(f"SARIF version {sarif_data['version']} is not supported.")
+
+    for run in sarif_data["runs"]:
+        metrics = run["properties"].get("metricResults")
+        if metrics is None:
+            logging.debug(
+                "CodeQL sanity check failed because required metadata was not found in the SARIF file. Make sure to include the 'Summary' queries if you want this check."
+            )
+            return
+
+        for metric in metrics:
+            if metric["ruleId"] == "cpp/summary/lines-of-code":
+                loc = int(metric["value"])
+            elif metric["ruleId"] == "cpp/summary/lines-of-user-code":
+                uloc = int(metric["value"])
+
+    if uloc == 0:
+        logging.warn(
+            "The CodeQL database contains no user code. That usually means CodeQL did not process the build script as intended and will lead to EMPTY RESULTS."
+        )
+    else:
+        logging.info(f"CodeQL picked up {loc} LoC, {uloc} of which are considered user-written code.")
+
+
 def convert_sarif(string: str) -> SASTFlags:
     """
     Convert SARIF data into our SAST flag format.
@@ -241,7 +276,7 @@ class CodeQLRunner(SASTToolRunner):
         result_dir = temp_dir / "codeql_res"
 
         run_shell_command(
-            f'./{BUILD_SCRIPT_NAME} "{self._config.path} database create --language=cpp --command=make --threads={self._config.num_threads} {result_dir}"',
+            f"{self._config.path} database create --language=cpp --command=./{BUILD_SCRIPT_NAME} --threads={self._config.num_threads} {result_dir}",
             cwd=copy_dir(self._subject_dir, temp_dir),
             env=SAST_SETUP_ENV,
         )
@@ -257,7 +292,9 @@ class CodeQLRunner(SASTToolRunner):
 
         time.sleep(5)
 
-        return result_file.read_text()
+        sarif_string = result_file.read_text()
+        codeql_sanity_check(sarif_string)
+        return sarif_string
 
     def _format(self, string: str) -> SASTFlags:
         return convert_sarif(string)
