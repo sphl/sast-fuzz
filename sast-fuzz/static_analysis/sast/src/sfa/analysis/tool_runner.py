@@ -23,7 +23,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Callable, ClassVar, Dict, Optional
 
-from sfa import SanityChecks, SASTToolConfig
+from sfa import SASTToolConfig
 from sfa.analysis import SASTFlag, SASTFlags
 from sfa.utils.fs import copy_dir, find_files
 from sfa.utils.proc import run_shell_command
@@ -57,12 +57,11 @@ def is_cmake_project(subject_dir: Path) -> bool:
     return (subject_dir / "CMakeLists.txt").exists()
 
 
-def convert_sarif(string: str, sanity_check: Optional[Callable[[Dict], None]] = None) -> SASTFlags:
+def default_sarif_checks(string: str) -> Dict:
     """
-    Convert SARIF data into our SAST flag format.
+    Run default checks on SARIF string.
 
     :param string:
-    :param sanity_check:
     :return:
     """
     if len(string.strip()) == 0:
@@ -73,8 +72,17 @@ def convert_sarif(string: str, sanity_check: Optional[Callable[[Dict], None]] = 
     if sarif_data["version"] != SARIF_VERSION:
         raise ValueError(f"SARIF version {sarif_data['version']} is not supported.")
 
-    if sanity_check is not None:
-        sanity_check(sarif_data)
+    return sarif_data
+
+
+def convert_sarif(string: str) -> SASTFlags:
+    """
+    Convert SARIF data into our SAST flag format.
+
+    :param string:
+    :return:
+    """
+    sarif_data = json.loads(string)
 
     flags = SASTFlags()
 
@@ -130,6 +138,16 @@ class SASTToolRunner(ABC):
         pass
 
     @abstractmethod
+    def _sanity_checks(self, string: str) -> None:
+        """
+        Run sanity checks on SAST tool output.
+
+        :param string:
+        :return:
+        """
+        pass
+
+    @abstractmethod
     def _format(self, string: str) -> SASTFlags:
         """
         Format SAST tool output.
@@ -141,7 +159,7 @@ class SASTToolRunner(ABC):
 
     def run(self) -> SASTFlags:
         """
-        Setup target program, run SAST tool, and format output.
+        Setup target program, run SAST tool (+ sanity checks), and format output.
 
         :return:
         """
@@ -149,6 +167,11 @@ class SASTToolRunner(ABC):
             with TemporaryDirectory() as temp_dir:
                 working_dir = self._setup(Path(temp_dir))
                 flags = self._analyze(working_dir)
+
+            if self._config.sanity_checks == "always" or (
+                self._config.sanity_checks == "cmake" and self._is_cmake_project
+            ):
+                self._sanity_checks(flags)
 
             return self._format(flags)
 
@@ -172,6 +195,9 @@ class FlawfinderRunner(SASTToolRunner):
             f"{self._config.path} --dataonly --sarif {' '.join(self._config.checks)} {working_dir}"
         )
 
+    def _sanity_checks(self, string: str) -> None:
+        default_sarif_checks(string)
+
     def _format(self, string: str) -> SASTFlags:
         return convert_sarif(string)
 
@@ -188,6 +214,9 @@ class SemgrepRunner(SASTToolRunner):
         return run_shell_command(
             f"{self._config.path} scan --quiet --sarif --jobs {self._config.num_threads} {' '.join([f'--config {check}' for check in self._config.checks])} {working_dir}"
         )
+
+    def _sanity_checks(self, string: str) -> None:
+        default_sarif_checks(string)
 
     def _format(self, string: str) -> SASTFlags:
         return convert_sarif(string)
@@ -220,6 +249,9 @@ class InferRunner(SASTToolRunner):
         # By default, Infer writes the results into the 'report.json' file once the analysis is complete.
         return (working_dir / "report.json").read_text()
 
+    def _sanity_checks(self, string: str) -> None:
+        pass
+
     def _format(self, string: str) -> SASTFlags:
         flags = SASTFlags()
 
@@ -240,39 +272,6 @@ class CodeQLRunner(SASTToolRunner):
     """
     CodeQL runner.
     """
-
-    def _sanity_check(self, sarif_data: Dict) -> None:
-        """
-        Run sanity checks on CodeQL output.
-
-        :param sarif_data:
-        :return:
-        """
-        n_runs = len(sarif_data["runs"])
-
-        if n_runs == 0:
-            raise ValueError("No CodeQL execution runs found.")
-
-        # Let's take the last executed SAST run for the sanity check
-        run = sarif_data["runs"][n_runs - 1]
-        metrics = run["properties"].get("metricResults")
-
-        if metrics is None:
-            raise ValueError("No CodeQL metrics data found in SARIF file.")
-
-        loc = 0
-        user_loc = 0
-
-        for m in metrics:
-            if m["ruleId"] == "cpp/summary/lines-of-code":
-                loc = int(m["value"])
-            if m["ruleId"] == "cpp/summary/lines-of-user-code":
-                user_loc = int(m["value"])
-
-        logging.debug(f"Sanity-Check [CodeQL]: LoC = {loc}, User-LoC = {user_loc}")
-
-        if user_loc == 0:
-            raise ValueError("No user C/C++ source code found in the CodeQL database.")
 
     def _setup(self, temp_dir: Path) -> Path:
         result_dir = temp_dir / "codeql_res"
@@ -303,18 +302,37 @@ class CodeQLRunner(SASTToolRunner):
 
         return result_file.read_text()
 
+    def _sanity_checks(self, string: str) -> None:
+        sarif_data = default_sarif_checks(string)
+
+        n_runs = len(sarif_data["runs"])
+
+        if n_runs == 0:
+            raise ValueError("No CodeQL execution runs found.")
+
+        # Let's take the last executed SAST run for the sanity check
+        run = sarif_data["runs"][n_runs - 1]
+        metrics = run["properties"].get("metricResults")
+
+        if metrics is None:
+            raise ValueError("No CodeQL metrics data found in SARIF file.")
+
+        loc = 0
+        user_loc = 0
+
+        for m in metrics:
+            if m["ruleId"] == "cpp/summary/lines-of-code":
+                loc = int(m["value"])
+            if m["ruleId"] == "cpp/summary/lines-of-user-code":
+                user_loc = int(m["value"])
+
+        logging.debug(f"Sanity-Check [CodeQL]: LoC = {loc}, User-LoC = {user_loc}")
+
+        if user_loc == 0:
+            raise ValueError("No user C/C++ source code found in the CodeQL database.")
+
     def _format(self, string: str) -> SASTFlags:
-        run_sc = False
-
-        if self._config.sanity_checks == SanityChecks.ALWAYS or (
-            self._config.sanity_checks == SanityChecks.CMAKE and self._is_cmake_project
-        ):
-            run_sc = True
-
-        if not run_sc:
-            return convert_sarif(string)
-        else:
-            return convert_sarif(string, self._sanity_check)
+        return convert_sarif(string)
 
 
 class ClangScanRunner(SASTToolRunner):
@@ -339,6 +357,10 @@ class ClangScanRunner(SASTToolRunner):
         # Clang analyzer writes the results of each checker into a separate SARIF file. Therefore, we append the results
         # (JSON string) of each file as one line to the return string.
         return os.linesep.join(map(lambda file: json.dumps(json.loads(file.read_text()), indent=None), result_files))
+
+    def _sanity_checks(self, string: str) -> None:
+        for sarif_str in string.split(os.linesep):
+            default_sarif_checks(sarif_str)
 
     def _format(self, string: str) -> SASTFlags:
         nested_flags = map(convert_sarif, string.split(os.linesep))
@@ -368,6 +390,9 @@ class SanitizerRunner(SASTToolRunner):
 
     def _analyze(self, working_dir: Path) -> str:
         return (working_dir / self._report_name).read_text()
+
+    def _sanity_checks(self, string: str) -> None:
+        pass
 
     def _format(self, string: str) -> SASTFlags:
         flags = SASTFlags()
