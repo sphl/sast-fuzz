@@ -21,7 +21,7 @@ from abc import ABC, abstractmethod
 from itertools import chain
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import ClassVar, Dict
+from typing import Callable, ClassVar, Dict, Optional
 
 from sfa import SASTToolConfig
 from sfa.analysis import SASTFlag, SASTFlags
@@ -92,11 +92,12 @@ def codeql_sanity_check(sarif_string: str) -> None:
         logging.info(f"CodeQL picked up {loc} LoC, {uloc} of which are considered user-written code.")
 
 
-def convert_sarif(string: str) -> SASTFlags:
+def convert_sarif(string: str, sanity_check: Optional[Callable[[Dict], None]] = None) -> SASTFlags:
     """
     Convert SARIF data into our SAST flag format.
 
     :param string:
+    :param sanity_check:
     :return:
     """
     if len(string.strip()) == 0:
@@ -106,6 +107,9 @@ def convert_sarif(string: str) -> SASTFlags:
 
     if sarif_data["version"] != SARIF_VERSION:
         raise ValueError(f"SARIF version {sarif_data['version']} is not supported.")
+
+    if sanity_check is not None:
+        sanity_check(sarif_data)
 
     flags = SASTFlags()
 

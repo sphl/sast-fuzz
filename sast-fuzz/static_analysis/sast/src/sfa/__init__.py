@@ -14,14 +14,28 @@
 
 from collections import namedtuple
 from dataclasses import dataclass
+from enum import Enum, auto
 from pathlib import Path
 
 import yaml
 
+
+# fmt: off
+class SanityChecks(Enum):
+    """
+    Options of when to run sanity checks.
+    """
+
+    ALWAYS = auto(); CMAKE = auto(); NONE = auto()
+# fmt: on
+
+
 ScoreWeights = namedtuple("ScoreWeights", ["flags", "tools"], defaults=[0.5, 0.5])
 
 # SAST tool configuration
-SASTToolConfig = namedtuple("SASTToolConfig", ["path", "checks", "num_threads"], defaults=["", "", -1])
+SASTToolConfig = namedtuple(
+    "SASTToolConfig", ["sanity_checks", "path", "checks", "num_threads"], defaults=[SanityChecks.NONE, "", "", -1]
+)
 
 
 @dataclass
@@ -56,22 +70,27 @@ class AppConfig:
         return cls(
             ScoreWeights(config["scoring"]["weights"]["flags"], config["scoring"]["weights"]["tools"]),
             flawfinder=SASTToolConfig(
-                config["tools"]["flawfinder"]["path"], config["tools"]["flawfinder"]["checks"], -1
+                SanityChecks.NONE, config["tools"]["flawfinder"]["path"], config["tools"]["flawfinder"]["checks"], -1
             ),
             semgrep=SASTToolConfig(
+                SanityChecks.NONE,
                 config["tools"]["semgrep"]["path"],
                 config["tools"]["semgrep"]["checks"],
                 config["tools"]["semgrep"]["num_threads"],
             ),
             infer=SASTToolConfig(
+                SanityChecks.NONE,
                 config["tools"]["infer"]["path"],
                 config["tools"]["infer"]["checks"],
                 config["tools"]["infer"]["num_threads"],
             ),
             codeql=SASTToolConfig(
-                config["tools"]["codeql"]["path"], codeql_checks, config["tools"]["codeql"]["num_threads"]
+                SanityChecks[config["tools"]["codeql"]["sanity_checks"]],
+                config["tools"]["codeql"]["path"],
+                codeql_checks,
+                config["tools"]["codeql"]["num_threads"],
             ),
             clang_scan=SASTToolConfig(
-                config["tools"]["clang_scan"]["path"], config["tools"]["clang_scan"]["checks"], -1
+                SanityChecks.NONE, config["tools"]["clang_scan"]["path"], config["tools"]["clang_scan"]["checks"], -1
             ),
         )
