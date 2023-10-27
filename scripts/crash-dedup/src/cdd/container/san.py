@@ -92,18 +92,27 @@ class SanitizerOutput:
         self.vtype = vtype
         self.stack_trace = stack_trace
 
-    def sorting_key(self, n_frames: Optional[int] = None, consider_lines: bool = False) -> Tuple:
+    def sorting_key(
+        self, n_frames: Optional[int] = None, consider_filepaths: bool = False, consider_lines: bool = False
+    ) -> Tuple:
         """
         Get sorting key for grouping sanitizer outputs.
 
         :param n_frames:
+        :param consider_filepaths:
         :param consider_lines:
         :return:
         """
         stack_trace = self.stack_trace if n_frames is None else self.stack_trace[:n_frames]
 
-        if not consider_lines:
-            stack_trace = [(t.id, t.file, t.function) for t in stack_trace]  # type: ignore
+        if consider_filepaths:
+            if not consider_lines:
+                stack_trace = [(t.id, t.file, t.function) for t in stack_trace]  # type: ignore
+        else:
+            if not consider_lines:
+                stack_trace = [(t.id, t.function) for t in stack_trace]  # type: ignore
+            else:
+                stack_trace = [(t.id, t.function, t.line) for t in stack_trace]  # type: ignore
 
         return self.san, self.vtype, stack_trace
 
