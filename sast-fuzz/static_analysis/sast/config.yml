@@ -258,6 +258,9 @@ tools:
       - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-764/UnreleasedLock.ql'
       - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-807/TaintedCondition.ql'
       - '%LIBRARY_PATH%/cpp/ql/src/Security/CWE/CWE-835/InfiniteLoopWithUnsatisfiableExitCondition.ql'
+      # not actually security queries, but metrics for sanity checking:
+      - '%LIBRARY_PATH%/cpp/ql/src/Summary/LinesOfCode.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Summary/LinesOfUserCode.ql'
     num_threads: 8
   clang_scan:
     path: '/opt/llvm-12.0.0/build/bin/scan-build'
