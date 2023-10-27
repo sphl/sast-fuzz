@@ -5,12 +5,14 @@ scoring:
     tools: 1.0
 tools:
   flawfinder:
+    sanity_checks: 'always' # Options: always, cmake, none
     path: 'python2 /opt/flawfinder-2.0.19/flawfinder.py'
     checks:
       - '--falsepositive'
       - '--minlevel=3'
       - '--neverignore'
   semgrep:
+    sanity_checks: 'always' # Options: always, cmake, none
     path: '/usr/local/bin/semgrep'
     checks:
       - 'r/c.lang.security.double-free.double-free'
@@ -27,6 +29,7 @@ tools:
       - 'r/c.lang.security.use-after-free.use-after-free'
     num_threads: 8
   infer:
+    sanity_checks: 'always' # Options: always, cmake, none
     path: '/opt/infer-1.1.0/bin/infer'
     checks:
       - '--no-default-checkers'
@@ -41,7 +44,7 @@ tools:
       - '--uninit'
     num_threads: 8
   codeql:
-    sanity_checks: 'cmake' # Options: always, cmake, none
+    sanity_checks: 'always' # Options: always, cmake, none
     lib_path: '/opt/codeql-2.12.0/lib'
     path: '/opt/codeql-2.12.0/cli/codeql'
     checks:
@@ -264,6 +267,7 @@ tools:
       - '%LIBRARY_PATH%/cpp/ql/src/Summary/LinesOfUserCode.ql'
     num_threads: 8
   clang_scan:
+    sanity_checks: 'always' # Options: always, cmake, none
     path: '/opt/llvm-12.0.0/build/bin/scan-build'
     checks:
       - '-disable-checker core.CallAndMessage'
