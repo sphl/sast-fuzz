@@ -85,7 +85,7 @@ class AppConfig:
                 config["tools"]["infer"]["num_threads"],
             ),
             codeql=SASTToolConfig(
-                SanityChecks[config["tools"]["codeql"]["sanity_checks"]],
+                SanityChecks[config["tools"]["codeql"]["sanity_checks"].upper()],
                 config["tools"]["codeql"]["path"],
                 codeql_checks,
                 config["tools"]["codeql"]["num_threads"],

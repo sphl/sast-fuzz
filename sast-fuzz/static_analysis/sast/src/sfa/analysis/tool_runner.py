@@ -23,7 +23,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Callable, ClassVar, Dict, Optional
 
-from sfa import SASTToolConfig
+from sfa import SanityChecks, SASTToolConfig
 from sfa.analysis import SASTFlag, SASTFlags
 from sfa.utils.fs import copy_dir, find_files
 from sfa.utils.proc import run_shell_command
@@ -55,41 +55,6 @@ def is_cmake_project(subject_dir: Path) -> bool:
     :return:
     """
     return (subject_dir / "CMakeLists.txt").exists()
-
-
-def codeql_sanity_check(sarif_string: str) -> None:
-    """
-    Check if the CodeQL database actually contains user code.
-    """
-
-    if len(sarif_string.strip()) == 0:
-        raise ValueError("Empty input / no JSON string.")
-
-    sarif_data = json.loads(sarif_string)
-
-    if sarif_data["version"] != SARIF_VERSION:
-        raise ValueError(f"SARIF version {sarif_data['version']} is not supported.")
-
-    for run in sarif_data["runs"]:
-        metrics = run["properties"].get("metricResults")
-        if metrics is None:
-            logging.debug(
-                "CodeQL sanity check failed because required metadata was not found in the SARIF file. Make sure to include the 'Summary' queries if you want this check."
-            )
-            return
-
-        for metric in metrics:
-            if metric["ruleId"] == "cpp/summary/lines-of-code":
-                loc = int(metric["value"])
-            elif metric["ruleId"] == "cpp/summary/lines-of-user-code":
-                uloc = int(metric["value"])
-
-    if uloc == 0:
-        logging.warn(
-            "The CodeQL database contains no user code. That usually means CodeQL did not process the build script as intended and will lead to EMPTY RESULTS."
-        )
-    else:
-        logging.info(f"CodeQL picked up {loc} LoC, {uloc} of which are considered user-written code.")
 
 
 def convert_sarif(string: str, sanity_check: Optional[Callable[[Dict], None]] = None) -> SASTFlags:
@@ -276,14 +241,54 @@ class CodeQLRunner(SASTToolRunner):
     CodeQL runner.
     """
 
+    def _sanity_check(self, sarif_data: Dict) -> None:
+        """
+        Run sanity checks on CodeQL output.
+
+        :param sarif_data:
+        :return:
+        """
+        n_runs = len(sarif_data["runs"])
+
+        if n_runs == 0:
+            raise ValueError("No CodeQL execution runs found.")
+
+        # Let's take the last executed SAST run for the sanity check
+        run = sarif_data["runs"][n_runs - 1]
+        metrics = run["properties"].get("metricResults")
+
+        if metrics is None:
+            raise ValueError("No CodeQL metrics data found in SARIF file.")
+
+        loc = 0
+        user_loc = 0
+
+        for m in metrics:
+            if m["ruleId"] == "cpp/summary/lines-of-code":
+                loc = int(m["value"])
+            if m["ruleId"] == "cpp/summary/lines-of-user-code":
+                user_loc = int(m["value"])
+
+        logging.debug(f"Sanity-Check [CodeQL]: LoC = {loc}, User-LoC = {user_loc}")
+
+        if user_loc == 0:
+            raise ValueError("No user C/C++ source code found in the CodeQL database.")
+
     def _setup(self, temp_dir: Path) -> Path:
         result_dir = temp_dir / "codeql_res"
 
-        run_shell_command(
-            f"{self._config.path} database create --language=cpp --command=./{BUILD_SCRIPT_NAME} --threads={self._config.num_threads} {result_dir}",
-            cwd=copy_dir(self._subject_dir, temp_dir),
-            env=SAST_SETUP_ENV,
-        )
+        if self._is_cmake_project:
+            run_shell_command(
+                f"{self._config.path} database create --language=cpp --command=./{BUILD_SCRIPT_NAME} --threads={self._config.num_threads} {result_dir}",
+                cwd=copy_dir(self._subject_dir, temp_dir),
+                env=SAST_SETUP_ENV,
+            )
+        else:
+            run_shell_command(
+                f'./{BUILD_SCRIPT_NAME} "{self._config.path} database create --language=cpp --command=make --threads={self._config.num_threads} {result_dir}"',
+                cwd=copy_dir(self._subject_dir, temp_dir),
+                env=SAST_SETUP_ENV,
+            )
 
         return result_dir
 
@@ -296,12 +301,20 @@ class CodeQLRunner(SASTToolRunner):
 
         time.sleep(5)
 
-        sarif_string = result_file.read_text()
-        codeql_sanity_check(sarif_string)
-        return sarif_string
+        return result_file.read_text()
 
     def _format(self, string: str) -> SASTFlags:
-        return convert_sarif(string)
+        run_sc = False
+
+        if self._config.sanity_checks == SanityChecks.ALWAYS or (
+            self._config.sanity_checks == SanityChecks.CMAKE and self._is_cmake_project
+        ):
+            run_sc = True
+
+        if not run_sc:
+            return convert_sarif(string)
+        else:
+            return convert_sarif(string, self._sanity_check)
 
 
 class ClangScanRunner(SASTToolRunner):
