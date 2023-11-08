@@ -11,6 +11,7 @@ tools:
       - '--falsepositive'
       - '--minlevel=3'
       - '--neverignore'
+      - '--regex=CWE-' # prevent no-CWE bug reports https://github.com/david-a-wheeler/flawfinder/issues/71
   semgrep:
     sanity_checks: 'always' # Options: always, cmake, none
     path: '/usr/local/bin/semgrep'
@@ -120,7 +121,7 @@ tools:
       - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Arithmetic/BadCheckOdd.ql'
       - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Arithmetic/BitwiseSignCheck.ql'
       - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Arithmetic/ComparisonPrecedence.ql'
-      - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Arithmetic/ComparisonWithCancelingSubExpr.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Arithmetic/ComparisonWithCancelingSubExpr.ql' # readability / maintainability (code smell)
       - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Arithmetic/FloatComparison.ql'
       - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Arithmetic/IntMultToLong.ql'
       # - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Arithmetic/PointlessComparison.ql'
@@ -338,7 +339,7 @@ tools:
       - '-enable-checker security.insecureAPI.bcopy'
       - '-enable-checker security.insecureAPI.bzero'
       - '-enable-checker security.insecureAPI.decodeValueOfObjCType'
-      - '-enable-checker security.insecureAPI.DeprecatedOrUnsafeBufferHandling'
+      #- '-enable-checker security.insecureAPI.DeprecatedOrUnsafeBufferHandling' # flags actually safe functions in favour of non-portable MS stuff https://clang.llvm.org/docs/analyzer/checkers.html#security-insecureapi-deprecatedorunsafebufferhandling-c
       - '-enable-checker security.insecureAPI.getpw'
       - '-enable-checker security.insecureAPI.gets'
       - '-enable-checker security.insecureAPI.mkstemp'
