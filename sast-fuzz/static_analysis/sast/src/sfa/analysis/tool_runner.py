@@ -20,7 +20,7 @@ import traceback
 from abc import ABC, abstractmethod
 from itertools import chain
 from pathlib import Path
-from tempfile import TemporaryDirectory
+from tempfile import TemporaryDirectory, mkstemp
 from typing import Callable, ClassVar, Dict, Optional
 
 from sfa import SASTToolConfig
@@ -84,6 +84,13 @@ def convert_sarif(string: str) -> SASTFlags:
     """
     sarif_data = json.loads(string)
 
+    # dump the SARIF data for debugging, since the main tmp dir is already deleted at this point
+    sarif_fd, sarif_path = mkstemp(prefix="sarif", suffix=".json", text=True)
+    with os.fdopen(sarif_fd) as sarif_file:
+        json.dump(sarif_data, sarif_file)
+
+    logging.debug(f"Raw SARIF data dumped to {sarif_path}.")
+
     flags = SASTFlags()
 
     for run in sarif_data["runs"]:
@@ -99,7 +106,7 @@ def convert_sarif(string: str) -> SASTFlags:
                 file = loc["physicalLocation"]["artifactLocation"]["uri"]
                 line = loc["physicalLocation"]["region"]["startLine"]
 
-                file = Path(file).name
+                # file = Path(file).name # we need the full path
 
                 flags.add(SASTFlag(tool, file, line, vuln))
 
