@@ -17,6 +17,7 @@
 #ifndef SFI_LLVM_UTILS_H
 #define SFI_LLVM_UTILS_H
 
+#include <optional>
 #include <string>
 
 #include <llvm/IR/BasicBlock.h>

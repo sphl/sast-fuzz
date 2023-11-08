@@ -28,6 +28,7 @@ set_target_properties(libcbi PROPERTIES PREFIX "")
 add_executable(cbi container/target.cpp main.cpp)
 
 target_include_directories(cbi PRIVATE "${SVF_INCLUDE_DIR}")
+target_include_directories(cbi PUBLIC ${LLVM_INCLUDE_DIRS})
 target_compile_options(cbi PRIVATE -fno-rtti -fPIC ${CBI_COMPILE_OPTIONS})
 target_link_libraries(
     cbi

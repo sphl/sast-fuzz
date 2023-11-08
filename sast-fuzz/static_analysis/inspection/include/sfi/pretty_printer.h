@@ -18,6 +18,7 @@
 #define SFI_PRETTY_PRINTER_H
 
 #include <map>
+#include <optional>
 #include <set>
 #include <string>
 #include <vector>

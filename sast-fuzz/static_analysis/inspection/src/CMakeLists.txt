@@ -35,7 +35,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Release")
 endif ()
 
 target_compile_options(libsfi PRIVATE ${SFI_COMPILE_OPTIONS})
-target_include_directories(libsfi PUBLIC ${SVF_INCLUDE_DIR} ${SFI_INCLUDE_DIR})
+target_include_directories(libsfi PUBLIC ${SVF_INCLUDE_DIR} ${SFI_INCLUDE_DIR} ${LLVM_INCLUDE_DIRS})
 target_link_libraries(libsfi PRIVATE ${LLVM_LIBS} ${SVF_LIB})
 set_target_properties(libsfi PROPERTIES PREFIX "")
 

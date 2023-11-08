@@ -3,6 +3,7 @@ target_link_libraries(afl-llvm-rt PRIVATE afl_config)
 set_target_properties(afl-llvm-rt PROPERTIES PREFIX "")
 
 add_library(afl-llvm-pass MODULE afl-llvm-pass.so.cc)
+target_include_directories(afl-llvm-pass PUBLIC ${LLVM_INCLUDE_DIRS})
 target_compile_options(afl-llvm-pass PRIVATE -fno-rtti)
 set_target_properties(afl-llvm-pass PROPERTIES PREFIX "")
 
