@@ -33,7 +33,7 @@ from sfa.analysis.factory import (
 from sfa.analysis.tool_runner import BUILD_SCRIPT_NAME, SASTToolRunner
 from sfa.utils.proc import run_with_multiproc
 
-logging.basicConfig(format="%(asctime)s SFA[%(levelname)s]: %(message)s", level=logging.INFO, stream=sys.stdout)
+logging.basicConfig(format="%(asctime)s SFA[%(levelname)s]: %(message)s", level=logging.DEBUG, stream=sys.stdout)
 
 # Path of the default config file.
 DEFAULT_CONFIG_FILE = Path.cwd() / "config.yml"
