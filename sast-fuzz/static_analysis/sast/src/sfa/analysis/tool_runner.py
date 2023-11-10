@@ -85,8 +85,8 @@ def convert_sarif(string: str) -> SASTFlags:
     sarif_data = json.loads(string)
 
     # dump the SARIF data for debugging, since the main tmp dir is already deleted at this point
-    sarif_fd, sarif_path = mkstemp(prefix="sarif", suffix=".json", text=True)
-    with os.fdopen(sarif_fd) as sarif_file:
+    sarif_fd, sarif_path = mkstemp(prefix="sarif-", suffix=".json", text=True)
+    with os.fdopen(sarif_fd, "w") as sarif_file:
         json.dump(sarif_data, sarif_file)
 
     logging.debug(f"Raw SARIF data dumped to {sarif_path}.")
