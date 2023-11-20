@@ -38,7 +38,9 @@ LineRange llvm_utils::computeRange(const Lines &lineNumbers) {
 }
 
 string llvm_utils::getFilename(const Function &func) {
-    return path(func.getSubprogram()->getFilename().str()).filename();
+    // filename patch, part 2: SFI (make names unambiguous)
+    // return path(func.getSubprogram()->getFilename().str()).filename();
+    return func.getSubprogram()->getFilename().str();
 }
 
 void llvm_utils::setBBId(BasicBlock &bb, BBId id) {

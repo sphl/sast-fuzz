@@ -106,7 +106,8 @@ def convert_sarif(string: str) -> SASTFlags:
                 file = loc["physicalLocation"]["artifactLocation"]["uri"]
                 line = loc["physicalLocation"]["region"]["startLine"]
 
-                # file = Path(file).name # we need the full path
+                # filename patch, part 1: SFA (make names unambiguous)
+                # file = Path(file).name
 
                 flags.add(SASTFlag(tool, file, line, vuln))
 
