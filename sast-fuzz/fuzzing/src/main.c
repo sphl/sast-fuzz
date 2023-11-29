@@ -361,7 +361,7 @@ s32 interesting_32[] = {INTERESTING_8, INTERESTING_16, INTERESTING_32};
 
 float vuln_score_thres = 0.5f;     //< Minimum vulnerability score a target BB must have for reactivation
 
-u32 init_cycle_interval = 7200;    //< Initial cycle interval (in seconds)
+u32 init_cycle_interval = 3600;    //< Initial cycle interval (in seconds)
 u32 cycle_thres;                   //< Current cycle threshold (increases over time)
 
 #if defined(SFZ_DEBUG) || defined(SFZ_OUTPUT_STATS)
