@@ -276,18 +276,11 @@ class CodeQLRunner(SASTToolRunner):
     def _setup(self, temp_dir: Path) -> Path:
         result_dir = temp_dir / "codeql_res"
 
-        if self._is_cmake_project:
-            run_shell_command(
-                f"{self._config.path} database create --language=cpp --command=./{BUILD_SCRIPT_NAME} --threads={self._config.num_threads} {result_dir}",
-                cwd=copy_dir(self._subject_dir, temp_dir),
-                env=SAST_SETUP_ENV,
-            )
-        else:
-            run_shell_command(
-                f'./{BUILD_SCRIPT_NAME} "{self._config.path} database create --language=cpp --command=make --threads={self._config.num_threads} {result_dir}"',
-                cwd=copy_dir(self._subject_dir, temp_dir),
-                env=SAST_SETUP_ENV,
-            )
+        run_shell_command(
+            f"{self._config.path} database create --language=cpp --command=./{BUILD_SCRIPT_NAME} --threads={self._config.num_threads} {result_dir}",
+            cwd=copy_dir(self._subject_dir, temp_dir),
+            env=SAST_SETUP_ENV,
+        )
 
         return result_dir
 
