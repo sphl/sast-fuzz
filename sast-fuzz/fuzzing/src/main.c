@@ -360,7 +360,6 @@ s32 interesting_32[] = {INTERESTING_8, INTERESTING_16, INTERESTING_32};
 /* SASTFuzz variables */
 
 float vuln_score_thres = 0.5f;     //< Minimum vulnerability score a target BB must have for reactivation
-float hc_reduct_factor = 0.5f;     //< Factor for reducing the number of required BB hit-counts
 
 u32 init_cycle_interval = 7200;    //< Initial cycle interval (in seconds)
 u32 cycle_thres;                   //< Current cycle threshold (increases over time)
@@ -5901,10 +5900,8 @@ void update_tbb_states() {
             int64_t n_req_input_execs =
                     (int64_t)roundf((float)cycle_input_count * (tbb_infos[i]->vuln_score / sum_vuln_score));
 
-            if (n_req_input_execs == 0 || hc_reduct_factor == 1.0f) {
+            if (n_req_input_execs == 0) {
                 n_req_input_execs = 1;
-            } else {
-                n_req_input_execs -= (int64_t)((float)n_req_input_execs * hc_reduct_factor);
             }
 
             int64_t exec_diff = (n_req_input_execs - (int64_t)tbb_infos[i]->n_input_execs);
@@ -6177,9 +6174,8 @@ u8 common_fuzz_stuff(char **argv, u8 *out_buf, u32 len) {
             }
         }
 
-        fprintf(stats_fd, "%d,%llu,%s,%d,%d,%.2f,%d,%d,%d,%llu\n", fuzz_dur, cycle_count,
-                ((explore_status) ? "cov" : "dir"), init_cycle_interval, cycle_interval, hc_reduct_factor, n_tbbs,
-                n_tbbs_hit, n_tbbs_finished, unique_crashes);
+        fprintf(stats_fd, "%d,%llu,%s,%d,%d,%d,%d,%d,%llu\n", fuzz_dur, cycle_count, ((explore_status) ? "cov" : "dir"),
+                init_cycle_interval, cycle_interval, n_tbbs, n_tbbs_hit, n_tbbs_finished, unique_crashes);
 
         // Enforce file write operation ...
         fflush(stats_fd);
@@ -10543,18 +10539,6 @@ int main(int argc, char **argv) {
             break;
         }
 
-        case 'r': {
-            float factor = atof(optarg);
-
-            if (factor >= 0.0f && factor <= 1.0f) {
-                hc_reduct_factor = factor;
-            } else {
-                FATAL("Reduction factor must be between 0 and 1");
-            }
-
-            break;
-        }
-
         case 'v': {
             float thres = atof(optarg);
 
@@ -10731,9 +10715,8 @@ int main(int argc, char **argv) {
         FATAL("Could not create the SASTFuzz stats file!");
     }
 
-    fprintf(stats_fd, "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n", "fuzzing_dur", "cycle_count", "fuzzing_mode",
-            "init_cycle_length", "cycle_interval", "hc_reduct_factor", "n_target_bbs", "n_target_bbs_hit",
-            "n_target_bbs_finished", "n_unique_crashes");
+    fprintf(stats_fd, "%s,%s,%s,%s,%s,%s,%s,%s,%s\n", "fuzzing_dur", "cycle_count", "fuzzing_mode", "init_cycle_length",
+            "cycle_interval", "n_target_bbs", "n_target_bbs_hit", "n_target_bbs_finished", "n_unique_crashes");
 
     ck_free(stats_fname);
 #endif
