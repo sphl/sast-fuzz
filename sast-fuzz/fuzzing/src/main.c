@@ -7157,7 +7157,7 @@ u8 fuzz_one(char **argv) {
 
         FLIP_BIT(out_buf, stage_cur);
 
-        /* While flipping the least significant bit in every byte, pull of an extra
+        /* While fXXXing the least significant bit in every byte, pull of an extra
            trick to detect possible syntax tokens. In essence, the idea is that if
            you have a binary blob like this:
 
@@ -7172,7 +7172,7 @@ u8 fuzz_one(char **argv) {
            We do this here, rather than as a separate stage, because it's a nice
            way to keep the operation approximately "free" (i.e., no extra execs).
 
-           Empirically, performing the check when flipping the least significant bit
+           Empirically, performing the check when fXXXing the least significant bit
            is advantageous, compared to doing it at the time of more disruptive
            changes, where the program flow may be affected in more violent ways.
 
@@ -7346,7 +7346,7 @@ u8 fuzz_one(char **argv) {
 
             /* We also use this stage to pull off a simple trick: we identify
               bytes that seem to have no effect on the current execution path
-              even when fully flipped - and we skip them during more expensive
+              even when fully fXXXed - and we skip them during more expensive
               deterministic stages, such as arithmetics or known ints. */
 
             if (!eff_map[EFF_APOS(stage_cur)]) {
@@ -9667,7 +9667,7 @@ void check_crash_handling(void) {
     if (read(fd, &fchar, 1) == 1 && fchar == '|') {
         SAYF("\n" cLRD "[-] " cRST "Hmm, your system is configured to send core dump notifications to an\n"
              "    external utility. This will cause issues: there will be an extended delay\n"
-             "    between stumbling upon a crash and having this information relayed to the\n"
+             "    between sXXXbling upon a crash and having this information relayed to the\n"
              "    fuzzer via the standard waitpid() API.\n\n"
 
              "    To avoid having crashes misinterpreted as timeouts, please log in as root\n"

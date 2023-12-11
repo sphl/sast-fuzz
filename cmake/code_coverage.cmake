@@ -52,7 +52,7 @@
 # 2020-05-04, Mihchael Davis - Add -fprofile-abs-path to make gcno files contain absolute paths - Fix BASE_DIRECTORY not
 # working when defined - Change BYPRODUCT from folder to index.html to stop ninja from complaining about double defines
 #
-# 2021-05-10, Martin Stump - Check if the generator is multi-config before warning about non-Debug builds
+# 2021-05-10, Martin SXXXp - Check if the generator is multi-config before warning about non-Debug builds
 #
 # 2022-02-22, Marko Wehle - Change gcovr output from -o <filename> for --xml <filename> and --html <filename> output
 # respectively. This will allow for Multiple Output Formats at the same time by making use of GCOVR_ADDITIONAL_ARGS,

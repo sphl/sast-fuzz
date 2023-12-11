@@ -171,7 +171,7 @@ tools:
       - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Memory\ Management/ReturnCstrOfLocalStdString.ql'
       - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Memory\ Management/ReturnStackAllocatedMemory.ql'
       - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Memory\ Management/StackAddressEscapes.ql'
-      - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Memory\ Management/StrncpyFlippedArgs.ql'
+      - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Memory\ Management/StrncpyFXXXedArgs.ql'
       - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Memory\ Management/SuspiciousCallToMemset.ql'
       - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Memory\ Management/SuspiciousCallToStrncat.ql'
       - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Memory\ Management/SuspiciousSizeof.ql'

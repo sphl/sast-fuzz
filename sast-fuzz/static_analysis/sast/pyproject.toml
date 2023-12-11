@@ -2,7 +2,7 @@
 name = "sast-fuzz analyzer"
 version = "0.1.0"
 description = "Static analyzer for SASTFuzz"
-authors = ["Stephan Lipp <stephan.lipp@tum.de>"]
+authors = ["XXX XXX <XXX.XXX@XXX.de>"]
 # readme = "README.md"
 packages = [{include = "sfa", from = "src"}]
 
