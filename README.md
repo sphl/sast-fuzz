@@ -1,5 +1,5 @@
 # sast-fuzz
 
-SAST-directed greybox fuzzing
+SAST-Guided Greybox Fuzzing
 
-:construction: **Under construction!** :construction:
+:construction: **This README is currently under construction!** :construction:
