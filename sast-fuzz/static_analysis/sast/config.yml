@@ -127,7 +127,7 @@ tools:
       # - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Arithmetic/PointlessComparison.ql'
       # - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Arithmetic/PointlessSelfComparison.ql'
       - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Arithmetic/SignedOverflowCheck.ql'
-      - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Arithmetic/UnsignedGEZero.ql'
+      # - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Arithmetic/UnsignedGEZero.ql'  # complains if unsigned <= 0 is tested (code smell, hints to signed / unsigned confusion)
       - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/ContinueInFalseLoop.ql'
       - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Conversion/ArrayArgSizeMismatch.ql'
       - '%LIBRARY_PATH%/cpp/ql/src/Likely\ Bugs/Conversion/CastArrayPointerArithmetic.ql'
