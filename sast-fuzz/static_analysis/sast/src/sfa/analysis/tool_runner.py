@@ -234,7 +234,14 @@ class SemgrepRunner(SASTToolRunner):
         default_sarif_checks(string)
 
     def _format(self, string: str) -> SASTFlags:
-        return convert_sarif(string)
+        flags = SASTFlags()
+
+        # convert absolute paths to relative ones
+        for flag in convert_sarif(string):
+            file = str(Path(flag.file).relative_to(self._subject_dir))
+            flags.add(SASTFlag(flag.tool, file, flag.line, flag.vuln))
+
+        return flags
 
 
 class InferRunner(SASTToolRunner):
