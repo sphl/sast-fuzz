@@ -22,6 +22,7 @@ from itertools import chain
 from pathlib import Path
 from tempfile import TemporaryDirectory, mkstemp
 from typing import Callable, ClassVar, Dict, Optional
+from urllib.parse import urlparse
 
 from sfa import SASTToolConfig
 from sfa.analysis import SASTFlag, SASTFlags
@@ -384,7 +385,20 @@ class ClangScanRunner(SASTToolRunner):
     def _format(self, string: str) -> SASTFlags:
         nested_flags = map(convert_sarif, string.split(os.linesep))
 
-        return SASTFlags(set(chain(*nested_flags)))
+        flags = SASTFlags()
+        for f in chain(*nested_flags):
+            # file is a URI here, parse it into an absolute path
+            file = urlparse(f.file).path
+
+            # remove the temp prefix from the path, but keep the rest
+            fparts = Path(file).parts
+            assert fparts[0] == "/" and fparts[1] == "tmp"
+            tmp_source = Path(fparts[0] + fparts[1]) / fparts[2] / fparts[3]
+            file = str(Path(file).relative_to(tmp_source))
+
+            flags.add(SASTFlag(f.tool, file, f.line, f.vuln))
+
+        return flags
 
 
 class SanitizerRunner(SASTToolRunner):
