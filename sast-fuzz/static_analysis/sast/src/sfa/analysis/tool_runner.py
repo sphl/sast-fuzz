@@ -45,6 +45,8 @@ SARIF_VERSION: str = "2.1.0"
 SAST_SETUP_ENV: Dict[str, str] = {
     **os.environ.copy(),
     **{"CC": "clang", "CXX": "clang++", "CFLAGS": "-O0 -fno-inline", "CXXFLAGS": "-O0 -fno-inline"},
+    # hard-coding PATH here to prevent build systems from using Poetry's PATH
+    "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
 }
 
 
