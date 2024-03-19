@@ -287,10 +287,11 @@ class InferRunner(SASTToolRunner):
             vuln = flag["bug_type"]
 
             # remove the temp prefix from the path, but keep the rest
-            fparts = Path(file).parts
-            assert fparts[0] == "/" and fparts[1] == "tmp"
-            tmp_source = Path(fparts[0] + fparts[1]) / fparts[2] / fparts[3]
-            file = str(Path(file).relative_to(tmp_source))
+            if Path(file).is_absolute():
+                fparts = Path(file).parts
+                assert fparts[0] == "/" and fparts[1] == "tmp", f"file not in /tmp: {file}"
+                tmp_source = Path(fparts[0] + fparts[1]) / fparts[2] / fparts[3]
+                file = str(Path(file).relative_to(tmp_source))
 
             flags.add(SASTFlag(tool, file, line, vuln))
 
