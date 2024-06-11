@@ -14,7 +14,7 @@ types-pyyaml = "^6.0.12.11"
 
 [tool.poetry.group.dev.dependencies]
 isort = "^5.12.0"
-black = "^23.7.0"
+black = "^24.3.0"
 mypy = "^1.5.1"
 bandit = "^1.7.5"
 pytest = "^7.4.2"
