@@ -1,5 +1,5 @@
 /**
- * Copyright 2023 Stephan Lipp
+ * Copyright 2023-2024 Chair for Software & Systems Engineering, TUM
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
