@@ -1,4 +1,4 @@
-# sast-fuzz
+# SASTFuzz
 
 SAST-directed greybox fuzzing
 
