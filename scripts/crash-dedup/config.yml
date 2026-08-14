@@ -1,5 +1,0 @@
----
-input_files:
-  blacklist:
-    - 'README.txt'
-...

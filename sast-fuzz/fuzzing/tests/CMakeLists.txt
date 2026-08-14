@@ -1,5 +1,5 @@
 # Copy test artifacts to build directory
-file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/data" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
+file(COPY "${CMAKE_SOURCE_DIR}/data/test_files/" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/data")
 
 include("${CMAKE_SOURCE_DIR}/cmake/google_test.cmake")
 

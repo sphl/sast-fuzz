@@ -38,6 +38,9 @@
 #include <hash.h>
 #include <math.h>
 #include <sched.h>
+#include <sfz/cycle_length.h>
+#include <sfz/distance_matrix.h>
+#include <sfz/target_bb.h>
 #include <signal.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -54,10 +57,6 @@
 #include <time.h>
 #include <types.h>
 #include <unistd.h>
-
-#include <sfz/cycle_length.h>
-#include <sfz/distance_matrix.h>
-#include <sfz/target_bb.h>
 
 #if defined(__APPLE__) || defined(__FreeBSD__) || defined(__OpenBSD__)
 #include <sys/sysctl.h>
@@ -4225,7 +4224,7 @@ bool has_new_critical_conformance() {
 
             if (condition_info[cnd_id] & 1) {  // Constant
                 conformance = num_equal_bits(condition_vars[2 * cnd_id + 0], condition_vals[2 * cnd_id + 1]);
-            } else {                           // Variable
+            } else {  // Variable
                 conformance = num_equal_bits(condition_vars[2 * cnd_id + 0], condition_vars[2 * cnd_id + 1]);
             }
 
@@ -4247,7 +4246,7 @@ void update_critical_conformance() {
 
             if (condition_info[cnd_id] & 1) {  // Constant
                 conformance = num_equal_bits(condition_vars[2 * cnd_id + 0], condition_vals[2 * cnd_id + 1]);
-            } else {                           // Variable
+            } else {  // Variable
                 conformance = num_equal_bits(condition_vars[2 * cnd_id + 0], condition_vars[2 * cnd_id + 1]);
             }
 
@@ -5114,7 +5113,7 @@ void maybe_delete_out_dir(void) {
         u8 *nfn = alloc_printf("%s_%04u%02u%02u%02u%02u%02u", fn, t->tm_year + 1900, t->tm_mon + 1, t->tm_mday,
                                t->tm_hour, t->tm_min, t->tm_sec);
 
-#endif                   /* ^!SIMPLE_FILES */
+#endif /* ^!SIMPLE_FILES */
 
         rename(fn, nfn); /* Ignore errors. */
         ck_free(nfn);
@@ -5143,7 +5142,7 @@ void maybe_delete_out_dir(void) {
         u8 *nfn = alloc_printf("%s_%04u%02u%02u%02u%02u%02u", fn, t->tm_year + 1900, t->tm_mon + 1, t->tm_mday,
                                t->tm_hour, t->tm_min, t->tm_sec);
 
-#endif                   /* ^!SIMPLE_FILES */
+#endif /* ^!SIMPLE_FILES */
 
         rename(fn, nfn); /* Ignore errors. */
         ck_free(nfn);
@@ -5363,20 +5362,20 @@ void show_stats(void) {
             strcpy(tmp, cMGN);
         } else
 
-            /* Subsequent cycles, but we're still making finds. */
-            if (cycles_wo_finds < 25 || min_wo_finds < 30) {
-                strcpy(tmp, cYEL);
-            } else
+                /* Subsequent cycles, but we're still making finds. */
+                if (cycles_wo_finds < 25 || min_wo_finds < 30) {
+            strcpy(tmp, cYEL);
+        } else
 
                 /* No finds for a long time and no test cases to try. */
                 if (cycles_wo_finds > 100 && !pending_not_fuzzed && min_wo_finds > 120) {
-                    strcpy(tmp, cLGN);
-                }
+            strcpy(tmp, cLGN);
+        }
 
-                /* Default: cautiously OK to stop? */
-                else {
-                    strcpy(tmp, cLBL);
-                }
+        /* Default: cautiously OK to stop? */
+        else {
+            strcpy(tmp, cLBL);
+        }
     }
 
     SAYF(bV bSTOP "        run time : " cRST "%-34s " bSTG bV bSTOP "  cycles done : %s%-5s  " bSTG bV "\n",
@@ -5676,9 +5675,9 @@ void show_init_stats(void) {
     if (avg_us > 50000) {
         havoc_div = 10; /* 0-19 execs/sec   */
     } else if (avg_us > 20000) {
-        havoc_div = 5;  /* 20-49 execs/sec  */
+        havoc_div = 5; /* 20-49 execs/sec  */
     } else if (avg_us > 10000) {
-        havoc_div = 2;  /* 50-100 execs/sec */
+        havoc_div = 2; /* 50-100 execs/sec */
     }
 
     if (!resuming_fuzz) {
@@ -5956,9 +5955,8 @@ void update_tbb_states() {
                 }
             }
 
-            printf("sast-fuzz: target BB = %d (%.2f), required = %ld (%.1f), actual = %llu (%ld) %s\n", i,
-                   tbb_infos[i]->vuln_score, n_req_input_execs, hc_reduct_factor, tbb_infos[i]->n_input_execs,
-                   exec_diff, status_str);
+            printf("sast-fuzz: target BB = %d (%.2f), required = %ld, actual = %llu (%ld) %s\n", i,
+                   tbb_infos[i]->vuln_score, n_req_input_execs, tbb_infos[i]->n_input_execs, exec_diff, status_str);
 #endif
 
             // Reset coverage flag
@@ -6018,7 +6016,7 @@ void update_tbb_states() {
         } else {
 
             if ((n_tbbs_finished + n_tbbs_paused) == n_tbbs) {
-                explore_status = true;   // coverage mode
+                explore_status = true;  // coverage mode
             } else {
                 explore_status = false;  // directed mode
             }
@@ -6032,7 +6030,7 @@ void update_tbb_states() {
             explore_status = true;  // coverage mode
         } else {
             if ((n_tbbs_finished + n_tbbs_paused) == n_tbbs) {
-                explore_status = true;   // coverage mode
+                explore_status = true;  // coverage mode
             } else {
                 explore_status = false;  // directed mode
             }

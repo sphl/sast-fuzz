@@ -1,5 +1,4 @@
 #include <math.h>
-
 #include <sfz/cycle_length.h>
 
 u32 lin_cycle_interval(u32 init_interval, u32 increase) { return (init_interval + increase); }

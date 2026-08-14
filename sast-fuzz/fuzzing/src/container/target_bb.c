@@ -1,6 +1,5 @@
 #include <alloc-inl.h>
 #include <math.h>
-
 #include <sfz/target_bb.h>
 
 tbb_info_t *tbb_info_create(float vuln_score) {

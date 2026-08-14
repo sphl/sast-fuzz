@@ -1,4 +1,3 @@
----
 BasedOnStyle: LLVM
 AlignTrailingComments: true
 BinPackParameters: false
@@ -10,25 +9,9 @@ KeepEmptyLinesAtTheStartOfBlocks: true
 Language: Cpp
 MaxEmptyLinesToKeep: 1
 ReflowComments: true
-SortIncludes: CaseSensitive
+SortIncludes: true
 IncludeBlocks: Regroup
-IncludeCategories:
-  - Regex:    '^".+\.h"$'
-    Priority: 1
-  - Regex:    '^<[a-zA-Z_]+>$'
-    Priority: 3
-  - Regex:    '^<(llvm|llvm-c|clang|clang-c)/.+>$'
-    Priority: 4
-  - Regex:    '^<(SVF|SVF-FE|WPA|klee)/.+>$'
-    Priority: 5
-  - Regex:    '^<(gtest|rapidjson)/.+>$'
-    Priority: 6
-  - Regex:    '^<(sfi|cbi|sfz)/.+>$'
-    Priority: 7
-  - Regex:    '^<.+\.h>$'
-    Priority: 2
 SortUsingDeclarations: true
 SpacesBeforeTrailingComments: 2
 Standard: Auto
 UseTab: Never
-InsertBraces: true

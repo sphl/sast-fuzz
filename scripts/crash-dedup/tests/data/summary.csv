@@ -1,5 +1,0 @@
-bug_id,n_dedup_frames,consider_filepaths,consider_lines,input_file,sanitizer,vuln_type,stack_trace,n_total_frames
-0,5,false,false,/path/to/file01,addresssanitizer,segv,#0:outputscript.c:outputSWF_TEXT_RECORD:1429=#1:outputscript.c:outputSWF_DEFINETEXT:1471=#2:outputscript.c:outputBlock:2079=#3:main.c:readMovie:277=#4:main.c:main:350,5
-0,5,false,false,/path/to/file03,addresssanitizer,segv,#0:outputscript.c:outputSWF_TEXT_RECORD:1429=#1:outputscript.c:outputSWF_DEFINETEXT:1471=#2:outputscript.c:outputBlock:2079=#3:main.c:readMovie:277=#4:main.c:main:350,5
-1,5,false,false,/path/to/file02,addresssanitizer,segv,#0:decompile.c:OpCode:868=#1:decompile.c:decompileINCR_DECR:1474=#2:decompile.c:decompileAction:3225=#3:decompile.c:decompileActions:3401=#4:decompile.c:decompile5Action:3423=#5:outputscript.c:outputSWF_DOACTION:1548=#6:outputscript.c:outputBlock:2079=#7:main.c:readMovie:277=#8:main.c:main:350,9
-2,5,false,false,/path/to/file04,addresssanitizer,segv,#0:-:-:-1=#1:-:-:-1=#2:-:-:-1,3

@@ -362,12 +362,12 @@ static u8 run_target(char **argv, u8 *mem, u32 len, u8 first_run) {
 
     } else
 
-        /* Handle non-crashing inputs appropriately. */
+            /* Handle non-crashing inputs appropriately. */
 
-        if (crash_mode) {
-            missed_paths++;
-            return 0;
-        }
+            if (crash_mode) {
+        missed_paths++;
+        return 0;
+    }
 
     cksum = hash32(trace_bits, MAP_SIZE, HASH_CONST);
 

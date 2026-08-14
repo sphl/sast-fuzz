@@ -1,5 +1,4 @@
 #include <alloc-inl.h>
-
 #include <sfz/distance_matrix.h>
 
 int32_t **dm_create_from_file(const char *filename, u32 *n_rows, u32 *n_cols) {

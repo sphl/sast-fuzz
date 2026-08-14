@@ -10,4 +10,4 @@ foreach (target ${afl_targets})
     target_link_libraries(${target} PRIVATE afl_config)
 endforeach ()
 
-add_subdirectory(libs)
+add_library(dislocator SHARED libdislocator.so.c)

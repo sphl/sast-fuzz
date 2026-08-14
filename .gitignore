@@ -1,20 +1,68 @@
-# MacOS
-.DS_Store
+# Compiler-generated dependency files
+*.d
 
-# JetBrains IDE
-.idea/
+# Object files
+*.slo
+*.lo
+*.o
+*.obj
 
-# CMake
-CMakeLists.txt.user
-CMakeCache.txt
+# Precompiled headers
+*.gch
+*.pch
+
+# Debug information
+*.ilk
+*.pdb
+*.dwo
+
+# Dynamic libraries
+*.so
+*.so.*
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Build directories
+build/
+Build/
+build-*/
+
+# CMake generated files
 CMakeFiles/
-CMakeScripts
-Testing/
-Makefile
+CMakeCache.txt
 cmake_install.cmake
+Makefile
 install_manifest.txt
 compile_commands.json
-CTestTestfile.cmake
-_deps
-build/
-cmake-*/
+
+# vcpkg
+vcpkg_installed/
+
+# Temporary files
+*.tmp
+*.log
+*.bak
+*.swp
+
+# Test artifacts
+Testing/
+.cache/
+
+# Demo artifacts
+data/demo/*
+!data/demo/pocketlang_targets.csv
